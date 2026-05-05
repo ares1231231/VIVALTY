@@ -37,9 +37,12 @@ def env_list(name: str, default: list[str] | None = None) -> list[str]:
     return [item.strip() for item in raw.split(",") if item.strip()]
 
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-insecure-change-me")
-DEBUG = env_bool("DJANGO_DEBUG", True)
-ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", ["*"] if DEBUG else [])
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", os.getenv("SECRET_KEY", "dev-insecure-change-me"))
+DEBUG = env_bool("DJANGO_DEBUG", env_bool("DEBUG", True))
+ALLOWED_HOSTS = env_list(
+    "DJANGO_ALLOWED_HOSTS",
+    env_list("ALLOWED_HOSTS", ["*"] if DEBUG else []),
+)
 
 INSTALLED_APPS = [
     "django.contrib.admin",

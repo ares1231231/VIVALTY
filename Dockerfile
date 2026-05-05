@@ -30,4 +30,4 @@ COPY --from=css /tailwind.css /app/static/css/tailwind.css
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py seed && python manage.py collectstatic --noinput && gunicorn config.wsgi:application -b 0.0.0.0:8000 --workers 3 --timeout 120"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py seed && python manage.py collectstatic --noinput && gunicorn config.wsgi:application -b 0.0.0.0:${PORT:-8000} --workers 3 --timeout 120"]
