@@ -1,0 +1,36 @@
+{% load web_extras %}
+{% if items %}
+  <div class="saas-grid lg:grid-cols-3">
+    {% for p in items %}
+      {% include "web/components/property_card.html" with p=p %}
+    {% endfor %}
+  </div>
+  {% if has_next or has_prev %}
+    <div class="mt-6 card p-4 flex flex-wrap items-center justify-between gap-3">
+      <div class="text-xs text-ink-500">Page {{ page }} · {{ total }} results</div>
+      <div class="flex gap-2">
+        {% if has_prev %}
+          <a href="?{% query_replace page=prev_page %}"
+             hx-get="{% url 'web:marketplace' %}?{% query_replace page=prev_page %}"
+             hx-target="#results"
+             hx-swap="innerHTML"
+             hx-push-url="true"
+             class="btn-secondary">← Prev</a>
+        {% endif %}
+        {% if has_next %}
+          <a href="?{% query_replace page=next_page %}"
+             hx-get="{% url 'web:marketplace' %}?{% query_replace page=next_page %}"
+             hx-target="#results"
+             hx-swap="innerHTML"
+             hx-push-url="true"
+             class="btn-secondary">Next →</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+{% else %}
+  <div class="card p-10 text-center text-ink-500">
+    <div class="text-base font-semibold text-ink-900">No properties matched your filters</div>
+    <div class="mt-1 text-sm">Try widening your criteria or resetting all filters.</div>
+  </div>
+{% endif %}

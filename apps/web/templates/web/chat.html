@@ -1,0 +1,84 @@
+{% extends "web/base.html" %}
+{% load web_extras %}
+
+{% block title %}AI Advisor · Vivalty{% endblock %}
+
+{% block content %}
+<div class="flex gap-0 h-[calc(100vh-72px)] overflow-hidden">
+
+  {# ── Dark sidebar ─────────────────────────────────────────────────────── #}
+  <aside class="flex w-72 shrink-0 flex-col bg-ink-900 text-white overflow-hidden">
+    {# Header #}
+    <div class="flex items-center gap-3 px-4 py-4 border-b border-white/10">
+      <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-600 text-xs font-black">AI</div>
+      <div>
+        <div class="text-sm font-semibold">Investment Brain</div>
+        <div class="flex items-center gap-1.5 text-[10px] text-ink-400">
+          <span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          Grounded in platform data
+        </div>
+      </div>
+    </div>
+
+    {# New chat button #}
+    <div class="p-3 border-b border-white/10">
+      <form method="post" action="{% url 'web:chat_new' %}">
+        {% csrf_token %}
+        <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          New conversation
+        </button>
+      </form>
+    </div>
+
+    {# Sessions list #}
+    <div class="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
+      {% for s in sessions %}
+        <a href="{% url 'web:chat_session' s.id %}"
+           class="flex flex-col rounded-xl px-3 py-2.5 transition-colors {% if active and active.id == s.id %}bg-white/10 text-white{% else %}text-ink-300 hover:bg-white/5 hover:text-white{% endif %}">
+          <div class="truncate text-sm font-medium">{{ s.title|default:"New conversation" }}</div>
+          <div class="mt-0.5 truncate text-[11px] text-ink-500">
+            {% with last=s.messages.last %}
+              {% if last %}{{ last.content|truncatechars:55 }}{% else %}Start chatting…{% endif %}
+            {% endwith %}
+          </div>
+        </a>
+      {% empty %}
+        <div class="px-3 py-6 text-center text-xs text-ink-500">
+          Your conversations will appear here.
+        </div>
+      {% endfor %}
+    </div>
+
+    {# Footer #}
+    <div class="border-t border-white/10 px-4 py-3">
+      <div class="text-[10px] text-ink-500 text-center">Estimates clearly labelled · No invented data</div>
+    </div>
+  </aside>
+
+  {# ── Main chat area ───────────────────────────────────────────────────── #}
+  <section class="flex flex-1 min-w-0 flex-col bg-ink-50">
+
+    {# Top bar #}
+    <div class="flex items-center gap-3 border-b border-ink-200 bg-white px-6 py-3 shadow-sm">
+      <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white text-xs font-black shadow">AI</div>
+      <div>
+        <div class="text-sm font-semibold text-ink-900">
+          {% if active %}{{ active.title|default:"Investment conversation" }}{% else %}Vivalty Investment Brain{% endif %}
+        </div>
+        <div class="text-[11px] text-ink-500">AI-powered real estate analysis across 7 markets</div>
+      </div>
+      {% if active %}
+      <div class="ml-auto flex items-center gap-2">
+        <span class="pill bg-brand-50 text-brand-700 text-[10px]">Session #{{ active.id }}</span>
+      </div>
+      {% endif %}
+    </div>
+
+    {# Chat panel #}
+    <div class="flex-1 min-h-0 flex flex-col">
+      {% include "web/components/chat_panel.html" with active=active messages=messages embedded=False %}
+    </div>
+  </section>
+</div>
+{% endblock %}

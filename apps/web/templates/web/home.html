@@ -1,0 +1,115 @@
+{% extends "web/base.html" %}
+{% load static web_extras %}
+
+{% block content %}
+<div class="bg-gradient-to-b from-white to-ink-50">
+  <section class="mx-auto max-w-7xl px-4 sm:px-6 pt-16 pb-20">
+    <div class="grid lg:grid-cols-2 gap-10 items-center">
+      <div>
+        <span class="pill bg-brand-50 text-brand-700">AI-powered global real estate</span>
+        <h1 class="mt-4 text-4xl sm:text-5xl font-extrabold tracking-tight text-ink-900">
+          Invest internationally,<br/>
+          <span class="text-brand-600 text-glow">guided by an AI analyst.</span>
+        </h1>
+        <p class="mt-5 text-lg text-ink-700 max-w-xl">
+          Vivalty connects investors to high-potential properties in France, the UK, Spain, Switzerland,
+          Italy, the UAE and Portugal — with ROI, yield, demand and risk metrics computed for every listing,
+          plus an AI advisor grounded in our database.
+        </p>
+        <div class="mt-7 flex flex-wrap gap-3">
+          <a href="{% url 'web:marketplace' %}" class="btn-primary">Explore properties</a>
+          <a href="{% url 'web:chat' %}" class="btn-secondary" data-modal-target="demo-ai-modal" data-modal-toggle="demo-ai-modal">AI advisor preview</a>
+        </div>
+        <div class="mt-8 grid grid-cols-3 gap-3 max-w-lg">
+          <div class="metric-tile"><div class="text-2xl font-extrabold text-ink-900">7</div><div class="text-xs uppercase tracking-wide text-ink-500">Markets</div></div>
+          <div class="metric-tile"><div class="text-2xl font-extrabold text-ink-900">0–100</div><div class="text-xs uppercase tracking-wide text-ink-500">Investment scores</div></div>
+          <div class="metric-tile"><div class="text-2xl font-extrabold text-ink-900">Live</div><div class="text-xs uppercase tracking-wide text-ink-500">AI advisor</div></div>
+        </div>
+      </div>
+
+      <div class="relative min-h-[420px] overflow-hidden rounded-3xl border border-ink-200 bg-ink-900 shadow-2xl">
+        {# 3D animated orb fills the entire card background #}
+        <canvas id="hero-3d-canvas" class="absolute inset-0 h-full w-full opacity-90"></canvas>
+        {# Radial gradient overlay for text contrast #}
+        <div class="absolute inset-0 bg-gradient-to-t from-ink-900/80 via-transparent to-transparent"></div>
+        {# Content on top #}
+        <div class="relative z-10 flex h-full flex-col p-6">
+          <div class="text-xs font-semibold uppercase tracking-widest text-brand-400 mb-4">Covered markets</div>
+          <div class="grid grid-cols-2 gap-2">
+            {% for c in countries %}
+              <a href="{% url 'web:marketplace' %}?country={{ c.code }}"
+                 class="group flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-white/90 hover:border-brand-400/50 hover:bg-white/10 transition-all duration-150">
+                <span class="font-medium text-sm">{{ c.flag_emoji }} {{ c.name }}</span>
+                <span class="text-[11px] text-white/50 group-hover:text-brand-300 transition-colors">{{ c.base_roi_min }}–{{ c.base_roi_max }}%</span>
+              </a>
+            {% endfor %}
+          </div>
+          <div class="mt-auto pt-5 border-t border-white/10 flex items-center justify-between">
+            <div class="text-xs text-white/40">AI-computed · Updated daily</div>
+            <a href="{% url 'web:markets' %}" class="text-xs font-semibold text-brand-400 hover:text-brand-300">All markets →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% if featured %}
+  <section class="mx-auto max-w-7xl px-4 sm:px-6 pb-16 reveal">
+    <div class="flex items-end justify-between mb-5">
+      <div>
+        <h2 class="text-2xl font-bold text-ink-900">Featured opportunities</h2>
+        <p class="text-sm text-ink-500">Highest-scored listings across our markets.</p>
+      </div>
+      <a href="{% url 'web:marketplace' %}" class="text-sm font-medium text-brand-700 hover:text-brand-900">View all →</a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {% for p in featured %}
+        {% include "web/components/property_card.html" with p=p %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="mx-auto max-w-7xl px-4 sm:px-6 pb-20 reveal">
+    <h2 class="section-title">How Vivalty works</h2>
+    <p class="section-subtitle">A reusable AI-first SaaS workflow from discovery to decision.</p>
+    <div class="mt-6 saas-grid">
+      <div class="card p-5">
+        <div class="grid h-8 w-8 place-items-center rounded-full bg-brand-600 text-white text-sm font-bold">1</div>
+        <div class="mt-3 font-semibold text-ink-900">Browse the global marketplace</div>
+        <div class="mt-1 text-sm text-ink-700">Filter by country, city, type, ROI and investment score.</div>
+      </div>
+      <div class="card p-5">
+        <div class="grid h-8 w-8 place-items-center rounded-full bg-brand-600 text-white text-sm font-bold">2</div>
+        <div class="mt-3 font-semibold text-ink-900">Read the metrics</div>
+        <div class="mt-1 text-sm text-ink-700">Every listing comes with an AI-computed ROI range, rental yield, demand and risk.</div>
+      </div>
+      <div class="card p-5">
+        <div class="grid h-8 w-8 place-items-center rounded-full bg-brand-600 text-white text-sm font-bold">3</div>
+        <div class="mt-3 font-semibold text-ink-900">Ask the AI advisor</div>
+        <div class="mt-1 text-sm text-ink-700">Get analyst-style recommendations grounded in our data — never invented.</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="demo-ai-modal" tabindex="-1" aria-hidden="true" class="fixed left-0 right-0 top-0 z-50 hidden h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden p-4">
+  <div class="relative max-h-full w-full max-w-2xl">
+    <div class="relative rounded-2xl bg-white p-6 shadow-2xl">
+      <div class="mb-3 flex items-center justify-between">
+        <h3 class="text-xl font-semibold text-ink-900">AI Advisor Preview</h3>
+        <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100" data-modal-hide="demo-ai-modal">✕</button>
+      </div>
+      <p class="text-sm text-ink-700">Get country comparisons, yield scenarios, and risk-aware recommendations powered by your platform data.</p>
+      <div class="mt-4 flex gap-3">
+        <a href="{% url 'web:chat' %}" class="btn-primary">Open AI advisor</a>
+        <button type="button" class="btn-secondary" data-modal-hide="demo-ai-modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block body_extra %}
+  <script type="module" src="{% static 'js/hero3d.js' %}"></script>
+{% endblock %}

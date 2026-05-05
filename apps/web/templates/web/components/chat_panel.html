@@ -1,0 +1,205 @@
+{% load web_extras %}
+{# Self-contained chat surface.
+   Variables: active, messages, embedded (bool) #}
+<div class="flex flex-1 min-h-0 flex-col" data-chat-root data-csrf="{{ csrf_token }}">
+
+  {# ── Message log ────────────────────────────────────────────────────── #}
+  <div class="flex-1 overflow-y-auto space-y-5 px-5 py-5 bg-ink-50" data-chat-log>
+    {% if not messages %}
+      {# Welcome state #}
+      <div class="flex flex-col items-center justify-center h-full text-center gap-4 py-8">
+        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-lg text-white text-xl font-black">AI</div>
+        <div>
+          <div class="font-semibold text-ink-900">Hi {% if user.is_authenticated %}{{ user.first_name|default:user.email }}{% else %}there{% endif %} 👋</div>
+          <div class="mt-1 text-sm text-ink-500 max-w-xs">Ask me anything about international real estate — ROI, markets, risk, or specific listings.</div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg mt-2">
+          <button type="button" data-suggest="Where should I invest €100k for the best ROI?"
+                  class="group text-left rounded-xl border border-ink-200 bg-white px-4 py-3 text-xs text-ink-700 shadow-sm hover:border-brand-500 hover:shadow-md hover:text-brand-700 transition-all duration-150">
+            <div class="font-semibold">💰 Best ROI for €100k?</div>
+            <div class="mt-0.5 text-ink-500 group-hover:text-brand-500">Country and city recommendations</div>
+          </button>
+          <button type="button" data-suggest="Compare Spain vs UAE for short-let income."
+                  class="group text-left rounded-xl border border-ink-200 bg-white px-4 py-3 text-xs text-ink-700 shadow-sm hover:border-brand-500 hover:shadow-md hover:text-brand-700 transition-all duration-150">
+            <div class="font-semibold">🌍 Spain vs UAE</div>
+            <div class="mt-0.5 text-ink-500 group-hover:text-brand-500">Short-let rental income comparison</div>
+          </button>
+          <button type="button" data-suggest="What are the lowest-risk markets right now?"
+                  class="group text-left rounded-xl border border-ink-200 bg-white px-4 py-3 text-xs text-ink-700 shadow-sm hover:border-brand-500 hover:shadow-md hover:text-brand-700 transition-all duration-150">
+            <div class="font-semibold">🛡️ Lowest-risk markets</div>
+            <div class="mt-0.5 text-ink-500 group-hover:text-brand-500">Safe picks with solid yields</div>
+          </button>
+          <button type="button" data-suggest="Show me 3 high-score apartments under €300k."
+                  class="group text-left rounded-xl border border-ink-200 bg-white px-4 py-3 text-xs text-ink-700 shadow-sm hover:border-brand-500 hover:shadow-md hover:text-brand-700 transition-all duration-150">
+            <div class="font-semibold">🏢 Apartments under €300k</div>
+            <div class="mt-0.5 text-ink-500 group-hover:text-brand-500">High investment score picks</div>
+          </button>
+        </div>
+      </div>
+    {% else %}
+      {% for m in messages %}
+        {% include "web/components/chat_message.html" with role=m.role content=m.content %}
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  {# ── Input bar ────────────────────────────────────────────────────────── #}
+  <div class="border-t border-ink-200 bg-white px-4 py-3 shadow-sm">
+    {# Typing indicator (hidden by default, JS shows it) #}
+    <div id="typing-indicator" class="hidden mb-2 flex items-center gap-2 text-xs text-ink-500">
+      <div class="flex gap-1">
+        <span class="inline-block h-1.5 w-1.5 rounded-full bg-brand-400 animate-bounce" style="animation-delay:0ms"></span>
+        <span class="inline-block h-1.5 w-1.5 rounded-full bg-brand-400 animate-bounce" style="animation-delay:150ms"></span>
+        <span class="inline-block h-1.5 w-1.5 rounded-full bg-brand-400 animate-bounce" style="animation-delay:300ms"></span>
+      </div>
+      AI is thinking…
+    </div>
+    <form data-chat-form class="flex gap-2">
+      {% csrf_token %}
+      <input type="text" name="message" data-chat-input autocomplete="off"
+             placeholder="Ask about ROI, markets, specific listings…"
+             class="input flex-1 rounded-xl" />
+      <button type="submit" data-chat-send
+              class="btn-primary rounded-xl px-5 gap-1.5 disabled:opacity-50">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/>
+        </svg>
+        Send
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+(function initChat() {
+  const candidates = document.querySelectorAll("[data-chat-root]");
+  const r = candidates[candidates.length - 1];
+  if (!r || r.dataset.chatBound) return;
+  r.dataset.chatBound = "1";
+
+  const log = r.querySelector("[data-chat-log]");
+  const form = r.querySelector("[data-chat-form]");
+  const input = r.querySelector("[data-chat-input]");
+  const send = r.querySelector("[data-chat-send]");
+  const typing = document.getElementById("typing-indicator");
+  const csrf = r.dataset.csrf;
+
+  const sessionEndpoint = "{% if active %}{% url 'web:chat_stream' active.id %}{% else %}{% url 'web:chat_new' %}{% endif %}";
+  let activeStreamUrl = "{% if active %}{% url 'web:chat_stream' active.id %}{% endif %}";
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  }
+  function userBubble(text) {
+    return `<div class="flex w-full justify-end">
+      <div class="max-w-[80%] rounded-2xl rounded-br-sm bg-brand-600 text-white px-4 py-3 text-sm whitespace-pre-wrap shadow">${escapeHtml(text)}</div>
+    </div>`;
+  }
+  function aiBubble(initial) {
+    return `<div class="flex w-full gap-3 justify-start">
+      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white text-xs font-black shadow">AI</div>
+      <div class="max-w-[80%] rounded-2xl rounded-bl-sm bg-white border border-ink-200 text-ink-900 shadow-card px-4 py-3 prose-chat" data-ai-target>${initial || ""}<span data-cursor class="inline-block h-2 w-2 animate-pulse rounded-full bg-brand-500 align-middle ml-1"></span></div>
+    </div>`;
+  }
+  function autoscroll() { log.scrollTop = log.scrollHeight; }
+
+  function mdToHtml(md) {
+    let h = escapeHtml(md);
+    h = h.replace(/^### (.*)$/gm, "<h3>$1</h3>");
+    h = h.replace(/^## (.*)$/gm, "<h2>$1</h2>");
+    h = h.replace(/^# (.*)$/gm, "<h1>$1</h1>");
+    h = h.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    h = h.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    h = h.replace(/`([^`]+)`/g, "<code>$1</code>");
+    h = h.replace(/^- (.+)$/gm, "<li>$1</li>");
+    h = h.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
+    h = h.replace(/\n/g, "<br/>");
+    return h;
+  }
+
+  r.querySelectorAll("[data-suggest]").forEach(btn => {
+    btn.addEventListener("click", () => { input.value = btn.dataset.suggest; form.requestSubmit(); });
+  });
+
+  async function ensureSession() {
+    if (activeStreamUrl) return activeStreamUrl;
+    const res = await fetch("{% url 'web:chat_new' %}", {
+      method: "POST",
+      headers: { "X-CSRFToken": csrf },
+      redirect: "manual",
+      credentials: "same-origin",
+    });
+    const loc = res.headers.get("Location") || "";
+    const m = loc.match(/\/chat\/(\d+)\//);
+    if (!m) throw new Error("Could not start a chat session.");
+    activeStreamUrl = `/chat/${m[1]}/stream/`;
+    return activeStreamUrl;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = (input.value || "").trim();
+    if (!text) return;
+    input.value = "";
+    send.disabled = true;
+    if (typing) typing.classList.remove("hidden");
+
+    // Remove welcome state chips if present
+    const welcome = log.querySelector(".flex-col.items-center");
+    if (welcome) welcome.remove();
+
+    log.insertAdjacentHTML("beforeend", userBubble(text));
+    autoscroll();
+
+    try {
+      const url = await ensureSession();
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
+        body: JSON.stringify({ message: text }),
+        credentials: "same-origin",
+      });
+      if (!res.ok || !res.body) throw new Error("Stream failed: " + res.status);
+
+      if (typing) typing.classList.add("hidden");
+      log.insertAdjacentHTML("beforeend", aiBubble(""));
+      autoscroll();
+      const target = log.lastElementChild.querySelector("[data-ai-target]");
+      let acc = "";
+
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += dec.decode(value, { stream: true });
+        let idx;
+        while ((idx = buffer.indexOf("\n\n")) !== -1) {
+          const frame = buffer.slice(0, idx).trim();
+          buffer = buffer.slice(idx + 2);
+          if (!frame.startsWith("data:")) continue;
+          try {
+            const payload = JSON.parse(frame.slice(5).trim());
+            if (payload.event === "done") { target.querySelector("[data-cursor]")?.remove(); break; }
+            if (typeof payload.delta === "string") {
+              acc += payload.delta;
+              target.innerHTML = mdToHtml(acc) + '<span data-cursor class="inline-block h-2 w-2 animate-pulse rounded-full bg-brand-500 align-middle ml-1"></span>';
+              autoscroll();
+            }
+          } catch {}
+        }
+      }
+      target.innerHTML = mdToHtml(acc);
+    } catch (err) {
+      if (typing) typing.classList.add("hidden");
+      log.insertAdjacentHTML("beforeend", aiBubble('<span class="text-rose-600 text-xs">The advisor failed to respond. Please try again.</span>'));
+    } finally {
+      if (typing) typing.classList.add("hidden");
+      send.disabled = false;
+      input.focus();
+      autoscroll();
+    }
+  });
+})();
+</script>

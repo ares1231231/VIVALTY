@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.env
+db.sqlite3
+staticfiles/
+media/
+
+# Node (Tailwind build pipeline)
+node_modules/
+.env.local
+
+# Built static assets — regenerated via `npm run build` in assets/
+static/css/tailwind.css
+
+# IDE
+.vscode/
+.idea/
+.DS_Store

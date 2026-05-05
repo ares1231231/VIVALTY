@@ -1,0 +1,33 @@
+{% load web_extras %}
+<div id="vivalty-chat-launcher" class="fixed bottom-6 right-6 z-40">
+  <button type="button" id="chat-toggle"
+          class="grid h-14 w-14 place-items-center rounded-full bg-brand-600 text-white shadow-lg hover:bg-brand-700"
+          aria-label="Open AI advisor">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 4V6a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg>
+  </button>
+
+  <div id="chat-popover"
+       class="hidden mt-3 h-[560px] w-[380px] sm:w-[400px] flex flex-col overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-2xl absolute bottom-16 right-0">
+    <div class="flex items-center justify-between border-b border-ink-200 px-4 py-3">
+      <div>
+        <div class="text-sm font-semibold">Vivalty Investment Brain</div>
+        <div class="text-[11px] text-ink-500">AI advisor — grounded in platform data</div>
+      </div>
+      <button id="chat-close" class="text-ink-500 hover:text-ink-900" aria-label="Close">✕</button>
+    </div>
+    <div id="chat-stream-host" class="flex-1 min-h-0 flex flex-col">
+      {% include "web/components/chat_panel.html" with embedded=True session_id=None messages=None %}
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const btn = document.getElementById("chat-toggle");
+  const pop = document.getElementById("chat-popover");
+  const close = document.getElementById("chat-close");
+  if (!btn || !pop || !close) return;
+  btn.addEventListener("click", () => pop.classList.toggle("hidden"));
+  close.addEventListener("click", () => pop.classList.add("hidden"));
+})();
+</script>

@@ -1,0 +1,16 @@
+{% load web_extras %}
+<form id="lead-form"
+      hx-post="{% url 'web:lead_create' p.id %}"
+      hx-target="#lead-wrap"
+      hx-swap="innerHTML"
+      class="space-y-3">
+  {% csrf_token %}
+  {% for field in lead_form %}
+    <div>
+      <label class="label">{{ field.label }}</label>
+      {{ field }}
+      {% if field.errors %}<p class="mt-1 text-xs text-rose-700">{{ field.errors|join:", " }}</p>{% endif %}
+    </div>
+  {% endfor %}
+  <button type="submit" class="btn-primary w-full">Send enquiry</button>
+</form>

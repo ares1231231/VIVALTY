@@ -1,0 +1,11 @@
+{% load web_extras %}
+{% if role == 'user' %}
+  <div class="flex w-full justify-end">
+    <div class="max-w-[80%] rounded-2xl rounded-br-sm bg-brand-600 text-white px-4 py-3 text-sm whitespace-pre-wrap shadow">{{ content }}</div>
+  </div>
+{% else %}
+  <div class="flex w-full gap-3 justify-start">
+    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white text-xs font-black shadow">AI</div>
+    <div class="max-w-[80%] rounded-2xl rounded-bl-sm bg-white border border-ink-200 text-ink-900 shadow-card px-4 py-3 prose-chat">{{ content|markdown }}</div>
+  </div>
+{% endif %}

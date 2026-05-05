@@ -1,0 +1,148 @@
+{% extends "web/base.html" %}
+{% load web_extras %}
+
+{% block title %}Dashboard · Vivalty{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-8">
+
+  {# ── Welcome hero ─────────────────────────────────────────────────────── #}
+  <header class="rounded-3xl border border-ink-200 bg-radial-brand p-6 shadow-card">
+    <div class="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
+      <div>
+        <div class="pill bg-white/70 text-brand-700">Your workspace</div>
+        <h1 class="mt-3 section-title">Welcome, {{ user.first_name|default:user.email }}</h1>
+        <p class="section-subtitle">
+          Role: <span class="font-semibold capitalize text-ink-900">{{ user.get_role_display }}</span>
+          · Member since {{ user.date_joined|date:"M Y" }}
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <a href="{% url 'web:marketplace' %}" class="btn-secondary">Marketplace</a>
+        <a href="{% url 'web:chat' %}" class="btn-secondary">AI Advisor</a>
+        {% if user.role == 'owner' or user.role == 'admin' or user.is_staff %}
+          <a href="{% url 'web:owner_new' %}" class="btn-primary">+ New listing</a>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Quick stats #}
+    <div class="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="metric-tile">
+        <div class="text-2xl font-black text-ink-900">{{ favorites|length }}</div>
+        <div class="text-[11px] uppercase tracking-wide text-ink-500">Saved</div>
+      </div>
+      {% if mine %}
+      <div class="metric-tile">
+        <div class="text-2xl font-black text-ink-900">{{ mine|length }}</div>
+        <div class="text-[11px] uppercase tracking-wide text-ink-500">My listings</div>
+      </div>
+      {% endif %}
+      <div class="metric-tile">
+        <div class="text-2xl font-black text-ink-900">7</div>
+        <div class="text-[11px] uppercase tracking-wide text-ink-500">Markets</div>
+      </div>
+      <div class="metric-tile">
+        <div class="text-2xl font-black text-ink-900">Live</div>
+        <div class="text-[11px] uppercase tracking-wide text-ink-500">AI advisor</div>
+      </div>
+    </div>
+  </header>
+
+  {# ── Tabs (Flowbite) ─────────────────────────────────────────────────── #}
+  <div>
+    <ul class="flex border-b border-ink-200 gap-1" id="dash-tabs" data-tabs-toggle="#dash-tab-content" role="tablist">
+      <li role="presentation">
+        <button class="rounded-t-xl px-5 py-2.5 text-sm font-medium text-ink-600 hover:text-brand-700 border-b-2 border-transparent aria-selected:border-brand-600 aria-selected:text-brand-700"
+                id="saved-tab" data-tabs-target="#tab-saved" type="button" role="tab" aria-controls="tab-saved" aria-selected="true">
+          Saved properties
+          <span class="ml-1.5 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-700">{{ favorites|length }}</span>
+        </button>
+      </li>
+      {% if user.role == 'owner' or user.role == 'admin' or user.is_staff %}
+      <li role="presentation">
+        <button class="rounded-t-xl px-5 py-2.5 text-sm font-medium text-ink-600 hover:text-brand-700 border-b-2 border-transparent aria-selected:border-brand-600 aria-selected:text-brand-700"
+                id="listings-tab" data-tabs-target="#tab-listings" type="button" role="tab" aria-controls="tab-listings" aria-selected="false">
+          My listings
+          <span class="ml-1.5 rounded-full bg-ink-100 px-2 py-0.5 text-xs font-bold text-ink-600">{{ mine|length }}</span>
+        </button>
+      </li>
+      {% endif %}
+    </ul>
+
+    <div id="dash-tab-content" class="pt-5">
+
+      {# Saved tab #}
+      <div id="tab-saved" role="tabpanel" aria-labelledby="saved-tab">
+        {% if favorites %}
+          <div class="saas-grid">
+            {% for f in favorites %}
+              {% include "web/components/property_card.html" with p=f.property %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="card p-12 text-center">
+            <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50">
+              <svg class="h-8 w-8 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </div>
+            <div class="font-semibold text-ink-900">No saved properties yet</div>
+            <p class="mt-1 text-sm text-ink-500">Browse the marketplace and hit the heart icon to save listings here.</p>
+            <a href="{% url 'web:marketplace' %}" class="btn-primary mt-4 inline-flex">Explore marketplace</a>
+          </div>
+        {% endif %}
+      </div>
+
+      {# Listings tab #}
+      {% if user.role == 'owner' or user.role == 'admin' or user.is_staff %}
+      <div id="tab-listings" role="tabpanel" aria-labelledby="listings-tab" class="hidden">
+        {% if mine %}
+          <div class="saas-grid">
+            {% for p in mine %}
+              {% include "web/components/property_card.html" with p=p %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="card p-12 text-center">
+            <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50">
+              <svg class="h-8 w-8 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <div class="font-semibold text-ink-900">No listings yet</div>
+            <p class="mt-1 text-sm text-ink-500">Create your first listing to attract investors.</p>
+            <a href="{% url 'web:owner_new' %}" class="btn-primary mt-4 inline-flex">+ New listing</a>
+          </div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Quick action cards ───────────────────────────────────────────────── #}
+  <section class="saas-grid">
+    <a href="{% url 'web:marketplace' %}" class="card p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group">
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition-colors">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      </div>
+      <div class="mt-3 font-semibold text-ink-900">Browse marketplace</div>
+      <div class="mt-1 text-sm text-ink-500">Discover and filter global investment listings.</div>
+    </a>
+    <a href="{% url 'web:chat' %}" class="card p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group">
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600 group-hover:bg-sky-600 group-hover:text-white transition-colors">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      </div>
+      <div class="mt-3 font-semibold text-ink-900">AI investment advisor</div>
+      <div class="mt-1 text-sm text-ink-500">Get ROI analysis, market comparisons, and recommendations.</div>
+    </a>
+    <a href="{% url 'web:markets' %}" class="card p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group">
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
+      </div>
+      <div class="mt-3 font-semibold text-ink-900">Market overview</div>
+      <div class="mt-1 text-sm text-ink-500">Country baselines and top-scored cities by market.</div>
+    </a>
+  </section>
+</div>
+{% endblock %}

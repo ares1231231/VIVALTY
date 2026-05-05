@@ -1,0 +1,115 @@
+{% extends "web/base.html" %}
+{% block title %}Create account · Vivalty{% endblock %}
+
+{% block content %}
+<div class="flex min-h-[calc(100vh-72px)]">
+
+  {# Left — brand panel #}
+  <div class="hidden lg:flex lg:w-5/12 flex-col justify-center bg-ink-900 px-12 py-16 relative overflow-hidden">
+    <div class="absolute inset-0 bg-radial-brand opacity-30"></div>
+    <div class="relative z-10">
+      <div class="flex items-center gap-3 mb-12">
+        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white font-black text-lg">V</span>
+        <span class="text-xl font-extrabold text-white">Vivalty</span>
+      </div>
+      <h2 class="text-3xl font-extrabold text-white leading-tight">
+        Join thousands of<br/>
+        <span class="text-brand-400">smart investors.</span>
+      </h2>
+      <p class="mt-4 text-ink-300 text-sm leading-relaxed">
+        Create a free account to save listings, unlock the AI advisor,
+        and start investing smarter across 7 global markets.
+      </p>
+      <div class="mt-10 grid grid-cols-2 gap-3">
+        <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div class="text-2xl font-black text-white">7</div>
+          <div class="text-xs text-ink-400 uppercase tracking-wide">Countries</div>
+        </div>
+        <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div class="text-2xl font-black text-white">Live</div>
+          <div class="text-xs text-ink-400 uppercase tracking-wide">AI advisor</div>
+        </div>
+        <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div class="text-2xl font-black text-white">100%</div>
+          <div class="text-xs text-ink-400 uppercase tracking-wide">Data-grounded</div>
+        </div>
+        <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div class="text-2xl font-black text-white">Free</div>
+          <div class="text-xs text-ink-400 uppercase tracking-wide">To join</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Right — form #}
+  <div class="flex flex-1 items-start justify-center overflow-y-auto px-6 py-12 bg-ink-50">
+    <div class="w-full max-w-lg space-y-6">
+      <div>
+        <div class="lg:hidden flex items-center gap-2.5 mb-6">
+          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white font-black">V</span>
+          <span class="text-lg font-extrabold text-ink-900">Vivalty</span>
+        </div>
+        <h1 class="text-2xl font-extrabold text-ink-900">Create your account</h1>
+        <p class="mt-1 text-sm text-ink-500">Free forever. No credit card required.</p>
+      </div>
+
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+
+        <div>
+          <label class="label">Email address</label>
+          {{ form.email }}
+          {% if form.email.errors %}<p class="mt-1 text-xs text-rose-700">{{ form.email.errors|join:", " }}</p>{% endif %}
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label">First name</label>
+            {{ form.first_name }}
+          </div>
+          <div>
+            <label class="label">Last name</label>
+            {{ form.last_name }}
+          </div>
+        </div>
+
+        <div>
+          <label class="label">Password <span class="normal-case text-ink-400">(min 8 characters)</span></label>
+          {{ form.password }}
+          {% if form.password.errors %}<p class="mt-1 text-xs text-rose-700">{{ form.password.errors|join:", " }}</p>{% endif %}
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label">I am a…</label>
+            {{ form.role }}
+          </div>
+          <div>
+            <label class="label">Company <span class="normal-case text-ink-400">(optional)</span></label>
+            {{ form.company_name }}
+          </div>
+        </div>
+
+        {% if form.non_field_errors %}
+          <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {{ form.non_field_errors|join:", " }}
+          </div>
+        {% endif %}
+
+        <button type="submit" class="btn-primary w-full justify-center py-3 text-base rounded-xl">
+          Create free account
+        </button>
+
+        <p class="text-center text-xs text-ink-400">
+          By signing up you agree to our Terms and Privacy Policy.
+        </p>
+      </form>
+
+      <p class="text-center text-sm text-ink-500">
+        Already have an account?
+        <a href="{% url 'web:login' %}" class="font-semibold text-brand-700 hover:text-brand-900">Sign in</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

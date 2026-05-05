@@ -1,0 +1,104 @@
+{% extends "web/base.html" %}
+{% block title %}Sign in · Vivalty{% endblock %}
+
+{% block content %}
+<div class="flex min-h-[calc(100vh-72px)]">
+
+  {# Left — brand panel #}
+  <div class="hidden lg:flex lg:w-1/2 flex-col justify-between bg-radial-brand border-r border-ink-200 px-12 py-16 relative overflow-hidden">
+    <div class="relative z-10">
+      <div class="flex items-center gap-3">
+        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white font-black text-lg shadow">V</span>
+        <span class="text-xl font-extrabold text-ink-900">Vivalty</span>
+      </div>
+      <div class="mt-12">
+        <h2 class="text-3xl font-extrabold text-ink-900 leading-tight">
+          Global real estate.<br/>
+          <span class="text-brand-600">AI-powered insight.</span>
+        </h2>
+        <p class="mt-4 text-ink-600">
+          Discover investment opportunities across 7 countries with
+          ROI scores, rental yields and an AI advisor — grounded in real data.
+        </p>
+      </div>
+      <div class="mt-10 space-y-3">
+        <div class="flex items-center gap-3">
+          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-white text-xs">✓</span>
+          <span class="text-sm text-ink-700">7 covered markets</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-white text-xs">✓</span>
+          <span class="text-sm text-ink-700">AI investment advisor, no hallucinations</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-white text-xs">✓</span>
+          <span class="text-sm text-ink-700">0–100 investment score per listing</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-white text-xs">✓</span>
+          <span class="text-sm text-ink-700">Real rental yield &amp; ROI data</span>
+        </div>
+      </div>
+    </div>
+    {# Decorative 3D canvas #}
+    <div class="relative z-10 mt-12 rounded-2xl border border-ink-200 bg-white/60 p-5 backdrop-blur">
+      <div class="text-xs text-ink-500 uppercase tracking-wide font-medium mb-3">Today's top score</div>
+      <div class="flex items-center gap-4">
+        <div class="flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-brand-500 bg-white shadow-lg">
+          <span class="text-lg font-black text-ink-900">87</span>
+          <span class="text-[8px] uppercase text-ink-500">/100</span>
+        </div>
+        <div>
+          <div class="text-sm font-semibold text-ink-900">Lisbon — Luxury Apartment</div>
+          <div class="text-xs text-ink-500">Portugal · ROI 7–11% · Yield 6.2%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Right — form #}
+  <div class="flex flex-1 items-center justify-center px-6 py-16 bg-ink-50">
+    <div class="w-full max-w-md space-y-7">
+      <div>
+        <div class="lg:hidden flex items-center gap-2.5 mb-6">
+          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white font-black">V</span>
+          <span class="text-lg font-extrabold text-ink-900">Vivalty</span>
+        </div>
+        <h1 class="text-2xl font-extrabold text-ink-900">Welcome back</h1>
+        <p class="mt-1 text-sm text-ink-500">Sign in to your account to continue.</p>
+      </div>
+
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div>
+          <label class="label">Email address</label>
+          {{ form.username }}
+          {% if form.username.errors %}
+            <p class="mt-1 text-xs text-rose-700">{{ form.username.errors|join:", " }}</p>
+          {% endif %}
+        </div>
+        <div>
+          <label class="label">Password</label>
+          {{ form.password }}
+          {% if form.password.errors %}
+            <p class="mt-1 text-xs text-rose-700">{{ form.password.errors|join:", " }}</p>
+          {% endif %}
+        </div>
+        {% if form.non_field_errors %}
+          <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {{ form.non_field_errors|join:", " }}
+          </div>
+        {% endif %}
+        <button type="submit" class="btn-primary w-full justify-center py-3 text-base rounded-xl">
+          Sign in
+        </button>
+      </form>
+
+      <p class="text-center text-sm text-ink-500">
+        Don't have an account?
+        <a href="{% url 'web:register' %}" class="font-semibold text-brand-700 hover:text-brand-900">Create one free</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

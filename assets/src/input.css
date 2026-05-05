@@ -1,0 +1,151 @@
+/**
+ * Single CSS source-of-truth for the Vivalty website.
+ *
+ * Build:  npm run build   (minified, ../static/css/tailwind.css)
+ * Dev:    npm run watch   (rebuilds on template/CSS changes)
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ──────────────────────────────────────────────────────────────
+   Component classes used across templates.
+   ────────────────────────────────────────────────────────────── */
+
+@layer base {
+  html, body {
+    @apply h-full;
+  }
+  body {
+    @apply bg-ink-50 text-ink-900 font-sans antialiased;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-brand-600 text-white hover:bg-brand-700 focus:ring-brand-500;
+  }
+  .btn-secondary {
+    @apply btn bg-ink-100 text-ink-900 hover:bg-ink-200 focus:ring-ink-300;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-ink-700 hover:bg-ink-100;
+  }
+  .input {
+    @apply w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 placeholder:text-ink-500 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30;
+  }
+  .label {
+    @apply block text-xs font-medium uppercase tracking-wide text-ink-500 mb-1;
+  }
+  .card {
+    @apply rounded-2xl bg-white shadow-card;
+  }
+  .card-glass {
+    @apply rounded-2xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl;
+  }
+  .pill {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+  .section-title {
+    @apply text-2xl sm:text-3xl font-extrabold tracking-tight text-ink-900;
+  }
+  .section-subtitle {
+    @apply mt-2 text-sm sm:text-base text-ink-600;
+  }
+  .metric-tile {
+    @apply rounded-xl border border-ink-200/70 bg-white/80 p-4 transition hover:-translate-y-0.5 hover:shadow-lg;
+  }
+  .saas-grid {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Markdown rendering inside chat bubbles (used in
+   `web/components/chat_message.html` and the streaming JS).
+   ────────────────────────────────────────────────────────────── */
+
+.prose-chat {
+  @apply text-sm leading-relaxed;
+}
+.prose-chat h1,
+.prose-chat h2,
+.prose-chat h3 {
+  @apply font-semibold text-ink-900 mt-3 mb-1;
+}
+.prose-chat h2 {
+  @apply text-base;
+}
+.prose-chat strong {
+  @apply text-ink-900;
+}
+.prose-chat ul {
+  @apply list-disc pl-5 my-2;
+}
+.prose-chat ol {
+  @apply list-decimal pl-5 my-2;
+}
+.prose-chat code {
+  @apply bg-ink-100 px-1 py-0.5 rounded text-xs;
+}
+.prose-chat pre {
+  @apply bg-ink-900 text-ink-50 rounded-lg p-3 overflow-auto text-xs my-2;
+}
+.prose-chat table {
+  @apply w-full text-xs border-collapse my-2;
+}
+.prose-chat th,
+.prose-chat td {
+  @apply border border-ink-200 px-2 py-1 text-left;
+}
+.prose-chat blockquote {
+  @apply border-l-2 border-brand-500 pl-3 text-ink-700 italic my-2;
+}
+
+/* ── Page & HTMX transition animations ─────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in-up  { animation: fadeInUp  0.35s ease both; }
+.animate-fade-in     { animation: fadeIn    0.25s ease both; }
+.animate-scale-in    { animation: scaleIn   0.3s  ease both; }
+
+/* HTMX settling hook — applied by htmx on the swapped element */
+.htmx-added          { animation: fadeInUp 0.3s ease both; }
+
+/* Stagger children (use on grid/list wrappers) */
+.stagger-children > * { animation: fadeInUp 0.35s ease both; }
+.stagger-children > *:nth-child(1) { animation-delay: 0ms;  }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms;}
+.stagger-children > *:nth-child(4) { animation-delay: 180ms;}
+.stagger-children > *:nth-child(5) { animation-delay: 240ms;}
+.stagger-children > *:nth-child(6) { animation-delay: 300ms;}
+
+/* Scroll-reveal (JS adds .revealed via IntersectionObserver) */
+.reveal             { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+.reveal.revealed    { opacity: 1; transform: translateY(0); }
+
+@layer utilities {
+  .bg-radial-brand {
+    background: radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.25), transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(14, 165, 233, 0.18), transparent 45%);
+  }
+  .text-glow {
+    text-shadow: 0 0 24px rgba(16, 185, 129, 0.32);
+  }
+}

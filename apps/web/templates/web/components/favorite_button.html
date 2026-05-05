@@ -1,0 +1,8 @@
+{# Returned by HTMX after toggle. Self-contained so it can swap itself. #}
+<button id="fav-btn"
+        hx-post="{% url 'web:favorite_toggle' p.id %}"
+        hx-target="#fav-btn"
+        hx-swap="outerHTML"
+        class="btn-secondary w-full justify-center {% if is_favorited %}bg-rose-50 text-rose-700 hover:bg-rose-100{% endif %}">
+  {% if is_favorited %}♥ Saved{% else %}♡ Save to favorites{% endif %}
+</button>
