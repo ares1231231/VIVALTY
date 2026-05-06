@@ -1,14 +1,15 @@
 {% load static web_extras %}<!doctype html>
-<html lang="en" class="h-full">
+<html lang="en" class="h-full scroll-smooth">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}Vivalty — AI-powered global real estate investing{% endblock %}</title>
   <meta name="description" content="Discover, analyse and invest in international real estate across France, UK, Spain, Switzerland, Italy, UAE and Portugal — guided by an embedded AI investment advisor." />
+  <meta name="theme-color" content="#059669" />
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23059669%22/><text x=%2216%22 y=%2222%22 font-family=%22sans-serif%22 font-size=%2218%22 font-weight=%22900%22 text-anchor=%22middle%22 fill=%22white%22>V</text></svg>" />
 
-  {# Compiled Tailwind: source in backend/assets/src/input.css → built to backend/static/css/tailwind.css. #}
+  {# Compiled Tailwind: source in assets/src/input.css → built to static/css/tailwind.css. #}
   <link rel="stylesheet" href="{% static 'css/tailwind.css' %}" />
 
   {# HTMX for filters / favorite toggle / lead form. ~14 KB gzipped. #}
@@ -18,29 +19,64 @@
 
   {% block head_extra %}{% endblock %}
 </head>
-<body class="min-h-full flex flex-col" hx-boost="true" hx-indicator="#htmx-loader">
-  <div id="htmx-loader" class="fixed right-4 top-4 z-50 hidden rounded-lg bg-ink-900 px-3 py-1.5 text-xs font-medium text-white shadow-lg htmx-request:block">
-    Loading...
-  </div>
+<body class="min-h-full flex flex-col bg-ink-50 text-ink-900" hx-boost="true" hx-indicator="#htmx-loader">
+
+  {# Top progress bar shown while HTMX swaps content #}
+  <div id="htmx-loader"
+       class="fixed left-0 right-0 top-0 z-[60] h-0.5 origin-left scale-x-0 bg-gradient-to-r from-brand-400 via-brand-500 to-emerald-400 htmx-request:animate-pulse htmx-request:scale-x-100 transition-transform duration-300"></div>
+
   {% include "web/components/navbar.html" %}
 
   {% if messages %}
     <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 mt-4 space-y-2">
       {% for m in messages %}
-        <div class="card px-4 py-2 text-sm {% if m.tags == 'error' %}text-rose-700{% elif m.tags == 'success' %}text-emerald-700{% else %}text-ink-700{% endif %}">{{ m }}</div>
+        <div class="card px-4 py-3 text-sm flex items-center gap-3
+                    {% if m.tags == 'error' %}border border-rose-200 bg-rose-50 text-rose-700{% elif m.tags == 'success' %}border border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border border-ink-200 text-ink-700{% endif %}">
+          <span class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold
+                       {% if m.tags == 'error' %}bg-rose-200 text-rose-800{% elif m.tags == 'success' %}bg-emerald-200 text-emerald-800{% else %}bg-ink-200 text-ink-700{% endif %}">
+            {% if m.tags == 'error' %}!{% elif m.tags == 'success' %}✓{% else %}i{% endif %}
+          </span>
+          <span class="flex-1">{{ m }}</span>
+        </div>
       {% endfor %}
     </div>
   {% endif %}
 
-  <main class="flex-1">
+  <main class="flex-1 flex flex-col">
     {% block content %}{% endblock %}
   </main>
+
+  {% include "web/components/footer.html" %}
 
   {% with url_name=request.resolver_match.url_name %}
     {% if user.is_authenticated and url_name != 'chat' and url_name != 'chat_session' %}
       {% include "web/components/chat_launcher.html" %}
     {% endif %}
   {% endwith %}
+
+  {# Back-to-top button (sits above chat launcher when present) #}
+  <button type="button" id="scroll-top"
+          class="fixed {% if user.is_authenticated %}bottom-24{% else %}bottom-6{% endif %} right-6 z-40 hidden h-11 w-11 items-center justify-center rounded-full
+                 bg-ink-900 text-white shadow-2xl ring-2 ring-white/10 hover:bg-ink-700 hover:scale-110
+                 transition-all duration-200"
+          aria-label="Back to top"
+          onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/>
+    </svg>
+  </button>
+  <script>
+    (function(){
+      var btn = document.getElementById('scroll-top');
+      if (!btn) return;
+      function toggle(){
+        if (window.scrollY > 600) btn.classList.remove('hidden'), btn.classList.add('flex');
+        else btn.classList.add('hidden'), btn.classList.remove('flex');
+      }
+      window.addEventListener('scroll', toggle, { passive: true });
+      toggle();
+    })();
+  </script>
 
   {% block body_extra %}{% endblock %}
 </body>

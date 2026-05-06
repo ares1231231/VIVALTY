@@ -127,7 +127,16 @@ def marketplace(request: HttpRequest) -> HttpResponse:
             "lon": coords[1] if coords else None,
         }
 
-    map_props_json = json.dumps([_map_pin(i) for i in items]) if not request.headers.get("HX-Request") else "[]"
+    # HTMX filter/pagination uses hx-target="#results" and must get the grid fragment only.
+    # hx-boosted navigations also send HX-Request but target <body> — they need the full page
+    # (navbar, filters, map data). Using "any HX-Request => partial" strips the header.
+    _hx_target = (request.headers.get("HX-Target") or "").strip()
+    _target_id = _hx_target[1:] if _hx_target.startswith("#") else _hx_target
+    is_results_partial = bool(request.headers.get("HX-Request")) and _target_id == "results"
+
+    map_props_json = (
+        json.dumps([_map_pin(i) for i in items]) if not is_results_partial else "[]"
+    )
 
     ctx = {
         "items": items,
@@ -143,7 +152,7 @@ def marketplace(request: HttpRequest) -> HttpResponse:
         "prev_page": page - 1,
         "map_props_json": map_props_json,
     }
-    template = "web/_marketplace_grid.html" if request.headers.get("HX-Request") else "web/marketplace.html"
+    template = "web/_marketplace_grid.html" if is_results_partial else "web/marketplace.html"
     return render(request, template, ctx)
 
 

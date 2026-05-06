@@ -1,124 +1,326 @@
 {% extends "web/base.html" %}
-{% load web_extras %}
-
 {% load static web_extras %}
+
 {% block title %}Marketplace · Vivalty{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-6">
-  <header class="rounded-3xl border border-ink-200 bg-radial-brand p-6 shadow-card">
-    <div class="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
-      <div>
-        <div class="pill bg-white/70 text-brand-700">Interactive marketplace</div>
-        <h1 class="mt-3 section-title">Global investment marketplace</h1>
-        <p class="section-subtitle"><span data-total>{{ total }}</span> listings across all covered markets with live filter updates.</p>
-      </div>
-      <div class="grid grid-cols-3 gap-3 text-center">
-        <div class="metric-tile">
-          <div class="text-xl font-black text-ink-900">{{ countries|length }}</div>
-          <div class="text-[11px] uppercase tracking-wide text-ink-500">Countries</div>
-        </div>
-        <div class="metric-tile">
-          <div class="text-xl font-black text-ink-900">{{ total }}</div>
-          <div class="text-[11px] uppercase tracking-wide text-ink-500">Listings</div>
-        </div>
-        <div class="metric-tile">
-          <div class="text-xl font-black text-ink-900">Live</div>
-          <div class="text-[11px] uppercase tracking-wide text-ink-500">HTMX</div>
-        </div>
-      </div>
-    </div>
-  </header>
 
-  <form method="get"
-        action="{% url 'web:marketplace' %}"
+{# ═══ PAGE HEADER ══════════════════════════════════════════════════ #}
+<div class="border-b border-ink-200 bg-gradient-to-b from-ink-50 to-white">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 py-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2 text-xs text-ink-500 mb-1">
+          <a href="{% url 'web:home' %}" class="hover:text-brand-600 transition-colors">Home</a>
+          <span>›</span>
+          <span class="text-ink-700 font-medium">Marketplace</span>
+        </div>
+        <h1 class="text-2xl font-extrabold text-ink-900 tracking-tight">
+          Property Listings
+        </h1>
+        <p class="mt-1 text-sm text-ink-500">
+          <span class="font-semibold text-ink-700" data-total>{{ total }}</span>
+          active listings across
+          <span class="font-semibold text-ink-700">{{ countries|length }}</span> countries
+          {% if params.country or params.type or params.search %}
+            · <span class="text-brand-600 font-medium">Filters active</span>
+          {% endif %}
+        </p>
+      </div>
+
+      {# Mobile: filter toggle #}
+      <button type="button"
+              data-drawer-target="filter-drawer"
+              data-drawer-show="filter-drawer"
+              data-drawer-placement="left"
+              class="lg:hidden inline-flex items-center gap-2 btn-secondary rounded-xl self-start">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
+        </svg>
+        Filters
+        {% if params.country or params.type or params.search or params.price_min or params.price_max or params.score_min or params.roi_min %}
+          <span class="flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-white text-[10px] font-bold">!</span>
+        {% endif %}
+      </button>
+    </div>
+
+    {# ── Country quick-pills ───────────────────────────────────────── #}
+    <div class="mt-4 flex flex-wrap gap-2">
+      <a href="{% url 'web:marketplace' %}{% if params.type or params.ordering != '-is_featured,-created_at' %}?{% if params.type %}type={{ params.type }}&{% endif %}{% if params.ordering and params.ordering != '-is_featured,-created_at' %}ordering={{ params.ordering }}{% endif %}{% endif %}"
+         class="country-pill {% if not params.country %}country-pill-active{% endif %}">
+        🌍 All markets
+      </a>
+      {% for c in countries %}
+        <a href="?country={{ c.code }}{% if params.type %}&type={{ params.type }}{% endif %}{% if params.ordering and params.ordering != '-is_featured,-created_at' %}&ordering={{ params.ordering }}{% endif %}"
+           class="country-pill {% if params.country == c.code %}country-pill-active{% endif %}">
+          {{ c.flag_emoji }} {{ c.name }}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{# ═══ MAIN LAYOUT: sidebar + results ══════════════════════════════ #}
+<div class="mx-auto max-w-7xl px-4 sm:px-6 py-6">
+  <div class="flex gap-6 items-start">
+
+    {# ══ DESKTOP SIDEBAR ═══════════════════════════════════════════ #}
+    <aside class="hidden lg:block w-72 shrink-0 sticky top-20 self-start">
+      <form id="filter-form"
+            method="get"
+            action="{% url 'web:marketplace' %}"
+            hx-get="{% url 'web:marketplace' %}"
+            hx-target="#results"
+            hx-swap="innerHTML"
+            hx-push-url="true"
+            hx-trigger="change, keyup changed delay:600ms from:input[name='search']"
+            hx-indicator="#market-loader"
+            class="card overflow-hidden">
+
+        <div class="border-b border-ink-100 px-5 py-4 flex items-center justify-between">
+          <span class="text-sm font-bold text-ink-900">Filters</span>
+          <a href="{% url 'web:marketplace' %}"
+             class="text-xs text-ink-400 hover:text-rose-500 transition-colors font-medium">
+            Clear all
+          </a>
+        </div>
+
+        <div class="px-5 py-4 space-y-5">
+
+          {# Search #}
+          <div>
+            <label class="label">Search</label>
+            <div class="relative">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-400 pointer-events-none"
+                   fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+              </svg>
+              <input class="input pl-9" name="search"
+                     value="{{ params.search|default:'' }}"
+                     placeholder="City, keyword…" />
+            </div>
+          </div>
+
+          {# Country — hidden on sidebar when pill is used, but keep for HTMX #}
+          <div>
+            <label class="label">Country</label>
+            <select class="input" name="country">
+              <option value="">All countries</option>
+              {% for c in countries %}
+                <option value="{{ c.code }}" {% if params.country == c.code %}selected{% endif %}>
+                  {{ c.flag_emoji }} {{ c.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          {# Property type #}
+          <div>
+            <label class="label">Property type</label>
+            <select class="input" name="type">
+              <option value="">Any type</option>
+              {% for value, label in types %}
+                <option value="{{ value }}" {% if params.type == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          {# Price range #}
+          <div>
+            <label class="label">Price range</label>
+            <div class="flex gap-2">
+              <input class="input" type="number" min="0" name="price_min"
+                     value="{{ params.price_min|default:'' }}"
+                     placeholder="Min" />
+              <input class="input" type="number" min="0" name="price_max"
+                     value="{{ params.price_max|default:'' }}"
+                     placeholder="Max" />
+            </div>
+          </div>
+
+          {# Min investment score #}
+          <div>
+            <label class="label">Min investment score</label>
+            <input class="input" type="number" min="0" max="100" name="score_min"
+                   value="{{ params.score_min|default:'' }}"
+                   placeholder="0 – 100" />
+          </div>
+
+          {# Min ROI #}
+          <div>
+            <label class="label">Min ROI %</label>
+            <input class="input" type="number" step="0.1" min="0" name="roi_min"
+                   value="{{ params.roi_min|default:'' }}"
+                   placeholder="e.g. 4.5" />
+          </div>
+
+          {# Sort #}
+          <div>
+            <label class="label">Sort by</label>
+            <select class="input" name="ordering">
+              <option value="-is_featured,-created_at" {% if ordering == '-is_featured,-created_at' %}selected{% endif %}>Recommended</option>
+              <option value="-metric__investment_score" {% if ordering == '-metric__investment_score' %}selected{% endif %}>Investment score ↓</option>
+              <option value="-metric__estimated_roi_max" {% if ordering == '-metric__estimated_roi_max' %}selected{% endif %}>Highest ROI</option>
+              <option value="price" {% if ordering == 'price' %}selected{% endif %}>Price: low → high</option>
+              <option value="-price" {% if ordering == '-price' %}selected{% endif %}>Price: high → low</option>
+              <option value="-created_at" {% if ordering == '-created_at' %}selected{% endif %}>Newest</option>
+            </select>
+          </div>
+
+        </div>
+
+        {# Loading indicator inside sidebar #}
+        <div id="market-loader"
+             class="hidden border-t border-brand-100 bg-brand-50 px-5 py-3 text-xs font-medium text-brand-700 htmx-request:flex items-center gap-2">
+          <svg class="h-3.5 w-3.5 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          Updating results…
+        </div>
+
+      </form>
+
+      {# Map toggle card #}
+      <div class="mt-4 card p-4 flex items-center justify-between">
+        <div>
+          <div class="text-xs font-semibold text-ink-700">Property map</div>
+          <div class="text-xs text-ink-400 mt-0.5">Pinned by city</div>
+        </div>
+        <button id="map-toggle" class="btn-secondary text-xs rounded-lg py-1.5 px-3">
+          Show map
+        </button>
+      </div>
+    </aside>
+
+    {# ══ RESULTS AREA ══════════════════════════════════════════════ #}
+    <div class="flex-1 min-w-0 space-y-4">
+
+      {# Leaflet map #}
+      <div id="map-wrap" class="hidden rounded-2xl overflow-hidden border border-ink-200 shadow-card">
+        <div id="marketplace-map"
+             class="h-72 lg:h-80 w-full"
+             data-map-props="{{ map_props_json|escapejs }}">
+        </div>
+      </div>
+
+      {# Results count + sort bar (mobile sort) #}
+      <div class="flex items-center justify-between">
+        <p class="text-sm text-ink-500">
+          <span class="font-semibold text-ink-900" data-total>{{ total }}</span> results
+        </p>
+        {# Mobile: sort select #}
+        <form class="lg:hidden" method="get" action="{% url 'web:marketplace' %}"
+              hx-get="{% url 'web:marketplace' %}"
+              hx-target="#results"
+              hx-swap="innerHTML"
+              hx-push-url="true"
+              hx-trigger="change">
+          {% if params.country %}<input type="hidden" name="country" value="{{ params.country }}">{% endif %}
+          {% if params.type %}<input type="hidden" name="type" value="{{ params.type }}">{% endif %}
+          {% if params.search %}<input type="hidden" name="search" value="{{ params.search }}">{% endif %}
+          {% if params.price_min %}<input type="hidden" name="price_min" value="{{ params.price_min }}">{% endif %}
+          {% if params.price_max %}<input type="hidden" name="price_max" value="{{ params.price_max }}">{% endif %}
+          {% if params.score_min %}<input type="hidden" name="score_min" value="{{ params.score_min }}">{% endif %}
+          {% if params.roi_min %}<input type="hidden" name="roi_min" value="{{ params.roi_min }}">{% endif %}
+          <select class="input text-xs py-1.5 w-44" name="ordering">
+            <option value="-is_featured,-created_at" {% if ordering == '-is_featured,-created_at' %}selected{% endif %}>Recommended</option>
+            <option value="-metric__investment_score" {% if ordering == '-metric__investment_score' %}selected{% endif %}>Best score</option>
+            <option value="-metric__estimated_roi_max" {% if ordering == '-metric__estimated_roi_max' %}selected{% endif %}>Highest ROI</option>
+            <option value="price" {% if ordering == 'price' %}selected{% endif %}>Price ↑</option>
+            <option value="-price" {% if ordering == '-price' %}selected{% endif %}>Price ↓</option>
+            <option value="-created_at" {% if ordering == '-created_at' %}selected{% endif %}>Newest</option>
+          </select>
+        </form>
+      </div>
+
+      {# Results grid #}
+      <div id="results">
+        {% include "web/_marketplace_grid.html" %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+{# ═══ MOBILE FILTER DRAWER (Flowbite) ══════════════════════════════ #}
+<div id="filter-drawer"
+     class="fixed left-0 top-0 z-50 h-screen w-80 -translate-x-full overflow-y-auto bg-white shadow-2xl transition-transform"
+     tabindex="-1">
+  <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
+    <span class="text-base font-bold text-ink-900">Filters</span>
+    <button type="button" data-drawer-hide="filter-drawer"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-xl text-ink-500 hover:bg-ink-100">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <form method="get" action="{% url 'web:marketplace' %}"
         hx-get="{% url 'web:marketplace' %}"
         hx-target="#results"
         hx-swap="innerHTML"
         hx-push-url="true"
         hx-indicator="#market-loader"
-        class="card p-4 sm:p-5 space-y-4">
-    <div class="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
-      <div class="col-span-2 md:col-span-2 lg:col-span-2">
-        <label class="label">Search</label>
-        <input class="input" name="search" value="{{ params.search|default:'' }}" placeholder="City, neighbourhood, keyword..." />
-      </div>
-      <div>
-        <label class="label">Country</label>
-        <select class="input" name="country">
-          <option value="">All</option>
-          {% for c in countries %}
-            <option value="{{ c.code }}" {% if params.country == c.code %}selected{% endif %}>{{ c.flag_emoji }} {{ c.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div>
-        <label class="label">Type</label>
-        <select class="input" name="type">
-          <option value="">Any type</option>
-          {% for value, label in types %}
-            <option value="{{ value }}" {% if params.type == value %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div>
-        <label class="label">Min price</label>
-        <input class="input" type="number" min="0" name="price_min" value="{{ params.price_min|default:'' }}" />
-      </div>
-      <div>
-        <label class="label">Max price</label>
-        <input class="input" type="number" min="0" name="price_max" value="{{ params.price_max|default:'' }}" />
-      </div>
-      <div>
-        <label class="label">Min score</label>
-        <input class="input" type="number" min="0" max="100" name="score_min" value="{{ params.score_min|default:'' }}" />
-      </div>
-      <div>
-        <label class="label">Min ROI %</label>
-        <input class="input" type="number" step="0.1" min="0" name="roi_min" value="{{ params.roi_min|default:'' }}" />
-      </div>
-      <div class="col-span-2">
-        <label class="label">Sort by</label>
-        <select class="input" name="ordering">
-          <option value="-is_featured,-created_at" {% if ordering == '-is_featured,-created_at' %}selected{% endif %}>Recommended</option>
-          <option value="-metric__investment_score" {% if ordering == '-metric__investment_score' %}selected{% endif %}>Investment score</option>
-          <option value="-metric__estimated_roi_max" {% if ordering == '-metric__estimated_roi_max' %}selected{% endif %}>Highest ROI</option>
-          <option value="price" {% if ordering == 'price' %}selected{% endif %}>Price: low → high</option>
-          <option value="-price" {% if ordering == '-price' %}selected{% endif %}>Price: high → low</option>
-          <option value="-created_at" {% if ordering == '-created_at' %}selected{% endif %}>Newest</option>
-        </select>
-      </div>
-      <div class="col-span-2 flex items-end gap-2">
-        <button type="submit" class="btn-primary flex-1">Apply filters</button>
-        <a href="{% url 'web:marketplace' %}" class="btn-secondary">Reset</a>
+        class="px-5 py-5 space-y-5">
+
+    <div>
+      <label class="label">Search</label>
+      <input class="input" name="search" value="{{ params.search|default:'' }}" placeholder="City, keyword…" />
+    </div>
+    <div>
+      <label class="label">Country</label>
+      <select class="input" name="country">
+        <option value="">All countries</option>
+        {% for c in countries %}
+          <option value="{{ c.code }}" {% if params.country == c.code %}selected{% endif %}>{{ c.flag_emoji }} {{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="label">Property type</label>
+      <select class="input" name="type">
+        <option value="">Any type</option>
+        {% for value, label in types %}
+          <option value="{{ value }}" {% if params.type == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="label">Price range</label>
+      <div class="flex gap-2">
+        <input class="input" type="number" min="0" name="price_min" value="{{ params.price_min|default:'' }}" placeholder="Min" />
+        <input class="input" type="number" min="0" name="price_max" value="{{ params.price_max|default:'' }}" placeholder="Max" />
       </div>
     </div>
-    <div id="market-loader" class="hidden rounded-xl border border-brand-200 bg-brand-50 px-3 py-2 text-xs font-medium text-brand-700 htmx-request:block">
-      Refreshing results...
+    <div>
+      <label class="label">Min investment score</label>
+      <input class="input" type="number" min="0" max="100" name="score_min" value="{{ params.score_min|default:'' }}" placeholder="0 – 100" />
+    </div>
+    <div>
+      <label class="label">Min ROI %</label>
+      <input class="input" type="number" step="0.1" min="0" name="roi_min" value="{{ params.roi_min|default:'' }}" placeholder="e.g. 4.5" />
+    </div>
+    <div>
+      <label class="label">Sort by</label>
+      <select class="input" name="ordering">
+        <option value="-is_featured,-created_at" {% if ordering == '-is_featured,-created_at' %}selected{% endif %}>Recommended</option>
+        <option value="-metric__investment_score" {% if ordering == '-metric__investment_score' %}selected{% endif %}>Investment score ↓</option>
+        <option value="-metric__estimated_roi_max" {% if ordering == '-metric__estimated_roi_max' %}selected{% endif %}>Highest ROI</option>
+        <option value="price" {% if ordering == 'price' %}selected{% endif %}>Price: low → high</option>
+        <option value="-price" {% if ordering == '-price' %}selected{% endif %}>Price: high → low</option>
+        <option value="-created_at" {% if ordering == '-created_at' %}selected{% endif %}>Newest</option>
+      </select>
+    </div>
+    <div class="flex gap-2 pt-2">
+      <button type="submit" class="btn-primary flex-1" data-drawer-hide="filter-drawer">Apply filters</button>
+      <a href="{% url 'web:marketplace' %}" class="btn-secondary">Reset</a>
     </div>
   </form>
-
-  {# Map toggle bar #}
-  <div class="flex items-center justify-between rounded-xl border border-ink-200 bg-white px-4 py-2.5 shadow-sm">
-    <div class="text-sm font-medium text-ink-700">
-      <span data-total>{{ total }}</span> listings
-      <span class="text-ink-400 font-normal ml-1">· pinned on map by city</span>
-    </div>
-    <button id="map-toggle" class="btn-secondary text-xs rounded-lg py-1.5 px-3">Show map</button>
-  </div>
-
-  {# Leaflet map (hidden by default) #}
-  <div id="map-wrap" class="hidden rounded-2xl overflow-hidden border border-ink-200 shadow-card">
-    <div id="marketplace-map"
-         class="h-72 lg:h-96 w-full"
-         data-map-props="{{ map_props_json|escapejs }}">
-    </div>
-  </div>
-
-  <div id="results">
-    {% include "web/_marketplace_grid.html" %}
-  </div>
 </div>
+
 {% endblock %}
 
 {% block body_extra %}

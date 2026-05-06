@@ -19,54 +19,164 @@
   }
   body {
     @apply bg-ink-50 text-ink-900 font-sans antialiased;
+    /* Subtle dotted texture to give the cream background depth */
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.04) 1px, transparent 0);
+    background-size: 24px 24px;
   }
+  /* Better selection color */
+  ::selection {
+    @apply bg-brand-200 text-brand-900;
+  }
+  /* Custom scrollbar (Webkit) */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { @apply bg-ink-50; }
+  ::-webkit-scrollbar-thumb { @apply bg-ink-200 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-ink-300; }
 }
 
 @layer components {
+  /* ── Buttons ─────────────────────────────────────────────────── */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold
+           transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1
+           disabled:opacity-50 disabled:cursor-not-allowed select-none;
   }
   .btn-primary {
-    @apply btn bg-brand-600 text-white hover:bg-brand-700 focus:ring-brand-500;
+    @apply btn text-white focus:ring-brand-500
+           bg-gradient-to-br from-brand-500 to-brand-700
+           hover:from-brand-600 hover:to-brand-900
+           shadow-md shadow-brand-500/20 hover:shadow-lg hover:shadow-brand-500/40
+           active:translate-y-px;
   }
   .btn-secondary {
-    @apply btn bg-ink-100 text-ink-900 hover:bg-ink-200 focus:ring-ink-300;
+    @apply btn bg-white text-ink-900 border border-ink-200
+           hover:bg-ink-50 hover:border-ink-300 focus:ring-ink-300 shadow-sm;
   }
   .btn-ghost {
-    @apply btn bg-transparent text-ink-700 hover:bg-ink-100;
+    @apply btn bg-transparent text-ink-700 hover:bg-ink-100 hover:text-ink-900;
   }
+
+  /* ── Form controls ───────────────────────────────────────────── */
   .input {
-    @apply w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 placeholder:text-ink-500 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30;
+    @apply w-full rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-sm text-ink-900
+           placeholder:text-ink-500 transition-all duration-150
+           focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/15
+           disabled:opacity-60;
+  }
+  textarea.input {
+    @apply leading-relaxed;
+  }
+  select.input {
+    @apply pr-9 bg-no-repeat;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-position: right 0.75rem center;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
   }
   .label {
-    @apply block text-xs font-medium uppercase tracking-wide text-ink-500 mb-1;
+    @apply block text-[11px] font-bold uppercase tracking-widest text-ink-600 mb-1.5;
   }
+
+  /* ── Surfaces ────────────────────────────────────────────────── */
   .card {
-    @apply rounded-2xl bg-white shadow-card;
+    @apply rounded-2xl bg-white border border-ink-200/70 shadow-card
+           transition-shadow duration-200;
   }
   .card-glass {
     @apply rounded-2xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl;
   }
+
   .pill {
-    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
   }
+
+  /* ── Section helpers ─────────────────────────────────────────── */
   .section-title {
     @apply text-2xl sm:text-3xl font-extrabold tracking-tight text-ink-900;
   }
   .section-subtitle {
     @apply mt-2 text-sm sm:text-base text-ink-600;
   }
+
   .metric-tile {
-    @apply rounded-xl border border-ink-200/70 bg-white/80 p-4 transition hover:-translate-y-0.5 hover:shadow-lg;
+    @apply rounded-xl border border-ink-200/70 bg-white/80 p-4
+           transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-ink-300;
   }
+
   .saas-grid {
     @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  /* ── Marketplace: country quick-filter pills ───────────────── */
+  .country-pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white
+           px-3.5 py-1.5 text-xs font-semibold text-ink-600 shadow-sm
+           hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 hover:shadow
+           transition-all duration-150 cursor-pointer whitespace-nowrap;
+  }
+  .country-pill-active {
+    @apply border-brand-500 bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-md shadow-brand-500/30
+           hover:from-brand-600 hover:to-brand-700 hover:text-white hover:border-brand-600;
+  }
+
+  /* ── Landing page: intent selector cards ───────────────────── */
+  .intent-card {
+    @apply relative flex flex-col items-center text-center rounded-2xl border bg-white/5
+           px-6 py-7 transition-all duration-200 cursor-pointer
+           hover:scale-[1.03] hover:shadow-2xl;
+  }
+  .intent-icon {
+    @apply flex h-14 w-14 items-center justify-center rounded-2xl text-3xl
+           transition-colors duration-200;
+  }
+  .intent-arrow {
+    @apply absolute top-3.5 right-3.5 flex h-6 w-6 items-center justify-center
+           rounded-full bg-white/10 text-white/40 transition-colors
+           group-hover:bg-white/20 group-hover:text-white/80;
+  }
+
+  /* ── Landing page: country cards ───────────────────────────── */
+  .country-card {
+    @apply relative overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card
+           px-5 py-6 flex flex-col cursor-pointer
+           hover:shadow-xl hover:-translate-y-1 hover:border-brand-300 transition-all duration-200;
+  }
+
+  /* ── Landing page: how-it-works steps ──────────────────────── */
+  .step-number {
+    @apply absolute top-0 right-0 text-8xl font-black text-ink-100/70 leading-none
+           -mr-1 -mt-1 select-none pointer-events-none;
+  }
+  .step-icon {
+    @apply flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 text-2xl
+           ring-1 ring-brand-200/50 shadow-sm;
+  }
+
+  /* ── Navbar desktop links ───────────────────────────────────── */
+  .nav-link {
+    @apply rounded-xl px-3.5 py-2 text-sm font-medium transition-all duration-150
+           text-ink-600 hover:bg-ink-100 hover:text-ink-900;
+  }
+  .nav-link-active {
+    @apply bg-brand-50 text-brand-700 hover:bg-brand-100 hover:text-brand-900;
+  }
+
+  /* ── Navbar user dropdown items ─────────────────────────────── */
+  .dropdown-item {
+    @apply block rounded-xl mx-1 px-3 py-2 text-ink-700 hover:bg-ink-50 hover:text-ink-900 transition-colors;
+  }
+
+  /* ── Mobile nav items ───────────────────────────────────────── */
+  .mobile-nav-item {
+    @apply flex items-center gap-2 rounded-xl px-3 py-2.5 transition-colors
+           text-ink-700 hover:bg-ink-50;
   }
 }
 
 /* ──────────────────────────────────────────────────────────────
-   Markdown rendering inside chat bubbles (used in
-   `web/components/chat_message.html` and the streaming JS).
+   Markdown rendering inside chat bubbles.
    ────────────────────────────────────────────────────────────── */
 
 .prose-chat {
@@ -119,10 +229,20 @@
   from { opacity: 0; transform: scale(0.96); }
   to   { opacity: 1; transform: scale(1); }
 }
+@keyframes shimmer {
+  0%   { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
 
 .animate-fade-in-up  { animation: fadeInUp  0.35s ease both; }
 .animate-fade-in     { animation: fadeIn    0.25s ease both; }
 .animate-scale-in    { animation: scaleIn   0.3s  ease both; }
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
 
 /* HTMX settling hook — applied by htmx on the swapped element */
 .htmx-added          { animation: fadeInUp 0.3s ease both; }
@@ -135,6 +255,8 @@
 .stagger-children > *:nth-child(4) { animation-delay: 180ms;}
 .stagger-children > *:nth-child(5) { animation-delay: 240ms;}
 .stagger-children > *:nth-child(6) { animation-delay: 300ms;}
+.stagger-children > *:nth-child(7) { animation-delay: 360ms;}
+.stagger-children > *:nth-child(8) { animation-delay: 420ms;}
 
 /* Scroll-reveal (JS adds .revealed via IntersectionObserver) */
 .reveal             { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
@@ -142,10 +264,20 @@
 
 @layer utilities {
   .bg-radial-brand {
-    background: radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.25), transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(14, 165, 233, 0.18), transparent 45%);
+    background:
+      radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.25), transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(14, 165, 233, 0.18), transparent 45%);
+  }
+  .bg-mesh-light {
+    background:
+      radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.08), transparent 50%),
+      radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.06), transparent 50%),
+      radial-gradient(at 50% 100%, rgba(245, 158, 11, 0.05), transparent 50%);
   }
   .text-glow {
     text-shadow: 0 0 24px rgba(16, 185, 129, 0.32);
   }
+  /* Hide scrollbar but keep functionality (used in horizontal pill rows) */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }

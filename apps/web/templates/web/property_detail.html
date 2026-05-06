@@ -131,7 +131,6 @@
     <section class="card p-6">
       <h2 class="font-semibold text-ink-900 mb-4">Property facts</h2>
       <dl class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {% for label, value in p.get_property_type_display|list %}{% endfor %}
         <div class="metric-tile">
           <div class="text-[10px] uppercase tracking-wide text-ink-500">Type</div>
           <div class="mt-1 text-sm font-semibold capitalize">{{ p.get_property_type_display }}</div>

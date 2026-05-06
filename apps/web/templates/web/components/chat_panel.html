@@ -1,6 +1,8 @@
 {% load web_extras %}
-{# Self-contained chat surface.
-   Variables: active, messages, embedded (bool) #}
+{% comment %}
+Self-contained chat surface.
+Variables: active, messages, embedded (bool)
+{% endcomment %}
 <div class="flex flex-1 min-h-0 flex-col" data-chat-root data-csrf="{{ csrf_token }}">
 
   {# ── Message log ────────────────────────────────────────────────────── #}

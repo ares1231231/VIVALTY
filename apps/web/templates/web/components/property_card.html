@@ -1,56 +1,79 @@
 {% load web_extras %}
 <a href="{% url 'web:property_detail' p.id %}"
-   class="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-card border border-ink-200/60 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:border-brand-300">
+   class="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-card border border-ink-200/60
+          transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-brand-200">
 
-  {# Image + overlays #}
-  <div class="relative aspect-[4/3] w-full overflow-hidden bg-ink-100">
+  {# ── Image ──────────────────────────────────────────────────────── #}
+  <div class="relative aspect-[16/10] w-full overflow-hidden bg-ink-100">
     {% with primary=p.primary_image_url %}
       <img src="{{ primary|default:'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=900' }}"
            alt="{{ p.title }}"
-           class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.07]"
+           class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
            loading="lazy" />
     {% endwith %}
 
-    {# Dark gradient for text legibility #}
-    <div class="absolute inset-0 bg-gradient-to-t from-ink-900/70 via-ink-900/10 to-transparent"></div>
+    {# Readability: light wash + strong bottom scrim for price bar #}
+    <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-950/95 via-ink-900/25 to-transparent"></div>
 
-    {# Top-left badges #}
-    <div class="absolute left-3 top-3 flex gap-1.5">
-      {% if p.is_featured %}<span class="pill bg-amber-400 text-amber-950 shadow">⭐ Featured</span>{% endif %}
-      {% if p.is_premium %}<span class="pill bg-indigo-500 text-white shadow">Premium</span>{% endif %}
+    {# Top-left badges — compact so they don’t fight the score #}
+    <div class="absolute left-2.5 top-2.5 z-10 flex max-w-[55%] flex-wrap gap-1.5 sm:left-3 sm:top-3">
+      {% if p.is_featured %}
+        <span class="inline-flex items-center gap-1 rounded-full bg-amber-400/95 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-950 shadow-md ring-1 ring-amber-300/80 sm:px-2.5 sm:py-1 sm:text-[11px]">
+          ⭐ Featured
+        </span>
+      {% endif %}
+      {% if p.is_premium %}
+        <span class="inline-flex items-center rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-md ring-1 ring-indigo-400/50 sm:px-2.5 sm:py-1 sm:text-[11px]">
+          Premium
+        </span>
+      {% endif %}
     </div>
 
-    {# Score ring — top-right #}
+    {# Score — top right, stacks above scrim #}
     {% if p.metric %}
-    <div class="absolute right-3 top-3 flex flex-col items-center gap-0.5">
-      <div class="flex h-12 w-12 flex-col items-center justify-center rounded-full border-2 border-white/80 bg-white/90 shadow-lg backdrop-blur">
-        <span class="text-sm font-black leading-none text-ink-900">{{ p.metric.investment_score|default:'—' }}</span>
-        <span class="text-[8px] uppercase tracking-widest text-ink-500">score</span>
+    <div class="absolute right-2.5 top-2.5 z-10 flex flex-col items-end gap-1 sm:right-3 sm:top-3">
+      <div class="flex h-12 w-12 flex-col items-center justify-center rounded-full border-2 border-white bg-white/98 shadow-xl ring-2 ring-white/40 backdrop-blur-sm sm:h-[3.25rem] sm:w-[3.25rem]">
+        <span class="text-sm font-black leading-none text-ink-900 sm:text-[15px]">{{ p.metric.investment_score|default:'—' }}</span>
+        <span class="mt-0.5 text-[7px] font-bold uppercase tracking-[0.15em] text-ink-500">AI</span>
       </div>
-      <span class="rounded-full px-1.5 py-0.5 text-[9px] font-bold {{ p.metric.investment_score|score_color }}">
+      <span class="max-w-full truncate rounded-full px-2 py-0.5 text-[9px] font-bold shadow-md ring-1 ring-black/5 {{ p.metric.investment_score|score_color }}">
         {{ p.metric.investment_score|score_label }}
       </span>
     </div>
     {% endif %}
 
-    {# Price on image (bottom-left) #}
-    <div class="absolute bottom-3 left-3">
-      <div class="rounded-xl bg-white/90 px-3 py-1 backdrop-blur shadow text-sm font-extrabold text-brand-700">
-        {{ p.price|money:p.currency }}
+    {# Bottom price + market — single readable band (fixes “tiny black price” on busy photos) #}
+    <div class="absolute inset-x-0 bottom-0 z-10 p-3 pt-12 sm:p-4 sm:pt-14">
+      <div class="flex items-end justify-between gap-3">
+        <div class="min-w-0 flex-1">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-white/65">Asking price</div>
+          <div class="mt-0.5 truncate text-xl font-black tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,.45)] sm:text-2xl">
+            {{ p.price|money:p.currency }}
+          </div>
+        </div>
+        <div class="flex shrink-0 items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-2.5 py-1.5 text-sm font-bold text-white shadow-lg backdrop-blur-md sm:px-3 sm:py-2">
+          <span class="text-lg leading-none drop-shadow" aria-hidden="true">{{ p.country.flag_emoji }}</span>
+          <span class="text-xs font-extrabold tracking-wide">{{ p.country.code }}</span>
+        </div>
       </div>
     </div>
-
-    {# Country flag bottom-right #}
-    <div class="absolute bottom-3 right-3 text-xl">{{ p.country.flag_emoji }}</div>
   </div>
 
-  {# Card body #}
-  <div class="flex flex-1 flex-col gap-2 p-4">
+  {# ── Card body ──────────────────────────────────────────────────── #}
+  <div class="flex flex-1 flex-col p-4 gap-3">
+
+    {# Location + title #}
     <div>
-      <div class="text-[11px] font-medium uppercase tracking-wide text-ink-500">
-        {{ p.city.name }}, {{ p.country.name }} · {{ p.get_property_type_display }}
+      <div class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-ink-400">
+        <svg class="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        {{ p.city.name }}, {{ p.country.name }}
+        <span class="text-ink-300">·</span>
+        {{ p.get_property_type_display }}
       </div>
-      <div class="mt-0.5 line-clamp-2 text-sm font-semibold text-ink-900 leading-snug group-hover:text-brand-700 transition-colors">
+      <div class="mt-1 text-sm font-bold text-ink-900 leading-snug line-clamp-2 group-hover:text-brand-700 transition-colors">
         {{ p.title }}
       </div>
     </div>
@@ -58,24 +81,73 @@
     {# Specs row #}
     <div class="flex items-center gap-3 text-xs text-ink-500">
       {% if p.bedrooms %}
-        <span class="flex items-center gap-0.5">
-          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-          {{ p.bedrooms }} bd
+        <span class="flex items-center gap-1">
+          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          {{ p.bedrooms }} bed
         </span>
       {% endif %}
-      {% if p.bathrooms %}<span>{{ p.bathrooms }} ba</span>{% endif %}
-      {% if p.area_sqm %}<span>{{ p.area_sqm|floatformat:0 }} m²</span>{% endif %}
+      {% if p.bathrooms %}
+        <span class="flex items-center gap-1">
+          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          {{ p.bathrooms }} bath
+        </span>
+      {% endif %}
+      {% if p.area_sqm %}
+        <span class="flex items-center gap-1">
+          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+          </svg>
+          {{ p.area_sqm|floatformat:0 }} m²
+        </span>
+      {% endif %}
     </div>
 
-    {# Metric pills #}
+    {# ── Investment metrics ─────────────────────────────────────── #}
     {% if p.metric %}
-    <div class="flex flex-wrap gap-1.5 mt-auto pt-2 border-t border-ink-100">
-      <span class="pill bg-brand-50 text-brand-700">ROI {{ p.metric.estimated_roi_min|pct }}–{{ p.metric.estimated_roi_max|pct }}</span>
-      <span class="pill bg-sky-50 text-sky-700">Yield {{ p.metric.rental_yield|pct }}</span>
-      <span class="pill capitalize {{ p.metric.market_trend|trend_color }}">{{ p.metric.get_market_trend_display }}</span>
-      <span class="pill capitalize {{ p.metric.risk_level|risk_color }}">Risk: {{ p.metric.get_risk_level_display }}</span>
-      {% if p.metric.is_estimated %}<span class="pill bg-ink-100 text-ink-500 italic">est.</span>{% endif %}
+    <div class="mt-auto pt-3 border-t border-ink-100">
+      <div class="grid grid-cols-2 gap-2">
+        <div class="rounded-lg bg-brand-50 px-3 py-2">
+          <div class="text-[10px] font-semibold uppercase tracking-widest text-brand-600">ROI</div>
+          <div class="text-sm font-extrabold text-brand-700 mt-0.5">
+            {{ p.metric.estimated_roi_min|pct }}–{{ p.metric.estimated_roi_max|pct }}
+          </div>
+        </div>
+        <div class="rounded-lg bg-sky-50 px-3 py-2">
+          <div class="text-[10px] font-semibold uppercase tracking-widest text-sky-600">Yield</div>
+          <div class="text-sm font-extrabold text-sky-700 mt-0.5">{{ p.metric.rental_yield|pct }}</div>
+        </div>
+      </div>
+      <div class="mt-2 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="pill text-[10px] capitalize {{ p.metric.market_trend|trend_color }} py-0.5">
+            {{ p.metric.get_market_trend_display }}
+          </span>
+          <span class="pill text-[10px] capitalize {{ p.metric.risk_level|risk_color }} py-0.5">
+            Risk: {{ p.metric.get_risk_level_display }}
+          </span>
+        </div>
+        {# View arrow #}
+        <div class="flex h-7 w-7 items-center justify-center rounded-full bg-ink-100 group-hover:bg-brand-600 group-hover:text-white text-ink-400 transition-all duration-200">
+          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="mt-auto pt-3 border-t border-ink-100 flex items-center justify-between">
+      <span class="text-xs text-ink-400 italic">No metrics yet</span>
+      <div class="flex h-7 w-7 items-center justify-center rounded-full bg-ink-100 group-hover:bg-brand-600 group-hover:text-white text-ink-400 transition-all duration-200">
+        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </div>
     </div>
     {% endif %}
+
   </div>
 </a>

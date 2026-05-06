@@ -1,36 +1,64 @@
 {% load web_extras %}
+
 {% if items %}
-  <div class="saas-grid lg:grid-cols-3">
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
     {% for p in items %}
       {% include "web/components/property_card.html" with p=p %}
     {% endfor %}
   </div>
+
+  {# ── Pagination ──────────────────────────────────────────────── #}
   {% if has_next or has_prev %}
-    <div class="mt-6 card p-4 flex flex-wrap items-center justify-between gap-3">
-      <div class="text-xs text-ink-500">Page {{ page }} · {{ total }} results</div>
-      <div class="flex gap-2">
-        {% if has_prev %}
-          <a href="?{% query_replace page=prev_page %}"
-             hx-get="{% url 'web:marketplace' %}?{% query_replace page=prev_page %}"
-             hx-target="#results"
-             hx-swap="innerHTML"
-             hx-push-url="true"
-             class="btn-secondary">← Prev</a>
-        {% endif %}
-        {% if has_next %}
-          <a href="?{% query_replace page=next_page %}"
-             hx-get="{% url 'web:marketplace' %}?{% query_replace page=next_page %}"
-             hx-target="#results"
-             hx-swap="innerHTML"
-             hx-push-url="true"
-             class="btn-secondary">Next →</a>
-        {% endif %}
-      </div>
+  <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-ink-200 bg-white px-5 py-4 shadow-sm">
+    <div class="text-sm text-ink-500">
+      Page <span class="font-semibold text-ink-900">{{ page }}</span>
+      &nbsp;·&nbsp;
+      <span class="font-semibold text-ink-900">{{ total }}</span> total listings
     </div>
-  {% endif %}
-{% else %}
-  <div class="card p-10 text-center text-ink-500">
-    <div class="text-base font-semibold text-ink-900">No properties matched your filters</div>
-    <div class="mt-1 text-sm">Try widening your criteria or resetting all filters.</div>
+    <div class="flex items-center gap-2">
+      {% if has_prev %}
+        <a href="?{% query_replace page=prev_page %}"
+           hx-get="{% url 'web:marketplace' %}?{% query_replace page=prev_page %}"
+           hx-target="#results"
+           hx-swap="innerHTML"
+           hx-push-url="true"
+           class="inline-flex items-center gap-1.5 btn-secondary rounded-xl text-sm px-4 py-2">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Previous
+        </a>
+      {% endif %}
+      {% if has_next %}
+        <a href="?{% query_replace page=next_page %}"
+           hx-get="{% url 'web:marketplace' %}?{% query_replace page=next_page %}"
+           hx-target="#results"
+           hx-swap="innerHTML"
+           hx-push-url="true"
+           class="inline-flex items-center gap-1.5 btn-primary rounded-xl text-sm px-4 py-2">
+          Next page
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        </a>
+      {% endif %}
+    </div>
   </div>
+  {% endif %}
+
+{% else %}
+
+  {# ── Empty state ─────────────────────────────────────────────── #}
+  <div class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-ink-200 bg-white px-8 py-20 text-center">
+    <div class="flex h-16 w-16 items-center justify-center rounded-full bg-ink-100 text-3xl mb-4">🔍</div>
+    <div class="text-lg font-bold text-ink-900">No properties found</div>
+    <div class="mt-2 text-sm text-ink-500 max-w-xs">
+      No listings matched your current filters. Try widening your search criteria or clearing some filters.
+    </div>
+    <a href="{% url 'web:marketplace' %}" class="mt-6 btn-primary rounded-xl px-6 py-2.5">
+      Clear all filters
+    </a>
+  </div>
+
 {% endif %}
