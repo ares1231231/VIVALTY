@@ -1,0 +1,192 @@
+{% load web_extras %}
+<div class="space-y-5">
+
+  {# ── KPI cards (tabular figures, dark institutional look) ─────────────── #}
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div class="stat-card">
+      <div class="stat-label">Net cashflow / mo</div>
+      <div class="stat-value {% if sim.annual.monthly_cashflow >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">
+        {{ sim.annual.monthly_cashflow|floatformat:0 }}
+      </div>
+      <div class="text-[10px] text-ink-500 mt-1">{{ inputs.currency }} · after debt service & taxes</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Cap rate</div>
+      <div class="stat-value">{{ sim.annual.cap_rate_pct|floatformat:1 }}<span class="text-base text-ink-400">%</span></div>
+      <div class="text-[10px] text-ink-500 mt-1">NOI ÷ asking price</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Cash-on-cash</div>
+      <div class="stat-value {% if sim.annual.cash_on_cash_pct >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">
+        {{ sim.annual.cash_on_cash_pct|floatformat:1 }}<span class="text-base text-ink-400">%</span>
+      </div>
+      <div class="text-[10px] text-ink-500 mt-1">Year-1 cashflow ÷ cash-in</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">{{ sim.summary.horizon_years }}-yr total return</div>
+      <div class="stat-value {% if sim.summary.total_return_pct >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">
+        {{ sim.summary.total_return_pct|floatformat:0 }}<span class="text-base text-ink-400">%</span>
+      </div>
+      <div class="text-[10px] text-ink-500 mt-1">{{ sim.summary.annualized_pct|floatformat:1 }}% annualised</div>
+    </div>
+  </div>
+
+  {# ── Acquisition + financing breakdown ────────────────────────────────── #}
+  <div class="grid lg:grid-cols-2 gap-5">
+    <div class="card p-5">
+      <h3 class="font-extrabold text-ink-900 mb-3 flex items-center gap-2">
+        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-50 text-brand-700">💼</span>
+        Acquisition
+      </h3>
+      <div class="data-row">
+        <span class="data-key">Asking price</span>
+        <span class="data-value">{{ sim.acquisition.price|floatformat:0 }} {{ inputs.currency }}</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Down payment ({{ sim.inputs.down_payment_pct|floatformat:0 }}%)</span>
+        <span class="data-value">{{ sim.acquisition.down_payment|floatformat:0 }} {{ inputs.currency }}</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Acquisition fees ({{ sim.assumptions.acquisition_fees|floatformat:1 }}%)</span>
+        <span class="data-value">{{ sim.acquisition.acquisition_fees|floatformat:0 }} {{ inputs.currency }}</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Mortgage principal</span>
+        <span class="data-value">{{ sim.acquisition.loan|floatformat:0 }} {{ inputs.currency }}</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Total cash-in at close</span>
+        <span class="data-value text-brand-700">{{ sim.acquisition.cash_in|floatformat:0 }} {{ inputs.currency }}</span>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <h3 class="font-extrabold text-ink-900 mb-3 flex items-center gap-2">
+        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-50 text-sky-700">🏦</span>
+        Financing
+      </h3>
+      <div class="data-row">
+        <span class="data-key">Loan amount</span>
+        <span class="data-value">{{ sim.financing.loan|floatformat:0 }} {{ inputs.currency }}</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Mortgage rate</span>
+        <span class="data-value">{{ sim.financing.rate_pct|floatformat:2 }}%</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Term</span>
+        <span class="data-value">{{ sim.financing.years }} years</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Monthly payment</span>
+        <span class="data-value">{{ sim.financing.monthly_payment|floatformat:0 }} {{ inputs.currency }}</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Annual debt service</span>
+        <span class="data-value">{{ sim.financing.annual_debt_service|floatformat:0 }} {{ inputs.currency }}</span>
+      </div>
+    </div>
+  </div>
+
+  {# ── Year-1 operating P&L ─────────────────────────────────────────────── #}
+  <div class="card p-5">
+    <h3 class="font-extrabold text-ink-900 mb-3 flex items-center gap-2">
+      <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">📊</span>
+      Year-1 operating P&L
+    </h3>
+    <div class="grid sm:grid-cols-2 gap-x-8">
+      <div>
+        <div class="data-row">
+          <span class="data-key">Gross rent</span>
+          <span class="data-value-pos">+{{ sim.annual.gross_rent|floatformat:0 }}</span>
+        </div>
+        <div class="data-row">
+          <span class="data-key">Operating costs ({{ sim.assumptions.operating|floatformat:0 }}%)</span>
+          <span class="data-value-neg">−{{ sim.annual.operating_costs|floatformat:0 }}</span>
+        </div>
+        <div class="data-row">
+          <span class="data-key">Net operating income (NOI)</span>
+          <span class="data-value">{{ sim.annual.noi|floatformat:0 }}</span>
+        </div>
+      </div>
+      <div>
+        <div class="data-row">
+          <span class="data-key">− Debt service</span>
+          <span class="data-value-neg">−{{ sim.financing.annual_debt_service|floatformat:0 }}</span>
+        </div>
+        <div class="data-row">
+          <span class="data-key">− Income tax ({{ sim.assumptions.income_tax|floatformat:0 }}%)</span>
+          <span class="data-value-neg">−{{ sim.annual.income_tax|floatformat:0 }}</span>
+        </div>
+        <div class="data-row">
+          <span class="data-key">Net cashflow</span>
+          <span class="{% if sim.annual.net_cashflow >= 0 %}data-value-pos{% else %}data-value-neg{% endif %}">
+            {{ sim.annual.net_cashflow|floatformat:0 }} {{ inputs.currency }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Multi-year projection ────────────────────────────────────────────── #}
+  <div class="card overflow-hidden">
+    <div class="border-b border-ink-200 px-5 py-3 flex items-center justify-between">
+      <h3 class="font-extrabold text-ink-900 flex items-center gap-2">
+        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-700">📈</span>
+        {{ sim.summary.horizon_years }}-year projection
+      </h3>
+      <span class="text-[10px] uppercase tracking-widest text-ink-500">
+        {{ sim.assumptions.appreciation|floatformat:1 }}% capital appreciation /yr
+      </span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs">
+        <thead class="bg-ink-50 text-ink-500">
+          <tr>
+            <th class="px-4 py-2 text-left font-bold uppercase tracking-widest">Year</th>
+            <th class="px-4 py-2 text-right font-bold uppercase tracking-widest">Gross rent</th>
+            <th class="px-4 py-2 text-right font-bold uppercase tracking-widest">Opex</th>
+            <th class="px-4 py-2 text-right font-bold uppercase tracking-widest">Net cashflow</th>
+            <th class="px-4 py-2 text-right font-bold uppercase tracking-widest">Property value</th>
+            <th class="px-4 py-2 text-right font-bold uppercase tracking-widest">Equity</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-ink-100">
+          {% for y in sim.projection %}
+            <tr class="hover:bg-ink-50/60 transition-colors">
+              <td class="px-4 py-2 font-bold text-ink-900">Y{{ y.year }}</td>
+              <td class="px-4 py-2 text-right text-ink-700 tabular-nums">{{ y.gross_rent|floatformat:0 }}</td>
+              <td class="px-4 py-2 text-right text-ink-700 tabular-nums">{{ y.operating_costs|floatformat:0 }}</td>
+              <td class="px-4 py-2 text-right tabular-nums {% if y.net_cashflow >= 0 %}text-emerald-700 font-semibold{% else %}text-rose-700 font-semibold{% endif %}">
+                {{ y.net_cashflow|floatformat:0 }}
+              </td>
+              <td class="px-4 py-2 text-right text-ink-900 tabular-nums">{{ y.property_value|floatformat:0 }}</td>
+              <td class="px-4 py-2 text-right tabular-nums font-semibold text-brand-700">{{ y.equity|floatformat:0 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="bg-ink-50 text-xs">
+          <tr>
+            <td class="px-4 py-2 font-bold text-ink-900">Σ {{ sim.summary.horizon_years }}y</td>
+            <td colspan="2" class="px-4 py-2 text-right text-ink-500">Cumulative net cashflow</td>
+            <td class="px-4 py-2 text-right tabular-nums font-bold {% if sim.summary.cumulative_net_cashflow >= 0 %}text-emerald-700{% else %}text-rose-700{% endif %}">
+              {{ sim.summary.cumulative_net_cashflow|floatformat:0 }}
+            </td>
+            <td class="px-4 py-2 text-right text-ink-500">Equity at exit</td>
+            <td class="px-4 py-2 text-right tabular-nums font-bold text-brand-700">{{ sim.summary.horizon_equity|floatformat:0 }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  {# ── Disclosures ─────────────────────────────────────────────────────── #}
+  <div class="rounded-2xl border border-ink-200 bg-ink-50 p-5">
+    <div class="text-[11px] font-bold uppercase tracking-widest text-ink-600 mb-2">Modelling assumptions</div>
+    <ul class="text-xs text-ink-600 space-y-1.5">
+      {% for d in sim.disclaimers %}
+        <li class="flex gap-2"><span class="mt-1.5 h-1 w-1 rounded-full bg-ink-300 shrink-0"></span><span>{{ d }}</span></li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>

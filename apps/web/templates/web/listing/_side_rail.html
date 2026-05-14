@@ -1,0 +1,83 @@
+{% load web_extras %}
+{% comment %}
+  Side rail shown alongside the wizard steps on desktop.
+
+  Pulls double-duty:
+  - shows a live AI-score gauge once we have enough draft signal
+  - shows a friendly "what you're building" summary at every step
+{% endcomment %}
+
+<div class="card p-5 space-y-4">
+  <div class="text-[10px] font-bold uppercase tracking-[0.22em] text-brand-700">
+    Live preview
+  </div>
+
+  {% if score %}
+    <div class="flex items-center gap-3">
+      <div class="vv-score-gauge" data-score="{{ score.score }}">
+        <span>{{ score.score }}</span>
+        <small>AI</small>
+      </div>
+      <div>
+        <div class="text-sm font-bold text-ink-900">{{ score.score|score_label }}</div>
+        <div class="text-[11px] text-ink-500 leading-tight">{{ score.confidence_label }}</div>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-2 pt-1">
+      <div class="rounded-lg bg-brand-50 px-2.5 py-1.5">
+        <div class="text-[9px] font-bold uppercase tracking-widest text-brand-600">ROI</div>
+        <div class="text-sm font-extrabold text-brand-700 tabular-nums">
+          {{ score.roi_min|pct }}–{{ score.roi_max|pct }}
+        </div>
+      </div>
+      <div class="rounded-lg bg-sky-50 px-2.5 py-1.5">
+        <div class="text-[9px] font-bold uppercase tracking-widest text-sky-600">Yield</div>
+        <div class="text-sm font-extrabold text-sky-700 tabular-nums">{{ score.yield_pct|pct }}</div>
+      </div>
+    </div>
+  {% else %}
+    <p class="text-xs text-ink-500 leading-relaxed">
+      Fill in location, area and asking price — we'll show the AI score the moment we have enough signal.
+    </p>
+  {% endif %}
+
+  <div class="pt-2 border-t border-ink-100 space-y-2 text-[12px]">
+    {% if draft.title %}
+      <div>
+        <div class="text-[9px] font-bold uppercase tracking-widest text-ink-400">Title</div>
+        <div class="font-semibold text-ink-900 leading-tight">{{ draft.title }}</div>
+      </div>
+    {% endif %}
+    {% if draft.city_name %}
+      <div>
+        <div class="text-[9px] font-bold uppercase tracking-widest text-ink-400">Location</div>
+        <div class="text-ink-700">{{ draft.city_name }}, {{ draft.country_name }}</div>
+      </div>
+    {% endif %}
+    {% if draft.area_sqm %}
+      <div>
+        <div class="text-[9px] font-bold uppercase tracking-widest text-ink-400">Area</div>
+        <div class="text-ink-700">{{ draft.area_sqm }} m²</div>
+      </div>
+    {% endif %}
+    {% if draft.price %}
+      <div>
+        <div class="text-[9px] font-bold uppercase tracking-widest text-ink-400">Asking price</div>
+        <div class="font-semibold text-ink-900 tabular-nums">
+          {{ draft.price|money:draft.currency }}
+        </div>
+      </div>
+    {% endif %}
+    {% if draft.images %}
+      <div>
+        <div class="text-[9px] font-bold uppercase tracking-widest text-ink-400">Photos</div>
+        <div class="text-ink-700">{{ draft.images|length }} uploaded</div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-[12px] text-amber-900 leading-relaxed">
+  <div class="font-bold text-amber-900 mb-1">Review before publish</div>
+  Owner-submitted listings are reviewed by Vivalty's editorial desk before going live to investors — usually within 24h.
+</div>

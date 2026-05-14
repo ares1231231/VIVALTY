@@ -1,0 +1,27 @@
+{% comment %}
+  Renders the current draft.images grid. Swapped via HTMX after every
+  upload / delete event. The first image is highlighted as the cover.
+{% endcomment %}
+<div id="image-grid"
+     class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3
+            {% if not images %}hidden{% endif %}">
+  {% for img in images %}
+    <div class="vv-image-thumb {% if forloop.first %}is-cover{% endif %}">
+      <img src="{{ img.url }}" alt="{{ img.filename }}" loading="lazy">
+      {% if forloop.first %}
+        <span class="vv-image-cover-badge">Cover</span>
+      {% endif %}
+      <button type="button"
+              hx-post="{% url 'web:listing_image_delete' image_id=img.id %}"
+              hx-target="#image-grid"
+              hx-swap="outerHTML"
+              hx-confirm="Remove this photo?"
+              class="vv-image-delete"
+              aria-label="Delete photo">
+        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  {% endfor %}
+</div>

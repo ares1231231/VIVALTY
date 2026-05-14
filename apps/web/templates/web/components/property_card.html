@@ -76,6 +76,17 @@
       <div class="mt-1 text-sm font-bold text-ink-900 leading-snug line-clamp-2 group-hover:text-brand-700 transition-colors">
         {{ p.title }}
       </div>
+      {% if p.listing_agency or p.metric %}
+        <div class="mt-1.5 flex items-center gap-2 text-[10px] text-ink-500">
+          {% if p.listing_agency %}
+            <span class="truncate">via <span class="text-ink-700 font-semibold">{{ p.listing_agency }}</span></span>
+          {% endif %}
+          {% if p.listing_ref %}
+            <span class="font-mono text-ink-400">{{ p.listing_ref }}</span>
+          {% endif %}
+          {% if p.metric %}{% confidence_pill p.metric %}{% endif %}
+        </div>
+      {% endif %}
     </div>
 
     {# Specs row #}

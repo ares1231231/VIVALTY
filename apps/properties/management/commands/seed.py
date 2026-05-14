@@ -1,5 +1,9 @@
 """Idempotent seed command.
 
+Generates a realistic, brokerage-grade catalogue of international listings:
+authentic property names, neighbourhood-specific addresses, agency attribution,
+unique descriptions and editorial-quality images.
+
 Usage:
     python manage.py seed              # safe to re-run; updates baselines + adds missing items.
     python manage.py seed --reset      # wipes properties first.
@@ -21,6 +25,7 @@ from apps.properties.models import (
     PropertyImage,
     PropertyType,
 )
+from apps.properties.services.scoring import upsert_metric
 from apps.users.models import Role, User
 
 
@@ -119,48 +124,291 @@ TAGS = [
     ("Beachfront", "cyan"),
 ]
 
-UNSPLASH = [
-    "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=1200",
-    "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200",
-    "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1200",
-    "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200",
-    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200",
-    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200",
-    "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200",
-    "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=1200",
-    "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=1200",
-    "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1200",
+# Editorial-grade Unsplash sets per property type — enough variety so a
+# 6-card grid never repeats the same hero shot.
+IMAGES = {
+    "apartment": [
+        "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=1400",
+        "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1400",
+        "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1400",
+        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1400",
+        "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=1400",
+        "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1400",
+        "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=1400",
+    ],
+    "villa": [
+        "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1400",
+        "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1400",
+        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1400",
+        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400",
+        "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1400",
+        "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=1400",
+    ],
+    "house": [
+        "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=1400",
+        "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1400",
+        "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1400",
+        "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1400",
+        "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=1400",
+    ],
+    "commercial": [
+        "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400",
+        "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=1400",
+        "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1400",
+    ],
+    "office": [
+        "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400",
+        "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1400",
+        "https://images.unsplash.com/photo-1564540583246-934409427776?w=1400",
+    ],
+    "retail": [
+        "https://images.unsplash.com/photo-1604014237800-1c9102c219da?w=1400",
+        "https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=1400",
+        "https://images.unsplash.com/photo-1552866299-5f02e2eb12bb?w=1400",
+    ],
+    "land": [
+        "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1400",
+        "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1400",
+        "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1400",
+    ],
+}
+
+# Authentic neighbourhood + street pairings used to build realistic addresses.
+NEIGHBOURHOODS: dict[str, list[tuple[str, list[str]]]] = {
+    "Paris": [
+        ("Le Marais", ["Rue des Archives", "Rue de Bretagne", "Rue Vieille du Temple"]),
+        ("Saint-Germain-des-Prés", ["Rue de Buci", "Rue Bonaparte", "Rue Jacob"]),
+        ("Montmartre", ["Rue Lepic", "Rue des Abbesses", "Rue Caulaincourt"]),
+        ("Bastille", ["Rue de la Roquette", "Rue Saint-Antoine", "Boulevard Beaumarchais"]),
+    ],
+    "Lyon": [
+        ("Presqu'île", ["Rue de la République", "Rue Mercière", "Place Bellecour"]),
+        ("Vieux Lyon", ["Rue Saint-Jean", "Rue du Bœuf", "Montée du Gourguillon"]),
+        ("Confluence", ["Quai Rambaud", "Cours Charlemagne", "Place Nautique"]),
+    ],
+    "Nice": [
+        ("Vieux Nice", ["Rue de la Préfecture", "Cours Saleya", "Rue Droite"]),
+        ("Promenade des Anglais", ["Promenade des Anglais", "Rue de France", "Boulevard Gambetta"]),
+        ("Cimiez", ["Avenue de Cimiez", "Boulevard de Cimiez", "Avenue des Arènes"]),
+    ],
+    "London": [
+        ("Shoreditch", ["Curtain Road", "Old Street", "Great Eastern Street"]),
+        ("Kensington", ["Cromwell Road", "Gloucester Road", "Kensington High Street"]),
+        ("Canary Wharf", ["Cabot Square", "Westferry Circus", "South Quay"]),
+        ("Notting Hill", ["Portobello Road", "Westbourne Park Road", "Ladbroke Grove"]),
+    ],
+    "Manchester": [
+        ("Northern Quarter", ["Stevenson Square", "Tib Street", "Oldham Street"]),
+        ("Spinningfields", ["Hardman Square", "Quay Street", "Byrom Street"]),
+        ("Ancoats", ["Henry Street", "Cotton Street", "Murray Street"]),
+    ],
+    "Birmingham": [
+        ("Jewellery Quarter", ["Vyse Street", "Frederick Street", "Caroline Street"]),
+        ("Digbeth", ["Digbeth High Street", "Floodgate Street", "Heath Mill Lane"]),
+        ("Edgbaston", ["Hagley Road", "Wheeleys Road", "Westbourne Road"]),
+    ],
+    "Madrid": [
+        ("Salamanca", ["Calle de Serrano", "Calle de Velázquez", "Calle de Goya"]),
+        ("Chamberí", ["Calle de Fuencarral", "Calle de Sagasta", "Calle de Alburquerque"]),
+        ("Malasaña", ["Calle del Pez", "Calle del Espíritu Santo", "Calle de la Palma"]),
+    ],
+    "Barcelona": [
+        ("Eixample", ["Carrer de Mallorca", "Passeig de Gràcia", "Carrer de Provença"]),
+        ("Gràcia", ["Carrer Gran de Gràcia", "Plaça del Sol", "Carrer de Verdi"]),
+        ("Born", ["Passeig del Born", "Carrer de l'Argenteria", "Carrer de Montcada"]),
+    ],
+    "Valencia": [
+        ("Ciutat Vella", ["Carrer de Cavallers", "Carrer dels Serrans", "Plaça del Mercat"]),
+        ("Ruzafa", ["Carrer de Cuba", "Carrer de Sueca", "Carrer de Cádiz"]),
+        ("El Cabanyal", ["Carrer de la Reina", "Carrer del Doctor Lluch", "Carrer del Progrés"]),
+    ],
+    "Málaga": [
+        ("Centro Histórico", ["Calle Larios", "Calle Granada", "Plaza de la Constitución"]),
+        ("Soho", ["Calle Tomás Heredia", "Calle Vendeja", "Calle Casas de Campos"]),
+        ("Pedregalejo", ["Avenida Juan Sebastián Elcano", "Paseo Marítimo Pablo Ruiz Picasso", "Calle Bolivia"]),
+    ],
+    "Geneva": [
+        ("Eaux-Vives", ["Rue de la Mairie", "Rue Versonnex", "Rue Adrien-Lachenal"]),
+        ("Pâquis", ["Rue de Berne", "Rue du Cendrier", "Rue du Mont-Blanc"]),
+        ("Champel", ["Avenue de Champel", "Avenue Krieg", "Chemin Beau-Soleil"]),
+    ],
+    "Zurich": [
+        ("Kreis 1", ["Bahnhofstrasse", "Limmatquai", "Rennweg"]),
+        ("Seefeld", ["Seefeldstrasse", "Höschgasse", "Färberstrasse"]),
+        ("Wiedikon", ["Birmensdorferstrasse", "Manessestrasse", "Goldbrunnenstrasse"]),
+    ],
+    "Lausanne": [
+        ("Ouchy", ["Avenue d'Ouchy", "Place de la Navigation", "Quai Jean-Pascal Delamuraz"]),
+        ("Flon", ["Rue du Grand-Saint-Jean", "Place de l'Europe", "Rue Centrale"]),
+    ],
+    "Milan": [
+        ("Brera", ["Via Brera", "Via Solferino", "Via Fiori Chiari"]),
+        ("Navigli", ["Ripa di Porta Ticinese", "Alzaia Naviglio Grande", "Via Vigevano"]),
+        ("Porta Nuova", ["Corso Como", "Via Vincenzo Capelli", "Piazza Gae Aulenti"]),
+    ],
+    "Rome": [
+        ("Trastevere", ["Via della Lungaretta", "Piazza di Santa Maria in Trastevere", "Vicolo del Cinque"]),
+        ("Prati", ["Via Cola di Rienzo", "Via Crescenzio", "Viale Giulio Cesare"]),
+        ("Monti", ["Via dei Serpenti", "Via Panisperna", "Via del Boschetto"]),
+    ],
+    "Florence": [
+        ("Oltrarno", ["Via Maggio", "Borgo San Frediano", "Via dello Sprone"]),
+        ("Santa Croce", ["Via dei Neri", "Borgo Santa Croce", "Via dei Benci"]),
+        ("San Niccolò", ["Via di San Niccolò", "Via dei Renai", "Lungarno Serristori"]),
+    ],
+    "Dubai Marina": [
+        ("Marina Promenade", ["Marina Walk", "Al Marsa Street", "King Salman Bin Abdulaziz Al Saud Street"]),
+        ("JBR", ["The Walk JBR", "Al Mamsha Street", "Murjan Street"]),
+    ],
+    "Business Bay": [
+        ("Downtown-adjacent", ["Marasi Drive", "Al Abraj Street", "Bay Avenue"]),
+        ("Executive Towers", ["Executive Towers Boulevard", "Al Abraj Street", "Burj Khalifa Boulevard"]),
+    ],
+    "Jumeirah Village Circle": [
+        ("District 13", ["Hessa Street", "Al Khail Road", "Sheikh Mohammed Bin Zayed Road"]),
+        ("District 16", ["Al Khail Road", "Hessa Street", "JVC Mall Road"]),
+    ],
+    "Abu Dhabi": [
+        ("Saadiyat Island", ["Saadiyat Beach Drive", "Al Mariah Avenue", "Al Saadiyat Boulevard"]),
+        ("Yas Island", ["Yas Marina Circuit Boulevard", "Al Yas Avenue", "Yas Bay"]),
+    ],
+    "Lisbon": [
+        ("Príncipe Real", ["Rua da Escola Politécnica", "Rua Dom Pedro V", "Praça do Príncipe Real"]),
+        ("Alfama", ["Rua de São Tomé", "Largo de Santo Estêvão", "Rua dos Remédios"]),
+        ("Chiado", ["Rua Garrett", "Largo do Chiado", "Rua do Carmo"]),
+    ],
+    "Porto": [
+        ("Ribeira", ["Cais da Ribeira", "Rua das Flores", "Rua de Mouzinho da Silveira"]),
+        ("Cedofeita", ["Rua de Cedofeita", "Rua do Bonjardim", "Rua de Costa Cabral"]),
+        ("Foz do Douro", ["Avenida do Brasil", "Rua de Diu", "Rua do Padrão"]),
+    ],
+    "Algarve": [
+        ("Lagos", ["Rua Cândido dos Reis", "Avenida dos Descobrimentos", "Rua 25 de Abril"]),
+        ("Albufeira", ["Rua 5 de Outubro", "Avenida Sá Carneiro", "Rua dos Pescadores"]),
+        ("Vilamoura", ["Marina de Vilamoura", "Avenida Tivoli", "Rua das Acácias"]),
+    ],
+}
+
+AGENCIES = [
+    "Vivalty Premium",
+    "Knight & Sterling Realty",
+    "Costa Verde Properties",
+    "Atlas Mediterranean Estates",
+    "London Bridge Investments",
+    "Iberia Capital Real Estate",
+    "Helvetia Private Estates",
+    "Lusitania Estate Partners",
+    "Emirates Crown Real Estate",
+    "Riviera Estates Group",
 ]
 
-PROPERTY_TYPES = [pt for pt, _ in PropertyType.choices]
+# Type-aware copywriting templates. {n} refers to the listing index per city.
+TITLE_TEMPLATES = {
+    "apartment": [
+        "{br}-bed apartment, {neighbourhood}",
+        "Renovated {br}-bedroom flat overlooking {neighbourhood}",
+        "Bright pied-à-terre in {neighbourhood}",
+        "Boutique residence in {neighbourhood}",
+        "Penthouse-style apartment, {neighbourhood}",
+    ],
+    "villa": [
+        "Private villa with garden, {neighbourhood}",
+        "Architect-designed villa in {neighbourhood}",
+        "Sea-facing villa in {neighbourhood}",
+        "Family villa with pool, {neighbourhood}",
+    ],
+    "house": [
+        "Townhouse in {neighbourhood}",
+        "Family home, {neighbourhood}",
+        "Period house in {neighbourhood}",
+    ],
+    "commercial": [
+        "Mixed-use building in {neighbourhood}",
+        "High-street commercial unit, {neighbourhood}",
+    ],
+    "office": [
+        "Class-A office floor, {neighbourhood}",
+        "Boutique office space, {neighbourhood}",
+    ],
+    "retail": [
+        "Retail unit on {neighbourhood}",
+        "Flagship street-level retail, {neighbourhood}",
+    ],
+    "land": [
+        "Development plot, {neighbourhood}",
+    ],
+}
 
-DESCRIPTIONS = {
-    "apartment": "Bright {br}-bedroom apartment in {city}, {area} m², featuring open-plan living, modern kitchen and access to local transit.",
-    "villa": "Private villa in {city} with {br} bedrooms over {area} m². Garden, parking and high-end finishes.",
-    "house": "Townhouse in {city}, {br} bedrooms, {area} m². Family layout with garden.",
-    "commercial": "Commercial unit in {city}, {area} m². Suitable for retail or office use, strong footfall.",
-    "land": "Building plot in {city}, {area} m². Permits pending; ideal for development.",
-    "office": "Class-A office space in {city}, {area} m². Open floor plan, parking included.",
-    "retail": "Street-level retail unit in {city}, {area} m². Long lease available.",
+DESCRIPTION_PARTS = {
+    "common": [
+        "Move-in-ready condition with high-end finishes throughout.",
+        "Tenant-in-place with steady rental history; investor-ready transaction.",
+        "Low body-corporate / management fees relative to comparable stock.",
+        "Walking distance to public transport, schools and lifestyle amenities.",
+        "Recently refurbished with energy-efficient glazing and appliances.",
+        "Strategic asset for income-focused or buy-to-let portfolios.",
+    ],
+    "apartment": [
+        "Open-plan living, modern kitchen and a private balcony with city views.",
+        "Concierge building with secure parking and a residents' fitness suite.",
+        "Light-filled south-facing aspect with double-glazed windows throughout.",
+        "Full short-let permission in place — strong Airbnb / corporate-let track record.",
+    ],
+    "villa": [
+        "Generous outdoor terraces, mature gardens and a heated pool.",
+        "Bespoke kitchen, en-suite bedrooms and a dedicated home-office.",
+        "Walled grounds with secure gated access and EV charging.",
+    ],
+    "house": [
+        "Period features, fireplaces and high ceilings paired with a contemporary fit-out.",
+        "Family-friendly layout with separate utility room and rear garden.",
+    ],
+    "commercial": [
+        "Triple-net lease available with a creditworthy occupier.",
+        "Strong footfall location with passing traffic supporting valuation upside.",
+    ],
+    "office": [
+        "Open floor plate with raised flooring and column-free office grid.",
+        "Flexible terms with the option of a sale-and-leaseback structure.",
+    ],
+    "retail": [
+        "Long unexpired lease term with index-linked rental uplifts.",
+        "Adjacent to flagship anchors driving strong daily footfall.",
+    ],
+    "land": [
+        "Outline planning supports a multi-unit residential or mixed-use development.",
+        "Ready-to-build site with services to the boundary.",
+    ],
+}
+
+
+PROPERTY_TYPES_BY_COUNTRY = {
+    "FR": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.VILLA, PropertyType.HOUSE],
+    "GB": [PropertyType.APARTMENT, PropertyType.HOUSE, PropertyType.HOUSE, PropertyType.COMMERCIAL],
+    "ES": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.VILLA, PropertyType.RETAIL],
+    "CH": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.OFFICE],
+    "IT": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.HOUSE, PropertyType.COMMERCIAL],
+    "AE": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.VILLA, PropertyType.OFFICE],
+    "PT": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.VILLA, PropertyType.HOUSE],
 }
 
 
 class Command(BaseCommand):
-    help = "Seed Vivalty with target countries, cities, tags and demo properties."
+    help = "Seed Vivalty with target countries, cities, tags and realistic listings."
 
     def add_arguments(self, parser) -> None:
         parser.add_argument("--reset", action="store_true", help="Delete existing properties first.")
-        parser.add_argument("--per-city", type=int, default=2, help="Demo properties per city.")
+        parser.add_argument("--per-city", type=int, default=3, help="Listings per city.")
 
     @transaction.atomic
-    def handle(self, *args, reset: bool = False, per_city: int = 2, **options):
-        random.seed(42)
+    def handle(self, *args, reset: bool = False, per_city: int = 3, **options):
+        random.seed(2026)
 
         if reset:
             self.stdout.write(self.style.WARNING("Wiping existing Property rows..."))
             Property.objects.all().delete()
 
-        # --- Owner --------------------------------------------------------
+        # ── Owner ────────────────────────────────────────────────────────────
         owner, created = User.objects.get_or_create(
             email="demo-owner@vivalty.app",
             defaults={
@@ -168,15 +416,17 @@ class Command(BaseCommand):
                 "first_name": "Demo",
                 "last_name": "Owner",
                 "role": Role.OWNER,
-                "company_name": "Vivalty Demo Listings",
+                "company_name": "Vivalty Premium",
             },
         )
         if created:
             owner.set_password("vivalty-demo-pass")
             owner.save()
-            self.stdout.write(self.style.SUCCESS("Created demo owner: demo-owner@vivalty.app / vivalty-demo-pass"))
+            self.stdout.write(self.style.SUCCESS(
+                "Created demo owner: demo-owner@vivalty.app / vivalty-demo-pass"
+            ))
 
-        # --- Tags ---------------------------------------------------------
+        # ── Tags ─────────────────────────────────────────────────────────────
         tag_objs: dict[str, InvestmentTag] = {}
         for name, color in TAGS:
             tag, _ = InvestmentTag.objects.update_or_create(
@@ -184,7 +434,7 @@ class Command(BaseCommand):
             )
             tag_objs[tag.slug] = tag
 
-        # --- Countries + cities ------------------------------------------
+        # ── Countries + cities ───────────────────────────────────────────────
         country_objs: dict[str, Country] = {}
         for c in COUNTRIES:
             obj, _ = Country.objects.update_or_create(
@@ -219,31 +469,64 @@ class Command(BaseCommand):
                         "trend": city["trend"],
                         "risk": city["risk"],
                         "investment_score": city["score"],
-                        "summary": f"{city['name']} — avg €/m² {city['avg_price_sqm']}, yield {city['avg_rental_yield']}%, score {city['score']}/100.",
+                        "summary": (
+                            f"{city['name']} — avg €/m² {city['avg_price_sqm']}, "
+                            f"yield {city['avg_rental_yield']}%, score {city['score']}/100."
+                        ),
                     },
                 )
                 city_objs.append(obj)
 
-        # --- Properties ---------------------------------------------------
+        # ── Properties ────────────────────────────────────────────────────────
         added = 0
         for city in city_objs:
             country = city.country
+            type_pool = PROPERTY_TYPES_BY_COUNTRY.get(country.code, [PropertyType.APARTMENT])
             for i in range(per_city):
-                ptype = random.choice([
-                    PropertyType.APARTMENT, PropertyType.APARTMENT,
-                    PropertyType.VILLA, PropertyType.HOUSE, PropertyType.COMMERCIAL,
-                ])
-                br = random.choice([1, 2, 3, 4]) if ptype != PropertyType.COMMERCIAL else None
-                area = round(random.uniform(45, 320), 1)
+                ptype = random.choice(type_pool)
+                br = random.choice([1, 2, 3, 4]) if ptype not in (PropertyType.COMMERCIAL, PropertyType.OFFICE, PropertyType.LAND, PropertyType.RETAIL) else None
+                area = round(random.uniform(48, 320), 1)
                 psqm = float(city.avg_price_sqm or 3000)
-                price = round(area * psqm * random.uniform(0.85, 1.25), -2)
-                title = f"{ptype.label} in {city.name} #{i + 1}"
+                price = round(area * psqm * random.uniform(0.85, 1.30), -2)
 
+                # Realistic neighbourhood + street
+                pool = NEIGHBOURHOODS.get(city.name, [(city.name, [f"{city.name} High Street"])])
+                neighbourhood, streets = random.choice(pool)
+                street = random.choice(streets)
+                house_no = random.randint(2, 220)
+                address = f"{house_no} {street}, {neighbourhood}, {city.name}"
+
+                # Title (de-duplicated by suffix when collisions occur)
+                title_tpl = random.choice(TITLE_TEMPLATES.get(ptype, TITLE_TEMPLATES["apartment"]))
+                title = title_tpl.format(br=br or "open-plan", neighbourhood=neighbourhood)
+                if Property.objects.filter(title=title, city=city).exists():
+                    title = f"{title} · Ref {random.randint(1000, 9999)}"
                 if Property.objects.filter(title=title, city=city).exists():
                     continue
 
-                desc_tpl = DESCRIPTIONS.get(ptype, DESCRIPTIONS["apartment"])
-                desc = desc_tpl.format(br=br or "open", area=area, city=city.name)
+                # Description — type-specific + 2 universal flavour lines
+                base = random.choice(DESCRIPTION_PARTS.get(ptype, DESCRIPTION_PARTS["apartment"]))
+                seasoning = random.sample(DESCRIPTION_PARTS["common"], k=2)
+                desc_intro = (
+                    f"{('Luxury' if psqm > 9000 else 'Smart')} investment opportunity in "
+                    f"{neighbourhood}, {city.name}, comprising "
+                    f"{('an open-plan' if not br else f'{br}-bedroom')} "
+                    f"{ptype.label.lower()} of {area:.0f} m². "
+                )
+                desc = desc_intro + " ".join([base] + seasoning)
+
+                listing_ref = f"VVT-{country.code}-{city.id:03d}-{(Property.objects.filter(city=city).count() + 1):03d}"
+                agency = random.choice(AGENCIES) if random.random() > 0.15 else "Vivalty Premium"
+
+                contact_first = random.choice([
+                    "Sophie", "James", "Léa", "Alessandro", "Sara",
+                    "Mateus", "Hassan", "Olivia", "Lucas", "Clara",
+                ])
+                contact_last = random.choice([
+                    "Laurent", "Whitfield", "García", "Conti", "Almeida",
+                    "Müller", "Khan", "Costa", "Beaumont", "Rossi",
+                ])
+                contact_phone = "+1 555 " + str(random.randint(1000, 9999))
 
                 prop = Property.objects.create(
                     owner=owner,
@@ -255,34 +538,56 @@ class Command(BaseCommand):
                     currency=country.currency,
                     country=country,
                     city=city,
-                    address=f"{random.randint(1, 200)} Demo Street, {city.name}",
+                    address=address,
                     bedrooms=br,
                     bathrooms=random.choice([1, 2, 3]) if br else None,
                     area_sqm=Decimal(str(area)),
-                    year_built=random.randint(1985, 2024),
-                    contact_name="Vivalty Demo Desk",
-                    contact_email="leads@vivalty.app",
-                    contact_phone="+1 555 0100",
-                    is_featured=(i == 0 and random.random() < 0.4),
+                    year_built=random.randint(1985, 2025),
+                    contact_name=f"{contact_first} {contact_last}",
+                    contact_email=f"{contact_first.lower()}.{contact_last.lower()}@{slugify(agency)}.com",
+                    contact_phone=contact_phone,
+                    listing_agency=agency,
+                    listing_ref=listing_ref,
+                    is_featured=(i == 0 and random.random() < 0.5),
+                    is_premium=(random.random() < 0.18),
                 )
-                # Images
-                for j, url in enumerate(random.sample(UNSPLASH, k=3)):
+
+                # Images — type-specific gallery
+                pool_imgs = IMAGES.get(ptype, IMAGES["apartment"])
+                k = min(4, len(pool_imgs))
+                for j, url in enumerate(random.sample(pool_imgs, k=k)):
                     PropertyImage.objects.create(property=prop, url=url, position=j)
+
                 # Tags
-                slugs = []
+                slugs: list[str] = []
                 if (city.investment_score or 0) >= 85:
                     slugs.append("high-roi")
                 if "Dubai" in city.name or psqm < 3500:
                     slugs.append("emerging-market")
                 if psqm > 9000:
                     slugs.append("luxury")
-                if country.code == "PT" or "Algarve" in city.name:
+                if country.code == "PT" or "Algarve" in city.name or "Marina" in city.name:
                     slugs.append("short-let-friendly")
                 if country.code == "CH":
                     slugs.append("capital-preservation")
+                if prop.year_built and prop.year_built >= 2020:
+                    slugs.append("new-build")
+                if "Algarve" in city.name or "Nice" in city.name or "JBR" in neighbourhood:
+                    slugs.append("beachfront")
                 prop.tags.set(InvestmentTag.objects.filter(slug__in=slugs))
+
+                # Compute & persist explainable score
+                upsert_metric(prop)
                 added += 1
 
+        # Make sure existing rows (not just new ones) all have an up-to-date
+        # investment metric — this matters when the user re-runs `seed` after
+        # tweaking weight tables.
+        for prop in Property.objects.select_related("city", "country").iterator():
+            if not getattr(prop, "metric", None) or not prop.metric.score_breakdown:
+                upsert_metric(prop)
+
         self.stdout.write(self.style.SUCCESS(
-            f"Seed complete: {len(country_objs)} countries, {len(city_objs)} cities, {added} new properties."
+            f"Seed complete: {len(country_objs)} countries, {len(city_objs)} cities, "
+            f"{added} new properties (total: {Property.objects.count()})."
         ))

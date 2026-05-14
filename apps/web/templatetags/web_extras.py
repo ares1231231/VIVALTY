@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
-from urllib.parse import urlencode
 
 from django import template
 from django.utils.safestring import mark_safe
@@ -124,3 +123,54 @@ def initials(user) -> str:
     parts = [user.first_name, user.last_name]
     letters = "".join(p[0] for p in parts if p)
     return (letters or user.email[:1]).upper()
+
+
+@register.filter
+def get_item(mapping, key):
+    """Lookup helper for dict / list access from templates."""
+    if mapping is None:
+        return None
+    try:
+        return mapping[key]
+    except (KeyError, IndexError, TypeError):
+        return getattr(mapping, str(key), None)
+
+
+@register.filter
+def absolute(value):
+    try:
+        return abs(float(value))
+    except (TypeError, ValueError):
+        return value
+
+
+CONFIDENCE_PILL = {
+    "verified": ("Verified", "disclosure disclosure-verified"),
+    "estimated": ("Estimated", "disclosure disclosure-estimated"),
+    "baseline": ("Country baseline", "disclosure disclosure-baseline"),
+}
+
+
+@register.simple_tag
+def confidence_pill(metric) -> str:
+    """Render a disclosure pill describing how trustworthy a metric is.
+
+    Reads `metric.is_estimated` + the city-level data presence to decide
+    between Verified / Estimated / Country baseline.
+    """
+    if metric is None:
+        label, css = CONFIDENCE_PILL["baseline"]
+        return mark_safe(f'<span class="{css}">{label}</span>')
+    if not metric.is_estimated:
+        label, css = CONFIDENCE_PILL["verified"]
+    else:
+        label, css = CONFIDENCE_PILL["estimated"]
+    return mark_safe(f'<span class="{css}">{label}</span>')
+
+
+@register.filter
+def positive_or_zero(value):
+    try:
+        return max(0.0, float(value))
+    except (TypeError, ValueError):
+        return 0

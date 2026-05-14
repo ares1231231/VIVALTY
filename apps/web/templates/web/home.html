@@ -1,162 +1,560 @@
 {% extends "web/base.html" %}
 {% load static web_extras %}
 
-{% block title %}Vivalty — Buy, Sell & Rent Properties Worldwide{% endblock %}
+{% block title %}Vivalty — High-performing international real estate, with confidence{% endblock %}
 
 {% block content %}
 
 {% comment %}
-═══════════════════════════════════════════════════════════════════
-HERO — full-screen dark canvas with intent selector
-═══════════════════════════════════════════════════════════════════
+HERO - full-bleed image, overlaid headline + filter bar, and
+a right-side stack of "FEATURED LISTINGS" + "TOP DESTINATIONS".
+The navbar overlays this section (see vv-nav--overlay variant).
 {% endcomment %}
-<section class="relative overflow-hidden bg-ink-900 min-h-[92vh] flex flex-col items-center justify-center">
+<section class="vv-hero">
 
-  {# Animated 3-D orb canvas #}
-  <canvas id="hero-3d-canvas" class="absolute inset-0 h-full w-full opacity-30 pointer-events-none"></canvas>
+  {# ── Bright hero photo with soft vignette behind the headline ── #}
+  <div class="vv-hero-bg">
+    <img src="{% static 'img/hero-image-clean.png' %}"
+         alt="" loading="eager" fetchpriority="high"
+         class="vv-hero-bg-img"/>
+  </div>
+  <div class="vv-hero-vignette" aria-hidden="true"></div>
 
-  {# Radial colour wash #}
-  <div class="absolute inset-0 bg-radial-brand opacity-50 pointer-events-none"></div>
+  <div class="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 lg:pt-36 pb-14 lg:pb-20">
 
-  {# Vignette #}
-  <div class="absolute inset-0 pointer-events-none"
-       style="background:radial-gradient(ellipse 80% 70% at 50% 40%,transparent 30%,rgba(15,23,42,.85) 100%)"></div>
+    <div class="flex flex-col items-center text-center">
 
-  <div class="relative z-10 mx-auto w-full max-w-5xl px-4 sm:px-6 py-24 text-center">
+      {# ── Headline (elegant serif, italic emphasis) ──────────── #}
+      <h1 class="vv-hero-title">
+        Discover Your <em class="vv-hero-title-em">Global</em> Home
+      </h1>
 
-    {# Badge #}
-    <div class="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-4 py-1.5 text-sm text-brand-300 mb-8 animate-fade-in-up">
-      <span class="h-1.5 w-1.5 rounded-full bg-brand-400 animate-pulse"></span>
-      AI-powered · 7 countries · Live market data
+      {# ── AI/underwriting value prop kept above the fold ──────── #}
+      <p class="vv-hero-lede">
+        <strong>AI-scored</strong> property across <strong>7 markets</strong> — underwrite any deal in <strong>60&nbsp;seconds</strong>.
+      </p>
+
+        {# ── White filter bar ─────────────────────────────────── #}
+        <form id="hero-search" method="get" action="{% url 'web:marketplace' %}"
+              class="vv-filter mt-8 sm:mt-10">
+
+          <div class="vv-filter-grid">
+
+            {# Location (country) #}
+            <div class="vv-filter-field vv-filter-choice" data-filter="country">
+              <span class="vv-filter-label">Location</span>
+              <input type="hidden" name="country" value="" data-filter-input>
+              <button type="button" class="vv-filter-trigger" data-filter-trigger aria-haspopup="listbox" aria-expanded="false">
+                <svg class="vv-filter-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="vv-filter-value" data-filter-value>All countries</span>
+                <svg class="vv-filter-caret" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+              <div class="vv-filter-menu" data-filter-menu role="listbox">
+                <button type="button" class="vv-filter-option is-selected" data-value="" data-label="All countries">All countries</button>
+                {% for c in countries %}
+                  <button type="button" class="vv-filter-option" data-value="{{ c.code }}" data-label="{{ c.flag_emoji }} {{ c.name }}">{{ c.flag_emoji }} {{ c.name }}</button>
+                {% endfor %}
+              </div>
+            </div>
+
+            {# Property type #}
+            <div class="vv-filter-field vv-filter-choice" data-filter="type">
+              <span class="vv-filter-label">Property type</span>
+              <input type="hidden" name="type" value="" data-filter-input>
+              <button type="button" class="vv-filter-trigger" data-filter-trigger aria-haspopup="listbox" aria-expanded="false">
+                <svg class="vv-filter-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1V10"/>
+                </svg>
+                <span class="vv-filter-value" data-filter-value>All types</span>
+                <svg class="vv-filter-caret" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+              <div class="vv-filter-menu" data-filter-menu role="listbox">
+                <button type="button" class="vv-filter-option is-selected" data-value="" data-label="All types">All types</button>
+                <button type="button" class="vv-filter-option" data-value="apartment" data-label="Apartment">Apartment</button>
+                <button type="button" class="vv-filter-option" data-value="villa" data-label="Villa">Villa</button>
+                <button type="button" class="vv-filter-option" data-value="house" data-label="House">House</button>
+                <button type="button" class="vv-filter-option" data-value="commercial" data-label="Commercial">Commercial</button>
+                <button type="button" class="vv-filter-option" data-value="office" data-label="Office">Office</button>
+                <button type="button" class="vv-filter-option" data-value="retail" data-label="Retail">Retail</button>
+                <button type="button" class="vv-filter-option" data-value="land" data-label="Land">Land</button>
+              </div>
+            </div>
+
+            {# Price range — uses marketplace `max_budget` #}
+            <div class="vv-filter-field vv-filter-choice" data-filter="max_budget">
+              <span class="vv-filter-label">Price range</span>
+              <input type="hidden" name="max_budget" value="" data-filter-input>
+              <button type="button" class="vv-filter-trigger" data-filter-trigger aria-haspopup="listbox" aria-expanded="false">
+                <svg class="vv-filter-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="vv-filter-value" data-filter-value>Any price</span>
+                <svg class="vv-filter-caret" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+              <div class="vv-filter-menu" data-filter-menu role="listbox">
+                <button type="button" class="vv-filter-option is-selected" data-value="" data-label="Any price">Any price</button>
+                <button type="button" class="vv-filter-option" data-value="250000" data-label="Less than €250k">Less than €250k</button>
+                <button type="button" class="vv-filter-option" data-value="500000" data-label="Less than €500k">Less than €500k</button>
+                <button type="button" class="vv-filter-option" data-value="1000000" data-label="Less than €1M">Less than €1M</button>
+                <button type="button" class="vv-filter-option" data-value="2500000" data-label="Less than €2.5M">Less than €2.5M</button>
+                <button type="button" class="vv-filter-option" data-value="5000000" data-label="Less than €5M">Less than €5M</button>
+                <button type="button" class="vv-filter-option" data-value="10000000" data-label="Less than €10M">Less than €10M</button>
+              </div>
+            </div>
+
+            <button type="submit" class="vv-filter-cta">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+              <span>Search&nbsp;Properties</span>
+            </button>
+          </div>
+        </form>
+
+        {# ── Trust strip — three quantified, AI-flavored signals ── #}
+        <div class="vv-hero-trust">
+          <span><strong class="tabular-nums">{{ stats.total_listings|default:"25,000" }}+</strong> AI-scored listings</span>
+          <span aria-hidden="true" class="vv-hero-trust-sep">|</span>
+          <span><strong class="tabular-nums">{{ stats.countries }}</strong> vetted markets</span>
+          <span aria-hidden="true" class="vv-hero-trust-sep">|</span>
+          <span><strong class="tabular-nums">{{ stats.avg_score|default:"72" }}</strong> avg investment score</span>
+        </div>
+
+    </div>
+  </div>
+</section>
+
+
+{% comment %}
+TOP DESTINATIONS - full-width section directly under the hero.
+{% endcomment %}
+{% if countries %}
+<section class="vv-destinations">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
+    <div class="flex flex-col items-center text-center mb-10 sm:mb-12">
+      <span class="vv-destinations-eyebrow">Curated for investors</span>
+      <h2 class="vv-destinations-title">
+        Top <em class="vv-hero-title-em">Investments</em>
+      </h2>
+      <p class="vv-destinations-subtitle">
+        Hand-picked markets across Europe and the Gulf, each with a strong
+        rental yield profile and trusted legal framework.
+      </p>
     </div>
 
-    {# Headline #}
-    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.05] animate-fade-in-up" style="animation-delay:60ms">
-      Your Gateway to<br/>
-      <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-emerald-300 to-teal-400">
-        Global Real Estate
-      </span>
-    </h1>
-
-    <p class="mt-6 text-lg sm:text-xl text-white/55 max-w-2xl mx-auto animate-fade-in-up" style="animation-delay:120ms">
-      Buy, sell or rent properties across France, UK, Spain, Switzerland,
-      Italy, UAE and Portugal — backed by AI investment analysis.
-    </p>
-
-    {# ── Intent cards ─────────────────────────────────────────────── #}
-    <div class="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto animate-fade-in-up" style="animation-delay:180ms">
-
-      {# BUY #}
-      <a href="{% url 'web:marketplace' %}"
-         class="intent-card group border-brand-500/20 hover:border-brand-400 hover:bg-brand-600/90">
-        <div class="intent-icon bg-brand-500/15 group-hover:bg-white/15">🏠</div>
-        <div class="font-bold text-lg text-white mt-3">Buy</div>
-        <div class="text-xs text-white/50 mt-1 group-hover:text-white/70">Browse investment listings</div>
-        <div class="intent-arrow">
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-          </svg>
-        </div>
-      </a>
-
-      {# SELL #}
-      {% if user.is_authenticated %}
-        <a href="{% url 'web:owner_new' %}"
-           class="intent-card group border-sky-500/20 hover:border-sky-400 hover:bg-sky-600/90">
-      {% else %}
-        <a href="{% url 'web:register' %}"
-           class="intent-card group border-sky-500/20 hover:border-sky-400 hover:bg-sky-600/90">
-      {% endif %}
-          <div class="intent-icon bg-sky-500/15 group-hover:bg-white/15">🏷️</div>
-          <div class="font-bold text-lg text-white mt-3">Sell</div>
-          <div class="text-xs text-white/50 mt-1 group-hover:text-white/70">List your property globally</div>
-          <div class="intent-arrow">
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-            </svg>
+    {# Show up to 7 country tiles + an "Explore all markets" CTA tile so the 4-column grid always renders a clean, fully-populated row. #}
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+      {% for c in countries|slice:":7" %}
+        <a href="{% url 'web:marketplace' %}?country={{ c.code }}"
+           class="vv-dest group"
+           data-code="{{ c.code }}">
+          <div class="vv-dest-bg" data-code="{{ c.code }}"></div>
+          <div class="vv-dest-scrim"></div>
+          <div class="vv-dest-chip">
+            <span aria-hidden="true">{{ c.flag_emoji }}</span>
+            <span>{% if c.code == "AE" %}UAE{% elif c.code == "GB" %}UK{% else %}{{ c.name }}{% endif %}</span>
           </div>
         </a>
+      {% endfor %}
 
-      {# RENT #}
-      <a href="{% url 'web:marketplace' %}?type=apartment"
-         class="intent-card group border-amber-500/20 hover:border-amber-400 hover:bg-amber-600/90">
-        <div class="intent-icon bg-amber-500/15 group-hover:bg-white/15">🔑</div>
-        <div class="font-bold text-lg text-white mt-3">Rent</div>
-        <div class="text-xs text-white/50 mt-1 group-hover:text-white/70">Find rental opportunities</div>
-        <div class="intent-arrow">
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-          </svg>
+      {# Editorial CTA tile — fills the trailing slot and converts empty grid space into a clear navigation cue. #}
+      <a href="{% url 'web:markets' %}" class="vv-dest vv-dest--cta group" aria-label="Explore all markets">
+        <div class="vv-dest-cta-inner">
+          <span class="vv-dest-cta-eyebrow">Curated</span>
+          <span class="vv-dest-cta-title">
+            Explore<br/>all markets
+          </span>
+          <span class="vv-dest-cta-arrow" aria-hidden="true">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.25">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 5l7 7-7 7"/>
+            </svg>
+          </span>
         </div>
       </a>
-
     </div>
+  </div>
+</section>
+{% endif %}
 
-    {# ── Trust strip ──────────────────────────────────────────────── #}
-    <div class="mt-14 flex flex-wrap items-center justify-center gap-6 text-sm text-white/35 animate-fade-in-up" style="animation-delay:240ms">
-      <div><span class="text-white font-bold">7</span> Countries</div>
-      <span class="h-px w-5 bg-white/15"></span>
-      <div><span class="text-white font-bold">0–100</span> AI investment score</div>
-      <span class="h-px w-5 bg-white/15"></span>
-      <div class="flex items-center gap-1.5">
-        <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span class="text-white font-bold">Live</span> AI advisor
+
+{% comment %}
+═══════════════════════════════════════════════════════════════════
+FEATURED PROPERTIES — visual deal preview
+Sits immediately under "Top Investments" so the country grid
+hands off straight into a tangible, click-through deal preview.
+═══════════════════════════════════════════════════════════════════
+{% endcomment %}
+{% if featured %}
+<section class="bg-ink-50 py-16 sm:py-20 reveal">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6">
+    <div class="rounded-[2rem] border border-ink-200 bg-white p-5 sm:p-7 shadow-card">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-7">
+      <div>
+        <span class="pill bg-amber-50 text-amber-700 border border-amber-200">Featured deals</span>
+        <h2 class="mt-3 font-display text-3xl sm:text-4xl font-black tracking-tight text-ink-900">
+          Handpicked opportunities worth a closer look.
+        </h2>
+        <p class="section-subtitle">
+          Editorially highlighted listings with strong investment signals and clearer underwriting data.
+        </p>
+      </div>
+      <a href="{% url 'web:marketplace' %}?ordering=-metric__investment_score"
+         class="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-900 transition-colors">
+        View all listings
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 stagger-children">
+      {% for p in featured %}
+        {% include "web/components/property_card.html" with p=p %}
+      {% endfor %}
+    </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+
+{% if hero_gallery %}
+<section class="bg-white py-16 sm:py-20">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10 reveal">
+      <div>
+        <div class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-emerald-700">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          AI-ranked brief
+        </div>
+        <h2 class="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-ink-900">
+          A shortlist you can act on.
+        </h2>
+        <p class="mt-1.5 text-sm text-ink-500 max-w-lg">
+          Every recommendation brings the investment score, income range, risk level and market context.
+        </p>
+      </div>
+      <div class="flex shrink-0 items-center gap-4">
+        <div class="rounded-2xl border border-ink-200 bg-ink-50 px-5 py-3 text-right">
+          <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400">Avg score</div>
+          <div class="text-3xl font-black text-ink-900 tabular-nums leading-none mt-1">{{ stats.avg_score }}</div>
+        </div>
+        <a href="{% url 'web:marketplace' %}?ordering=-metric__investment_score"
+           class="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-brand-600 hover:bg-brand-500 text-white px-5 py-2.5 text-sm font-bold shadow-md shadow-brand-500/30 transition-all hover:-translate-y-0.5">
+          View all
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </a>
       </div>
     </div>
 
-  </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
+      {% for h in hero_gallery %}
+        <a href="{% url 'web:property_detail' h.id %}"
+           class="group relative flex flex-col overflow-hidden rounded-3xl border border-ink-200 bg-white shadow-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:border-brand-200">
 
-  {# Bottom fade into next section #}
-  <div class="absolute bottom-0 inset-x-0 h-28 pointer-events-none"
-       style="background:linear-gradient(to top,rgb(248 250 252),transparent)"></div>
+          {# Property image #}
+          <div class="relative aspect-[16/10] overflow-hidden bg-ink-100">
+            <img src="{{ h.primary_image_url }}" alt="{{ h.title }}" loading="lazy"
+                 class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"/>
+            <div class="absolute inset-0 bg-gradient-to-t from-ink-900/80 via-ink-900/10 to-transparent"></div>
+
+            {# AI Score badge #}
+            {% if h.metric %}
+              <div class="absolute right-4 top-4 flex h-[52px] w-[52px] flex-col items-center justify-center rounded-full bg-white shadow-xl ring-4 ring-white/30">
+                <span class="text-[1.05rem] font-black leading-none text-ink-900 tabular-nums">{{ h.metric.investment_score }}</span>
+                <span class="mt-0.5 text-[7px] font-bold uppercase tracking-widest text-ink-400">score</span>
+              </div>
+            {% endif %}
+
+            {# Location + Title overlay #}
+            <div class="absolute inset-x-0 bottom-0 p-4">
+              <div class="text-[11px] font-bold uppercase tracking-widest text-white/65">
+                {{ h.country.flag_emoji }} {{ h.city.name }} &middot; {{ h.get_property_type_display }}
+              </div>
+              <div class="mt-1 text-base font-black leading-snug text-white line-clamp-2 group-hover:text-emerald-200 transition-colors">
+                {{ h.title }}
+              </div>
+            </div>
+          </div>
+
+          {# Stats row #}
+          <div class="grid grid-cols-3 divide-x divide-ink-100 border-t border-ink-100 mt-auto">
+            <div class="px-4 py-3.5">
+              <div class="text-[9px] font-bold uppercase tracking-widest text-ink-400">Price</div>
+              <div class="mt-0.5 text-sm font-black text-ink-900 tabular-nums">{{ h.price|money:h.currency }}</div>
+            </div>
+            <div class="px-4 py-3.5">
+              <div class="text-[9px] font-bold uppercase tracking-widest text-ink-400">Yield</div>
+              <div class="mt-0.5 text-sm font-black text-emerald-600 tabular-nums">
+                {% if h.metric %}{{ h.metric.rental_yield|pct }}{% else %}—{% endif %}
+              </div>
+            </div>
+            <div class="px-4 py-3.5">
+              <div class="text-[9px] font-bold uppercase tracking-widest text-ink-400">Market</div>
+              <div class="mt-0.5 text-sm font-black text-ink-900">{{ h.country.code }}</div>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+
+    <div class="mt-8 flex justify-center sm:hidden">
+      <a href="{% url 'web:marketplace' %}?ordering=-metric__investment_score"
+         class="inline-flex items-center gap-1.5 rounded-full bg-brand-600 hover:bg-brand-500 text-white px-6 py-2.5 text-sm font-bold shadow-md shadow-brand-500/30 transition-all">
+        View all listings
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+  </div>
+</section>
+{% endif %}
+
+
+{% comment %}
+═══════════════════════════════════════════════════════════════════
+START HERE — quick user paths
+═══════════════════════════════════════════════════════════════════
+{% endcomment %}
+<section class="bg-ink-50 py-16 sm:py-20">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6">
+    <div class="grid gap-8 lg:grid-cols-[0.92fr_1.2fr] lg:items-end mb-10 reveal">
+      <div>
+        <span class="pill bg-white text-brand-700 border border-brand-200 shadow-sm">Start here</span>
+        <h2 class="mt-4 font-display text-3xl sm:text-4xl font-black tracking-tight text-ink-900">
+          Pick your next move.
+        </h2>
+      </div>
+      <p class="text-base text-ink-600 leading-relaxed max-w-2xl lg:ml-auto">
+        Vivalty works like a guided dashboard: start with listings, validate the numbers,
+        compare candidates, or ask the investor desk to prepare a shortlist.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
+      <a href="{% url 'web:marketplace' %}?ordering=-metric__investment_score"
+         class="landing-path-card group">
+        <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-brand-200/45 blur-2xl transition-transform group-hover:scale-125"></div>
+        <div class="absolute left-6 top-6 text-[11px] font-black uppercase tracking-[0.18em] text-brand-600/70">01</div>
+        <div class="relative">
+          <div class="ml-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-lg shadow-brand-600/20">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <h3 class="mt-7 text-lg font-extrabold text-ink-900">Browse best deals</h3>
+          <p class="mt-2 text-sm text-ink-600 leading-relaxed">
+            Start with the highest AI-scored listings across every market.
+          </p>
+          <div class="mt-4 inline-flex rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-bold text-brand-700">Best for discovery</div>
+          <div class="mt-5 inline-flex items-center gap-1 text-sm font-bold text-brand-700">
+            Explore marketplace
+            <svg class="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+      </a>
+
+      <a href="{% url 'web:simulator' %}"
+         class="landing-path-card group">
+        <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-sky-200/50 blur-2xl transition-transform group-hover:scale-125"></div>
+        <div class="absolute left-6 top-6 text-[11px] font-black uppercase tracking-[0.18em] text-sky-600/70">02</div>
+        <div class="relative">
+          <div class="ml-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-lg shadow-sky-600/20">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M9 17V9m4 8V5m4 12v-6"/>
+            </svg>
+          </div>
+          <h3 class="mt-7 text-lg font-extrabold text-ink-900">Run the numbers</h3>
+          <p class="mt-2 text-sm text-ink-600 leading-relaxed">
+            Model mortgage, fees, cashflow and appreciation before you enquire.
+          </p>
+          <div class="mt-4 inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-bold text-sky-700">Best for underwriting</div>
+          <div class="mt-5 inline-flex items-center gap-1 text-sm font-bold text-sky-700">
+            Open simulator
+            <svg class="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+      </a>
+
+      <a href="{% url 'web:compare' %}"
+         class="landing-path-card group">
+        <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-amber-200/50 blur-2xl transition-transform group-hover:scale-125"></div>
+        <div class="absolute left-6 top-6 text-[11px] font-black uppercase tracking-[0.18em] text-amber-600/70">03</div>
+        <div class="relative">
+          <div class="ml-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-500/20">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7v10m0 0l4-4m-4 4l-4-4m12-6v10m0 0l4-4m-4 4l-4-4"/>
+            </svg>
+          </div>
+          <h3 class="mt-7 text-lg font-extrabold text-ink-900">Compare options</h3>
+          <p class="mt-2 text-sm text-ink-600 leading-relaxed">
+            Place properties side-by-side with score, yield and cashflow.
+          </p>
+          <div class="mt-4 inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">Best for decisions</div>
+          <div class="mt-5 inline-flex items-center gap-1 text-sm font-bold text-amber-700">
+            Compare listings
+            <svg class="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+      </a>
+
+      <a href="#investor-desk"
+         class="group relative overflow-hidden rounded-3xl border border-ink-800 bg-gradient-to-br from-ink-900 via-slate-800 to-brand-900 p-6 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+        <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-emerald-400/20 blur-2xl transition-transform group-hover:scale-125"></div>
+        <div class="absolute left-6 top-6 text-[11px] font-black uppercase tracking-[0.18em] text-emerald-300/70">04</div>
+        <div class="relative">
+          <div class="ml-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white ring-1 ring-white/15">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m6-6a4 4 0 11-8 0 4 4 0 018 0zm6 2a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <h3 class="mt-7 text-lg font-extrabold text-white">Talk to an expert</h3>
+          <p class="mt-2 text-sm text-white/65 leading-relaxed">
+            Get a curated shortlist from the Vivalty investor desk.
+          </p>
+          <div class="mt-4 inline-flex rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-emerald-200 ring-1 ring-white/10">Best for assisted search</div>
+          <div class="mt-5 inline-flex items-center gap-1 text-sm font-bold text-emerald-300">
+            Speak to the desk
+            <svg class="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
 </section>
 
 
 {% comment %}
 ═══════════════════════════════════════════════════════════════════
-COUNTRIES — 7 market cards
+WHY VIVALTY — three clearer benefits
 ═══════════════════════════════════════════════════════════════════
 {% endcomment %}
-<section class="bg-ink-50 pt-6 pb-20">
+<section class="bg-ink-50 py-16 sm:py-20">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6">
+    <div class="text-center mb-12 reveal">
+      <span class="pill bg-white border border-ink-200 text-ink-600 shadow-sm">Why investors use Vivalty</span>
+      <h2 class="mt-4 font-display text-3xl sm:text-4xl font-black tracking-tight text-ink-900">
+        A calmer way to evaluate international property.
+      </h2>
+      <p class="section-subtitle max-w-2xl mx-auto">
+        Beautiful listings are only useful when the numbers are clear. Vivalty adds the investment layer on top.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 stagger-children">
+      <div class="card p-7 group hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-700 ring-1 ring-brand-200/60">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+          </svg>
+        </div>
+        <h3 class="mt-5 text-lg font-extrabold text-ink-900">Explainable AI score, not a black box.</h3>
+        <p class="mt-2 text-sm text-ink-600 leading-relaxed">
+          Every 0–100 score breaks down into six factors — yield, demand, trend, value-for-money, verification and risk —
+          with the exact weights and source data shown alongside each listing.
+        </p>
+        <a href="{% url 'web:methodology' %}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:text-brand-900">
+          Read the methodology
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+
+      <div class="card p-7 group hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-700 ring-1 ring-sky-200/60">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M9 17V9m4 8V5m4 12v-6"/>
+          </svg>
+        </div>
+        <h3 class="mt-5 text-lg font-extrabold text-ink-900">Underwrite each deal in 60 seconds.</h3>
+        <p class="mt-2 text-sm text-ink-600 leading-relaxed">
+          The investment simulator models mortgage scenarios, country-specific taxes and fees,
+          monthly cash-flow, cap rate, cash-on-cash return and a 10-year appreciation projection.
+        </p>
+        <a href="{% url 'web:simulator' %}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-sky-700 hover:text-sky-900">
+          Run a scenario
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+
+      <div class="card p-7 group hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-700 ring-1 ring-amber-200/60">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/>
+          </svg>
+        </div>
+        <h3 class="mt-5 text-lg font-extrabold text-ink-900">Diversify across 7 vetted markets.</h3>
+        <p class="mt-2 text-sm text-ink-600 leading-relaxed">
+          We cover France, the UK, Spain, Switzerland, Italy, the UAE and Portugal —
+          curated for liquidity, transparency and an established investor protection regime.
+        </p>
+        <a href="{% url 'web:markets' %}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-amber-700 hover:text-amber-900">
+          See market intelligence
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+{% comment %}
+═══════════════════════════════════════════════════════════════════
+MARKETS — approachable exploration grid
+═══════════════════════════════════════════════════════════════════
+{% endcomment %}
+<section class="bg-white py-16 sm:py-20">
   <div class="mx-auto max-w-7xl px-4 sm:px-6">
 
-    <div class="text-center mb-12 reveal">
-      <span class="pill bg-white border border-ink-200 text-ink-600 shadow-sm">Choose your market</span>
-      <h2 class="mt-4 section-title">7 Handpicked Markets</h2>
-      <p class="section-subtitle max-w-lg mx-auto">
-        Select a country to explore its properties, cities, and AI-computed investment data.
+    <div class="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end mb-10 reveal">
+      <div>
+        <span class="pill bg-ink-50 border border-ink-200 text-ink-600 shadow-sm">Explore markets</span>
+        <h2 class="mt-4 font-display text-3xl sm:text-4xl font-black tracking-tight text-ink-900">
+          Start with the market that matches your strategy.
+        </h2>
+      </div>
+      <p class="section-subtitle max-w-xl mx-auto">
+        From income-focused Portugal and UAE opportunities to lower-risk Swiss capital preservation,
+        browse markets through the lens of returns, risk and rental demand.
       </p>
     </div>
 
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 stagger-children">
       {% for c in countries %}
       <a href="{% url 'web:marketplace' %}?country={{ c.code }}"
-         class="country-card group">
-
-        {# Hover tint #}
-        <div class="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300
-                    bg-gradient-to-br from-brand-500/8 to-emerald-500/12"></div>
-
+         class="country-card group !rounded-3xl !p-5">
+        <div class="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-brand-500/10 via-white to-sky-500/10"></div>
         <div class="relative z-10">
-          {# Flag #}
-          <div class="text-5xl mb-4 transition-transform duration-200 group-hover:scale-110 origin-left">{{ c.flag_emoji }}</div>
-
-          {# Name + currency #}
+          <div class="flex items-center justify-between">
+            <div class="text-5xl mb-4 transition-transform duration-200 group-hover:scale-110 origin-left">{{ c.flag_emoji }}</div>
+            {% if c.avg_score %}
+              <div class="text-right">
+                <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400">Avg score</div>
+                <div class="font-display text-lg font-black text-ink-900 tabular-nums">{{ c.avg_score|floatformat:0 }}</div>
+              </div>
+            {% endif %}
+          </div>
           <div class="font-bold text-base text-ink-900 group-hover:text-brand-700 transition-colors">{{ c.name }}</div>
-          <div class="text-xs text-ink-400 mt-0.5">{{ c.currency }}</div>
-
-          {# ROI badge #}
+          <div class="text-xs text-ink-400 mt-0.5">{{ c.currency }} · {{ c.cities_count }} {{ c.cities_count|pluralize:"city,cities" }}</div>
           <div class="mt-4 flex items-end justify-between">
             <div>
               <div class="text-[10px] font-semibold uppercase tracking-widest text-ink-400">ROI range</div>
               <div class="text-sm font-extrabold text-brand-600 mt-0.5">{{ c.base_roi_min }}–{{ c.base_roi_max }}%</div>
             </div>
-            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-ink-100 group-hover:bg-brand-100
-                        group-hover:text-brand-600 text-ink-400 transition-all">
-              <svg class="h-3.5 w-3.5 -translate-x-px group-hover:translate-x-0 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-              </svg>
+            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-ink-100 group-hover:bg-brand-100 group-hover:text-brand-600 text-ink-400 transition-all">
+              <svg class="h-3.5 w-3.5 -translate-x-px group-hover:translate-x-0 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
             </div>
+          </div>
+          <div class="mt-4 text-[11px] font-bold uppercase tracking-widest text-ink-400 group-hover:text-brand-600 transition-colors">
+            View opportunities
           </div>
         </div>
       </a>
@@ -174,88 +572,141 @@ COUNTRIES — 7 market cards
 
 {% comment %}
 ═══════════════════════════════════════════════════════════════════
-FEATURED PROPERTIES
+INVESTOR RELATIONS — institutional capture form
 ═══════════════════════════════════════════════════════════════════
 {% endcomment %}
-{% if featured %}
-<section class="bg-white py-20 reveal">
-  <div class="mx-auto max-w-7xl px-4 sm:px-6">
+<section id="investor-desk" class="bg-ink-50 py-20">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 grid lg:grid-cols-[1.2fr_1fr] gap-10 items-start">
+    <div>
+      <span class="pill bg-white border border-ink-200 text-ink-600 shadow-sm">Investor relations</span>
+      <h2 class="mt-4 section-title">Speak to the Vivalty investor desk.</h2>
+      <p class="section-subtitle max-w-xl">
+        Whether you're allocating €250k or €25m, our desk will map the right markets, vehicles and tax wrappers
+        to your strategy — and prepare a side-by-side shortlist before any call.
+      </p>
 
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
-      <div>
-        <span class="pill bg-amber-50 text-amber-700 border border-amber-200">Top picks</span>
-        <h2 class="mt-3 section-title">Featured Opportunities</h2>
-        <p class="section-subtitle">Highest-scored listings across our 7 markets.</p>
+      <div class="mt-6 grid sm:grid-cols-2 gap-3">
+        <div class="trust-badge w-full">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+          GDPR-compliant data handling
+        </div>
+        <div class="trust-badge w-full">
+          <svg class="h-3.5 w-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 5.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Editorially-vetted opportunities
+        </div>
+        <div class="trust-badge w-full">
+          <svg class="h-3.5 w-3.5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/></svg>
+          Family-office &amp; institutional desk
+        </div>
+        <div class="trust-badge w-full">
+          <svg class="h-3.5 w-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Response within 1 business day
+        </div>
       </div>
-      <a href="{% url 'web:marketplace' %}"
-         class="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-900 transition-colors">
-        View all listings
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-        </svg>
-      </a>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 stagger-children">
-      {% for p in featured %}
-        {% include "web/components/property_card.html" with p=p %}
-      {% endfor %}
-    </div>
+    <form method="post" action="{% url 'web:investor_inquiry' %}"
+          class="card p-6 space-y-4">
+      {% csrf_token %}
+      <input type="hidden" name="source_page" value="home_hero"/>
+      <input type="hidden" name="next" value="{% url 'web:home' %}"/>
 
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label class="label">Full name</label>
+          {{ investor_form.name }}
+        </div>
+        <div>
+          <label class="label">Email</label>
+          {{ investor_form.email }}
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label class="label">Phone (optional)</label>
+          {{ investor_form.phone }}
+        </div>
+        <div>
+          <label class="label">Investor profile</label>
+          {{ investor_form.profile }}
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label class="label">Max budget</label>
+          {{ investor_form.budget_max }}
+        </div>
+        <div>
+          <label class="label">Currency</label>
+          {{ investor_form.budget_currency }}
+        </div>
+      </div>
+      <div>
+        <label class="label">Markets you're interested in</label>
+        {{ investor_form.markets_of_interest }}
+      </div>
+      <div>
+        <label class="label">Goals &amp; constraints (optional)</label>
+        {{ investor_form.message }}
+      </div>
+      <button type="submit" class="btn-primary w-full">
+        Speak to the investor desk
+      </button>
+      <p class="text-[11px] text-ink-500 text-center">
+        We never share data with third parties. Vivalty is a marketplace and information service —
+        we are not a regulated investment advisor.
+      </p>
+    </form>
   </div>
 </section>
-{% endif %}
 
 
 {% comment %}
 ═══════════════════════════════════════════════════════════════════
-HOW IT WORKS — 3 steps
+HOW IT WORKS — 3 institutional steps
 ═══════════════════════════════════════════════════════════════════
 {% endcomment %}
-<section class="bg-ink-50 py-20">
+<section class="bg-white py-20">
   <div class="mx-auto max-w-7xl px-4 sm:px-6">
-
     <div class="text-center mb-12 reveal">
-      <span class="pill bg-white border border-ink-200 text-ink-600 shadow-sm">Simple process</span>
-      <h2 class="mt-4 section-title">How Vivalty Works</h2>
-      <p class="section-subtitle max-w-lg mx-auto">From intent to investment decision in three steps.</p>
+      <span class="pill bg-ink-50 border border-ink-200 text-ink-600 shadow-sm">How it works</span>
+      <h2 class="mt-4 section-title">From shortlist to underwriting in three steps.</h2>
+      <p class="section-subtitle max-w-lg mx-auto">No spreadsheets. No guesswork. Every figure traces back to a documented input.</p>
     </div>
-
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 stagger-children">
-
       <div class="card p-7 relative overflow-hidden">
         <div class="step-number">1</div>
         <div class="relative z-10">
           <div class="step-icon">🎯</div>
-          <div class="font-bold text-ink-900 text-lg mt-4">Choose your intent</div>
+          <div class="font-bold text-ink-900 text-lg mt-4">Shortlist by score</div>
           <p class="mt-2 text-sm text-ink-600 leading-relaxed">
-            Decide whether you want to buy, sell or rent, then pick from our 7 carefully selected markets across Europe and the Middle East.
+            Filter listings by AI score, ROI, yield, country and price. Each card discloses its confidence level so you know
+            which numbers are verified and which are estimates.
           </p>
         </div>
       </div>
-
       <div class="card p-7 relative overflow-hidden">
         <div class="step-number">2</div>
         <div class="relative z-10">
-          <div class="step-icon">🔍</div>
-          <div class="font-bold text-ink-900 text-lg mt-4">Browse &amp; filter</div>
+          <div class="step-icon">📊</div>
+          <div class="font-bold text-ink-900 text-lg mt-4">Underwrite with the simulator</div>
           <p class="mt-2 text-sm text-ink-600 leading-relaxed">
-            Use powerful filters — city, property type, price range, ROI and AI investment score. Every listing is scored 0–100 by our models.
+            Model the deal in 60 seconds: down payment, mortgage terms, country-specific taxes &amp; fees,
+            monthly cash-flow and a 10-year projection of equity build-up.
           </p>
         </div>
       </div>
-
       <div class="card p-7 relative overflow-hidden">
         <div class="step-number">3</div>
         <div class="relative z-10">
-          <div class="step-icon">🤖</div>
-          <div class="font-bold text-ink-900 text-lg mt-4">Ask the AI advisor</div>
+          <div class="step-icon">🤝</div>
+          <div class="font-bold text-ink-900 text-lg mt-4">Compare and contact</div>
           <p class="mt-2 text-sm text-ink-600 leading-relaxed">
-            Get analyst-style guidance grounded in our live database — ROI comparisons, risk profiles, city demand trends. Never hallucinated.
+            Place 2–4 listings side-by-side. Export a one-page investment summary or contact the listing agency
+            directly through Vivalty's protected channel.
           </p>
         </div>
       </div>
-
     </div>
   </div>
 </section>
@@ -263,84 +714,194 @@ HOW IT WORKS — 3 steps
 
 {% comment %}
 ═══════════════════════════════════════════════════════════════════
-AI ADVISOR CTA — dark band
+AI ADVISOR CTA
 ═══════════════════════════════════════════════════════════════════
 {% endcomment %}
 <section class="relative overflow-hidden bg-ink-900 py-24 reveal">
   <div class="absolute inset-0 bg-radial-brand opacity-40 pointer-events-none"></div>
   <div class="absolute inset-0 pointer-events-none"
        style="background:radial-gradient(ellipse 70% 60% at 50% 100%,rgba(5,150,105,.12),transparent)"></div>
-
   <div class="relative z-10 mx-auto max-w-3xl px-4 sm:px-6 text-center">
     <div class="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-4 py-1.5 text-sm text-brand-300 mb-6">
       <span class="h-1.5 w-1.5 rounded-full bg-brand-400 animate-pulse"></span>
-      Powered by AI · Grounded in data
+      Conversational investor assistant · grounded in our database
     </div>
-
     <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.1]">
-      Not sure where to invest?<br/>
+      Not sure which market fits your strategy?<br/>
       <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-emerald-300">
-        Ask our AI advisor.
+        Ask the Vivalty AI advisor.
       </span>
     </h2>
-
     <p class="mt-5 text-lg text-white/55 max-w-xl mx-auto">
-      Compare markets, model rental yields, assess risk factors — all powered by our proprietary real estate database.
+      Compare yields, model rental scenarios, screen by risk profile — never with hallucinated numbers,
+      always with the source listings cited inline.
     </p>
-
     <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
       <a href="{% url 'web:chat' %}"
-         class="btn bg-brand-600 text-white hover:bg-brand-500 focus:ring-brand-500 px-8 py-3.5 text-base font-semibold rounded-xl shadow-lg shadow-brand-500/25 hover:shadow-brand-400/40 transition-all">
+         class="btn bg-brand-600 text-white hover:bg-brand-500 focus:ring-brand-500 px-8 py-3.5 text-base font-semibold rounded-xl shadow-lg shadow-brand-500/25">
         Start a conversation →
       </a>
-      <a href="{% url 'web:marketplace' %}"
-         class="btn border border-white/20 bg-white/5 text-white hover:bg-white/10 px-8 py-3.5 text-base rounded-xl transition-all">
-        Browse marketplace
+      <a href="{% url 'web:methodology' %}"
+         class="btn border border-white/20 bg-white/5 text-white hover:bg-white/10 px-8 py-3.5 text-base rounded-xl">
+        See methodology
       </a>
-    </div>
-
-    {# Mini stats #}
-    <div class="mt-14 grid grid-cols-3 gap-4 max-w-sm mx-auto text-center">
-      <div>
-        <div class="text-2xl font-black text-white">7</div>
-        <div class="text-xs text-white/40 mt-0.5 uppercase tracking-wide">Markets</div>
-      </div>
-      <div class="border-x border-white/10">
-        <div class="text-2xl font-black text-white">0–100</div>
-        <div class="text-xs text-white/40 mt-0.5 uppercase tracking-wide">AI score</div>
-      </div>
-      <div>
-        <div class="text-2xl font-black text-white">Live</div>
-        <div class="text-xs text-white/40 mt-0.5 uppercase tracking-wide">Advisor</div>
-      </div>
     </div>
   </div>
 </section>
 
+{{ cities_by_country|json_script:"hero-cities-data" }}
 
-{# AI advisor modal (Flowbite) #}
-<div id="demo-ai-modal" tabindex="-1" aria-hidden="true"
-     class="fixed left-0 right-0 top-0 z-50 hidden h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden p-4">
-  <div class="relative max-h-full w-full max-w-2xl">
-    <div class="relative rounded-2xl bg-white p-6 shadow-2xl">
-      <div class="mb-3 flex items-center justify-between">
-        <h3 class="text-xl font-semibold text-ink-900">AI Advisor Preview</h3>
-        <button type="button"
-                class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-500 hover:bg-ink-100"
-                data-modal-hide="demo-ai-modal">✕</button>
-      </div>
-      <p class="text-sm text-ink-700">Get country comparisons, yield scenarios, and risk-aware recommendations powered by your platform data.</p>
-      <div class="mt-4 flex gap-3">
-        <a href="{% url 'web:chat' %}" class="btn-primary">Open AI advisor</a>
-        <button type="button" class="btn-secondary" data-modal-hide="demo-ai-modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
+{# ── Hero custom filters + destination thumbnails ──────────────── #}
+<script>
+(function () {
+  var citiesByCountry = {};
+  try {
+    var cityData = document.getElementById('hero-cities-data');
+    if (cityData) citiesByCountry = JSON.parse(cityData.textContent || '{}');
+  } catch (err) {
+    citiesByCountry = {};
+  }
+
+  function closeFilters(except) {
+    document.querySelectorAll('.vv-filter-choice.is-open').forEach(function (choice) {
+      if (choice !== except) {
+        choice.classList.remove('is-open');
+        var trigger = choice.querySelector('[data-filter-trigger]');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  function selectFilterOption(choice, option) {
+    if (!choice || !option || option.classList.contains('is-disabled')) return;
+
+    var input = choice.querySelector('[data-filter-input]');
+    var value = choice.querySelector('[data-filter-value]');
+    var nextValue = option.dataset.value || '';
+    var nextLabel = option.dataset.label || option.textContent.trim();
+
+    if (input) input.value = nextValue;
+    if (value) value.textContent = nextLabel;
+
+    choice.querySelectorAll('.vv-filter-option').forEach(function (item) {
+      item.classList.toggle('is-selected', item === option);
+    });
+
+    if (choice.dataset.filter === 'country') {
+      populateCityOptions(nextValue);
+    }
+
+    closeFilters();
+  }
+
+  function buildCityButton(city) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'vv-filter-option';
+    button.dataset.value = city.slug;
+    button.dataset.label = city.name;
+    button.textContent = city.name;
+    return button;
+  }
+
+  function populateCityOptions(countryCode) {
+    // City field was removed from the hero — keep this helper safe-by-default
+    // so any reuse of the marketplace patterns continues to behave correctly
+    // (and never shows the old "Choose country first" shame copy).
+    var cityChoice = document.querySelector('.vv-filter-choice[data-filter=\"city\"]');
+    if (!cityChoice) return;
+
+    var menu = cityChoice.querySelector('[data-filter-menu]');
+    var input = cityChoice.querySelector('[data-filter-input]');
+    var value = cityChoice.querySelector('[data-filter-value]');
+    var cities = countryCode ? (citiesByCountry[countryCode] || []) : [];
+
+    if (input) input.value = '';
+    if (value) value.textContent = 'All cities';
+    if (!menu) return;
+
+    menu.innerHTML = '';
+
+    var allButton = document.createElement('button');
+    allButton.type = 'button';
+    allButton.className = 'vv-filter-option is-selected';
+    allButton.dataset.value = '';
+    allButton.dataset.label = 'All cities';
+    allButton.textContent = 'All cities';
+    menu.appendChild(allButton);
+
+    cities.forEach(function (city) {
+      menu.appendChild(buildCityButton(city));
+    });
+  }
+
+  document.querySelectorAll('.vv-filter-choice').forEach(function (choice) {
+    var trigger = choice.querySelector('[data-filter-trigger]');
+    var menu = choice.querySelector('[data-filter-menu]');
+
+    if (trigger) {
+      trigger.addEventListener('click', function () {
+        var willOpen = !choice.classList.contains('is-open');
+        closeFilters(choice);
+        choice.classList.toggle('is-open', willOpen);
+        trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      });
+    }
+
+    if (menu) {
+      menu.addEventListener('click', function (event) {
+        var option = event.target.closest('.vv-filter-option');
+        if (option) selectFilterOption(choice, option);
+      });
+    }
+  });
+
+  document.addEventListener('click', function (event) {
+    if (!event.target.closest('.vv-filter-choice')) closeFilters();
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') closeFilters();
+  });
+
+  populateCityOptions('');
+
+  // High-resolution, editorial-grade Unsplash photos for each market.
+  // ?fit=crop&w=1600&q=88&auto=format keeps file sizes reasonable while
+  // staying crisp on 2x/Retina displays at our card sizes.
+  var IMG_PARAMS = '?auto=format&fit=crop&w=1600&q=88';
+  var COUNTRY_IMGS = {
+    FR: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34' + IMG_PARAMS, // Paris - Eiffel Tower
+    PT: 'https://images.unsplash.com/photo-1513735492246-483525079686' + IMG_PARAMS, // Lisbon - Alfama
+    ES: 'https://images.unsplash.com/photo-1583422409516-2895a77efded' + IMG_PARAMS, // Barcelona - Sagrada Familia
+    AE: 'https://images.unsplash.com/photo-1518684079-3c830dcef090' + IMG_PARAMS, // Dubai - Burj Khalifa skyline
+    GB: 'https://images.unsplash.com/photo-1533929736458-ca588d08c8be' + IMG_PARAMS, // London - Tower Bridge dusk
+    CH: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99' + IMG_PARAMS, // Swiss Alps - Lauterbrunnen
+    IT: 'https://images.unsplash.com/photo-1531572753322-ad063cecc140' + IMG_PARAMS, // Rome - Colosseum
+    MA: 'https://images.unsplash.com/photo-1597211833712-5e41faa202ea' + IMG_PARAMS, // Marrakech - Medina
+    GR: 'https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e' + IMG_PARAMS, // Santorini - Oia
+    TR: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200' + IMG_PARAMS, // Istanbul - Bosphorus
+    US: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9' + IMG_PARAMS, // NYC - Manhattan skyline
+    AU: 'https://images.unsplash.com/photo-1523428096881-5bd79d043006' + IMG_PARAMS, // Sydney - Opera House
+  };
+
+  document.querySelectorAll('.vv-dest-bg').forEach(function (el) {
+    var url = COUNTRY_IMGS[el.dataset.code];
+    if (!url) {
+      el.style.backgroundImage = 'linear-gradient(135deg,#1e293b 0%,#0f172a 100%)';
+      return;
+    }
+    // Preload so we can swap to the high-res image only once it's ready,
+    // avoiding a flash of broken/blank state on slow connections.
+    var preload = new Image();
+    preload.onload = function () {
+      el.style.backgroundImage = 'url(' + url + ')';
+      el.classList.add('is-loaded');
+    };
+    preload.src = url;
+  });
+})();
+</script>
 
 {% endblock %}
 
-
-{% block body_extra %}
-  <script type="module" src="{% static 'js/hero3d.js' %}"></script>
-{% endblock %}

@@ -137,6 +137,21 @@
            group-hover:bg-white/20 group-hover:text-white/80;
   }
 
+  .landing-kpi {
+    @apply rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-md
+           shadow-[0_16px_40px_rgba(0,0,0,0.16)];
+  }
+  .landing-kpi-value {
+    @apply block font-display text-2xl font-black leading-none text-white tabular-nums;
+  }
+  .landing-kpi-label {
+    @apply mt-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-white/50;
+  }
+  .landing-path-card {
+    @apply relative overflow-hidden rounded-3xl border border-ink-200 bg-white p-6 shadow-card
+           transition-all duration-300 hover:-translate-y-1 hover:border-brand-200 hover:shadow-xl;
+  }
+
   /* ── Landing page: country cards ───────────────────────────── */
   .country-card {
     @apply relative overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card
@@ -172,6 +187,1688 @@
   .mobile-nav-item {
     @apply flex items-center gap-2 rounded-xl px-3 py-2.5 transition-colors
            text-ink-700 hover:bg-ink-50;
+  }
+
+  /* ── Institutional / financial-terminal accents ────────────── */
+  .stat-card {
+    @apply relative rounded-2xl border border-ink-200/70 bg-white p-5
+           transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg;
+  }
+  .stat-card-dark {
+    @apply relative rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-md
+           transition-all duration-200 hover:bg-white/[0.06];
+  }
+  .stat-label {
+    @apply text-[10px] font-bold uppercase tracking-[0.18em] text-ink-500;
+  }
+  .stat-value {
+    @apply mt-1 font-display text-2xl sm:text-3xl font-black tracking-tight text-ink-900 tabular-nums;
+  }
+  .stat-delta-up {
+    @apply inline-flex items-center gap-0.5 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700;
+  }
+  .stat-delta-down {
+    @apply inline-flex items-center gap-0.5 rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold text-rose-700;
+  }
+
+  /* Bloomberg-style data row — used in tables, score breakdowns, simulator. */
+  .data-row {
+    @apply flex items-center justify-between gap-4 border-b border-ink-100 py-2.5;
+  }
+  .data-row:last-child {
+    @apply border-b-0;
+  }
+  .data-key {
+    @apply text-xs font-medium text-ink-500 uppercase tracking-wide;
+  }
+  .data-value {
+    @apply text-sm font-bold text-ink-900 tabular-nums;
+  }
+  .data-value-pos {
+    @apply text-sm font-bold text-emerald-600 tabular-nums;
+  }
+  .data-value-neg {
+    @apply text-sm font-bold text-rose-600 tabular-nums;
+  }
+
+  /* Inline factor bar (used for "How AI Score Works" + property detail) */
+  .factor-bar-track {
+    @apply relative h-2 w-full overflow-hidden rounded-full bg-ink-100;
+  }
+  .factor-bar-fill {
+    @apply h-full rounded-full bg-gradient-to-r from-brand-500 to-emerald-400 transition-all duration-700 ease-out;
+  }
+  .factor-bar-fill-warn {
+    @apply h-full rounded-full bg-gradient-to-r from-amber-400 to-rose-400 transition-all duration-700 ease-out;
+  }
+
+  /* Trust badges — institutional look */
+  .trust-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white
+           px-3 py-1.5 text-xs font-semibold text-ink-700 shadow-sm;
+  }
+  .trust-badge-dark {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5
+           px-3 py-1.5 text-xs font-semibold text-white/80;
+  }
+
+  /* Premium analytics lock overlay */
+  .premium-lock {
+    @apply absolute inset-0 flex flex-col items-center justify-center gap-3
+           rounded-2xl bg-gradient-to-b from-white/40 via-white/85 to-white/95
+           backdrop-blur-md text-center p-6 z-10;
+  }
+
+  /* Disclosure pill (estimated / verified / country-baseline) */
+  .disclosure {
+    @apply inline-flex items-center gap-1.5 rounded-md border border-ink-200 bg-white
+           px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-600;
+  }
+  .disclosure-verified {
+    @apply border-emerald-200 bg-emerald-50 text-emerald-700;
+  }
+  .disclosure-estimated {
+    @apply border-amber-200 bg-amber-50 text-amber-700;
+  }
+  .disclosure-baseline {
+    @apply border-rose-200 bg-rose-50 text-rose-700;
+  }
+
+  /* Smart-search & investor-only call-out band */
+  .terminal-band {
+    @apply relative overflow-hidden rounded-2xl border border-white/10 bg-ink-900 text-white
+           shadow-2xl;
+  }
+
+  /* Score-ring number (big circular display) */
+  .score-ring-large {
+    @apply relative flex h-32 w-32 items-center justify-center rounded-full bg-white shadow-xl
+           ring-1 ring-ink-200;
+  }
+
+  /* ── Zillow-style hero: full-bleed photo + Ken Burns ──────────── */
+
+  /* The photo div — inset:-5% so the Ken Burns zoom never shows edges */
+  .hero-photo-animated {
+    position: absolute;
+    inset: -5%;
+    background-size: cover;
+    background-position: center 60%;
+    background-repeat: no-repeat;
+    will-change: transform;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-photo-animated {
+      animation: kenBurns 22s ease-in-out infinite alternate;
+    }
+  }
+  @keyframes kenBurns {
+    0%   { transform: scale(1.0)  translate( 0%,   0%); }
+    33%  { transform: scale(1.06) translate(-1%,  -0.5%); }
+    66%  { transform: scale(1.10) translate( 1%,   0.5%); }
+    100% { transform: scale(1.13) translate(-0.5%, 1%); }
+  }
+
+  /* Legacy left-heavy overlay kept for backward compat */
+  .hero-overlay-zillow {
+    @apply absolute inset-0 pointer-events-none;
+    background:
+      linear-gradient(to right,
+        rgba(5, 15, 30, 0.72) 0%,
+        rgba(5, 15, 30, 0.50) 42%,
+        rgba(5, 15, 30, 0.20) 70%,
+        rgba(5, 15, 30, 0.06) 100%
+      ),
+      linear-gradient(to bottom,
+        rgba(5, 15, 30, 0.15) 0%,
+        transparent 30%,
+        rgba(5, 15, 30, 0.65) 100%
+      );
+  }
+
+  /* Centered overlay for full-viewport hero */
+  .hero-overlay-centered {
+    @apply absolute inset-0 pointer-events-none;
+    background:
+      linear-gradient(to bottom,
+        rgba(5, 15, 30, 0.20) 0%,
+        rgba(5, 15, 30, 0.52) 30%,
+        rgba(5, 15, 30, 0.84) 72%,
+        rgba(5, 15, 30, 0.97) 100%
+      );
+  }
+
+  /* Floating real-listing glass cards (right side, desktop only) */
+  .hero-listing-float {
+    @apply absolute hidden 2xl:flex flex-col overflow-hidden rounded-2xl
+           shadow-[0_20px_60px_rgba(0,0,0,0.40)] ring-1 ring-white/20
+           transition-all duration-500 will-change-transform opacity-75;
+    background: rgba(255, 255, 255, 0.10);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    backdrop-filter: blur(18px) saturate(160%);
+  }
+  .hero-listing-float:hover {
+    transform: translateY(-5px) rotate(0deg) scale(1.025) !important;
+    box-shadow: 0 28px 70px rgba(0,0,0,0.50);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-listing-float   { animation: floatCard 13s ease-in-out infinite; }
+    .hero-listing-float-2 { animation-delay: -4.5s; }
+    .hero-listing-float-3 { animation-delay: -9s; }
+  }
+  @keyframes floatCard {
+    0%,100% { transform: translateY(0)    rotate(var(--card-rot, 0deg)); }
+    50%     { transform: translateY(-9px) rotate(var(--card-rot, 0deg)); }
+  }
+
+  /* White search card (Zillow style) */
+  .hero-search-card {
+    @apply rounded-[1.4rem] border border-white/70 bg-white p-2 shadow-[0_22px_70px_rgba(0,0,0,0.25)];
+  }
+
+  /* ── Premium hero (v2): badge, title, search, stats ─────────── */
+
+  /* Floating "live" social-proof pill at the very top of the hero */
+  .hero-proof-badge {
+    @apply inline-flex items-center gap-2 rounded-full
+           border border-white/15 bg-white/[0.06]
+           px-3.5 py-1.5 text-[11px] font-semibold tracking-wide text-white/85
+           shadow-[0_8px_30px_rgba(0,0,0,0.20)] backdrop-blur-xl;
+  }
+  .hero-proof-badge::before {
+    content: "";
+    @apply h-1.5 w-1.5 rounded-full bg-emerald-400;
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+    animation: heroProofPulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes heroProofPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
+    50%      { box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
+  }
+
+  /* Hero typography */
+  .hero-title {
+    font-size: clamp(2.4rem, 6vw, 4.6rem);
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+    font-weight: 900;
+    text-shadow: 0 4px 32px rgba(0, 0, 0, 0.55);
+  }
+  /* Compact title — about half the size for tighter hero */
+  .hero-title-compact {
+    font-size: clamp(1.35rem, 2.4vw, 2.05rem);
+    line-height: 1.18;
+    letter-spacing: -0.018em;
+    font-weight: 800;
+    text-shadow: 0 3px 22px rgba(0, 0, 0, 0.55);
+  }
+  .hero-title-grad {
+    background: linear-gradient(110deg, #6ee7b7 0%, #34d399 35%, #5eead4 70%, #a7f3d0 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: heroGradShift 8s ease-in-out infinite alternate;
+    text-shadow: none;
+    filter: drop-shadow(0 4px 18px rgba(52, 211, 153, 0.22));
+  }
+  @keyframes heroGradShift {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+  }
+  .hero-subtitle {
+    @apply mx-auto max-w-2xl text-[0.95rem] sm:text-base text-white/70 leading-relaxed;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  }
+
+  /* Decorative blurred aurora orbs inside the hero */
+  .hero-orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(70px);
+    opacity: 0.45;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .hero-orb-emerald {
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.55), transparent 70%);
+  }
+  .hero-orb-sky {
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.40), transparent 70%);
+  }
+  .hero-orb-amber {
+    background: radial-gradient(circle, rgba(251, 191, 36, 0.32), transparent 70%);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-orb-emerald { animation: heroOrbDrift1 18s ease-in-out infinite alternate; }
+    .hero-orb-sky     { animation: heroOrbDrift2 22s ease-in-out infinite alternate; }
+    .hero-orb-amber   { animation: heroOrbDrift3 26s ease-in-out infinite alternate; }
+  }
+  @keyframes heroOrbDrift1 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(40px, -30px) scale(1.15); } }
+  @keyframes heroOrbDrift2 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(-50px, 30px) scale(1.1); } }
+  @keyframes heroOrbDrift3 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(30px, 40px) scale(1.05); } }
+
+  /* Premium search card with gradient ring */
+  .hero-search-premium {
+    position: relative;
+    border-radius: 1.5rem;
+    padding: 0.55rem;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow:
+      0 30px 80px -10px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(255, 255, 255, 0.65) inset,
+      0 1px 0 rgba(255, 255, 255, 1) inset;
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+  .hero-search-premium::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 1.6rem;
+    padding: 2px;
+    background: linear-gradient(135deg,
+      rgba(110, 231, 183, 0.55) 0%,
+      rgba(255, 255, 255, 0.15) 35%,
+      rgba(56, 189, 248, 0.45) 70%,
+      rgba(110, 231, 183, 0.55) 100%);
+    background-size: 200% 200%;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    animation: heroSearchRing 6s ease-in-out infinite alternate;
+    opacity: 0.85;
+  }
+  @keyframes heroSearchRing {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+  }
+
+  .hero-search-field {
+    @apply relative flex flex-col rounded-2xl bg-ink-50/70 px-3.5 py-2.5
+           ring-1 ring-ink-200/60 transition-all duration-150
+           hover:bg-white hover:ring-brand-300 focus-within:bg-white focus-within:ring-brand-500
+           focus-within:shadow-[0_0_0_4px_rgba(16,185,129,0.12)];
+  }
+  .hero-search-field-label {
+    @apply text-[10px] font-bold uppercase tracking-[0.16em] text-ink-500;
+  }
+  .hero-search-field input,
+  .hero-search-field select {
+    @apply mt-0.5 w-full bg-transparent border-0 p-0 text-[15px] font-bold text-ink-900
+           focus:outline-none focus:ring-0 tabular-nums;
+  }
+  .hero-search-field select {
+    @apply pr-5 cursor-pointer appearance-none bg-no-repeat;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-position: right 0 center;
+  }
+  .hero-search-divider {
+    @apply hidden sm:block w-px self-stretch my-2 bg-ink-200/70;
+  }
+  .hero-search-cta {
+    @apply inline-flex items-center justify-center gap-1.5
+           rounded-2xl px-5 py-3 text-[14px] font-extrabold tracking-wide text-white
+           bg-gradient-to-br from-brand-500 via-brand-600 to-emerald-600
+           shadow-[0_14px_30px_-6px_rgba(16,185,129,0.55)]
+           transition-all duration-200 whitespace-nowrap
+           hover:from-brand-400 hover:via-brand-500 hover:to-emerald-500
+           hover:shadow-[0_18px_40px_-6px_rgba(16,185,129,0.65)] hover:-translate-y-0.5
+           active:translate-y-0 active:scale-[0.99];
+  }
+
+  /* Live stats strip pinned below the search card */
+  .hero-live-stats {
+    @apply inline-flex items-center gap-1 sm:gap-1.5
+           rounded-full border border-white/15 bg-white/[0.06] px-4 py-1.5
+           text-[11px] font-semibold tracking-wide text-white/75
+           shadow-[0_6px_20px_rgba(0,0,0,0.15)] backdrop-blur-xl;
+  }
+  .hero-live-stats strong {
+    @apply text-white font-black tabular-nums;
+  }
+  .hero-live-stats .hero-stats-sep {
+    @apply mx-2 h-3 w-px bg-white/20;
+  }
+
+  /* Avatar stack used inside trust badge */
+  .hero-avatar-stack {
+    @apply flex -space-x-2;
+  }
+  .hero-avatar-stack > span {
+    @apply inline-flex h-6 w-6 items-center justify-center rounded-full
+           ring-2 ring-slate-950 text-[9px] font-bold text-white;
+  }
+
+  /* ── Market strip (country flashcards, primary hero element) ── */
+  .market-strip {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.5rem;
+    padding: 0.85rem 0.9rem 0.95rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03)),
+      radial-gradient(circle at 16% 0%, rgba(16, 185, 129, 0.18), transparent 38%),
+      radial-gradient(circle at 84% 100%, rgba(56, 189, 248, 0.14), transparent 44%),
+      rgba(2, 6, 23, 0.36);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    backdrop-filter: blur(16px) saturate(140%);
+  }
+  .market-strip-heading {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+  }
+  .market-strip-heading::before,
+  .market-strip-heading::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    max-width: 7rem;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18));
+  }
+  .market-strip-heading::after {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent);
+  }
+  .market-strip-eyebrow {
+    font-size: 0.64rem;
+    font-weight: 950;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgb(110, 231, 183);
+    white-space: nowrap;
+  }
+  .market-strip-hint {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.52);
+    white-space: nowrap;
+  }
+  .market-strip-scroll {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 0.7rem;
+    overflow-x: auto;
+    padding: 0.2rem 0.05rem 0.35rem;
+    scroll-snap-type: x proximity;
+  }
+  /* Tablet: 4 cards on the top row, the rest wrap below */
+  @media (min-width: 640px) and (max-width: 1023.98px) {
+    .market-strip-scroll {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.75rem;
+      overflow-x: visible;
+      padding-bottom: 0.1rem;
+      justify-items: center;
+    }
+  }
+  /* Desktop: 4 cards on top, 3 centered below — using an 8-column grid */
+  @media (min-width: 1024px) {
+    .market-strip-scroll {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      grid-auto-rows: auto;
+      gap: 0.95rem 0.85rem;
+      overflow-x: visible;
+      padding-bottom: 0.15rem;
+      justify-items: stretch;
+      max-width: 64rem;
+      margin: 0 auto;
+    }
+    /* Row 1 — 4 cards, each spans 2 cols */
+    .market-tile:nth-child(1) { grid-column: 1 / span 2; grid-row: 1; }
+    .market-tile:nth-child(2) { grid-column: 3 / span 2; grid-row: 1; }
+    .market-tile:nth-child(3) { grid-column: 5 / span 2; grid-row: 1; }
+    .market-tile:nth-child(4) { grid-column: 7 / span 2; grid-row: 1; }
+    /* Row 2 — 3 cards, centred (offset by 1 column on each side) */
+    .market-tile:nth-child(5) { grid-column: 2 / span 2; grid-row: 2; }
+    .market-tile:nth-child(6) { grid-column: 4 / span 2; grid-row: 2; }
+    .market-tile:nth-child(7) { grid-column: 6 / span 2; grid-row: 2; }
+  }
+
+  /* Market tile — calm, premium, focused on hover & active states */
+  .market-tile {
+    position: relative;
+    display: block;
+    flex: 0 0 auto;
+    width: 11rem;
+    height: 9rem;
+    overflow: hidden;
+    scroll-snap-align: center;
+    border-radius: 1.35rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(15, 23, 42, 0.7);
+    text-align: left;
+    box-shadow:
+      0 18px 36px rgba(0, 0, 0, 0.38),
+      0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+    transition:
+      transform 340ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 240ms ease,
+      box-shadow 320ms ease;
+    cursor: pointer;
+  }
+  /* On tablet+ the tiles live in a grid → stretch to fill their cell */
+  @media (min-width: 640px) {
+    .market-tile {
+      flex: initial;
+      width: 100%;
+      max-width: 16rem;
+      height: 10.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .market-tile {
+      max-width: none;
+      height: 11rem;
+    }
+  }
+
+  /* Subtle staggered entrance only — no continuous motion */
+  @media (prefers-reduced-motion: no-preference) {
+    .market-tile {
+      opacity: 0;
+      animation: marketTileEnter 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation-delay: calc(var(--tile-i, 0) * 70ms + 100ms);
+    }
+  }
+  @keyframes marketTileEnter {
+    0%   { opacity: 0; transform: translateY(18px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  .market-tile:hover {
+    transform: translateY(-6px);
+    border-color: rgba(110, 231, 183, 0.45);
+    box-shadow:
+      0 26px 50px -10px rgba(0, 0, 0, 0.50),
+      0 0 0 1px rgba(52, 211, 153, 0.20);
+    z-index: 2;
+  }
+  .market-tile:focus-visible {
+    outline: 2px solid rgba(110, 231, 183, 0.9);
+    outline-offset: 3px;
+  }
+  .market-tile.is-active {
+    transform: translateY(-6px);
+    border-color: rgba(110, 231, 183, 0.95);
+    box-shadow:
+      0 28px 56px rgba(16, 185, 129, 0.32),
+      0 0 0 2px rgba(52, 211, 153, 0.70);
+    z-index: 2;
+  }
+
+  /* Background photo — only zooms on hover/active, otherwise still */
+  .market-tile-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    transform: scale(1.02);
+    transition:
+      transform 600ms cubic-bezier(0.22, 1, 0.36, 1),
+      filter 280ms ease;
+  }
+  .market-tile:hover .market-tile-bg,
+  .market-tile.is-active .market-tile-bg {
+    transform: scale(1.12);
+    filter: saturate(1.12) contrast(1.04);
+  }
+
+  /* Scrim — clean dark gradient with a soft emerald glow in the corner */
+  .market-tile-scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to top,
+        rgba(2, 6, 23, 0.95) 0%,
+        rgba(2, 6, 23, 0.60) 42%,
+        rgba(2, 6, 23, 0.10) 78%,
+        rgba(2, 6, 23, 0.00) 100%),
+      radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.18), transparent 48%);
+  }
+
+  /* (Shine + glow + roi-dot are kept but invisible — class-free) */
+  .market-tile-shine,
+  .market-tile-glow,
+  .market-tile-roi-dot { display: none; }
+
+  /* Country-code chip */
+  .market-tile-chip {
+    position: absolute;
+    top: 0.65rem;
+    left: 0.65rem;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.14);
+    padding: 0.22rem 0.55rem;
+    font-size: 0.62rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.14em;
+    color: rgba(255, 255, 255, 0.96);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    transition: background 200ms ease, border-color 200ms ease;
+  }
+  .market-tile.is-active .market-tile-chip {
+    background: rgba(16, 185, 129, 0.35);
+    border-color: rgba(110, 231, 183, 0.85);
+  }
+
+  /* Check mark badge (active state) */
+  .market-tile-check {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    z-index: 3;
+    display: inline-flex;
+    height: 1.35rem;
+    width: 1.35rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: rgb(16, 185, 129);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.50);
+    opacity: 0;
+    transform: scale(0.55);
+    transition: opacity 220ms ease, transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .market-tile.is-active .market-tile-check {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* Body — flag, name, ROI */
+  .market-tile-body {
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 2;
+    padding: 0 0.9rem 0.8rem;
+  }
+  .market-tile-flag {
+    font-size: 1.5rem;
+    line-height: 1;
+    margin-bottom: 0.35rem;
+    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.55));
+  }
+  .market-tile-name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1rem;
+    font-weight: 900;
+    line-height: 1.1;
+    color: white;
+    letter-spacing: -0.005em;
+    text-shadow: 0 1px 14px rgba(0, 0, 0, 0.75);
+  }
+  .market-tile-roi {
+    margin-top: 0.35rem;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1;
+    color: rgb(110, 231, 183);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+  }
+
+  /* ── Hero brand mark ───────────────────────────────────────── */
+  .hero-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.4rem 0.95rem 0.4rem 0.45rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.04);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    text-decoration: none;
+    transition:
+      transform 220ms ease,
+      background 220ms ease,
+      border-color 220ms ease;
+  }
+  .hero-brand:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+  .hero-brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.7rem;
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    color: white;
+    font-weight: 900;
+    font-size: 1.05rem;
+    line-height: 1;
+    box-shadow:
+      0 8px 22px rgba(16, 185, 129, 0.40),
+      0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+  }
+  .hero-brand-name {
+    font-size: 1.05rem;
+    font-weight: 900;
+    letter-spacing: -0.005em;
+    color: white;
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+  }
+
+  /* ── Hero search bar: Buy / Rent segmented control ─────────── */
+  .hero-intent-tabs {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    margin: 0 auto -1.5rem;
+    padding: 0.4rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(2, 6, 23, 0.62);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    backdrop-filter: blur(16px) saturate(150%);
+    box-shadow:
+      0 18px 40px rgba(0, 0, 0, 0.40),
+      0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+    isolation: isolate;
+  }
+  /* Sliding background thumb that snaps to the active tab */
+  .hero-intent-thumb {
+    position: absolute;
+    top: 0.4rem;
+    bottom: 0.4rem;
+    left: 0.4rem;
+    width: calc(50% - 0.4rem);
+    z-index: 0;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #6ee7b7 0%, #34d399 55%, #10b981 100%);
+    box-shadow:
+      0 14px 28px -6px rgba(16, 185, 129, 0.55),
+      0 0 0 1px rgba(255, 255, 255, 0.25) inset;
+    transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+  .hero-intent-tabs:has(.hero-intent-tab:nth-child(3).is-active) .hero-intent-thumb {
+    transform: translateX(100%);
+  }
+  .hero-intent-tab {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    min-width: 9.5rem;
+    padding: 0.7rem 1.5rem;
+    border-radius: 9999px;
+    font-size: 0.98rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    color: rgba(255, 255, 255, 0.65);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    transition: color 220ms ease, transform 200ms ease;
+  }
+  .hero-intent-tab svg {
+    transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .hero-intent-tab:hover {
+    color: white;
+  }
+  .hero-intent-tab:hover svg {
+    transform: scale(1.08) rotate(-3deg);
+  }
+  .hero-intent-tab.is-active {
+    color: #052e16;
+  }
+  .hero-intent-tab.is-active svg {
+    transform: scale(1.05);
+  }
+  @media (max-width: 480px) {
+    .hero-intent-tab {
+      min-width: 7.5rem;
+      padding: 0.6rem 1.1rem;
+      font-size: 0.9rem;
+    }
+  }
+
+  /* Country chip that appears once a market is selected */
+  .hero-country-chip {
+    margin: 0 0.25rem 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.32rem 0.4rem 0.32rem 0.7rem;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 1px solid #6ee7b7;
+    color: #047857;
+    font-size: 0.78rem;
+    font-weight: 800;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.18);
+    animation: heroCountryChipIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  }
+  @keyframes heroCountryChipIn {
+    0%   { opacity: 0; transform: translateY(-4px) scale(0.92); }
+    100% { opacity: 1; transform: translateY(0)    scale(1); }
+  }
+  .hero-country-chip[hidden] { display: none; }
+  .hero-country-chip-flag {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+  .hero-country-chip-name {
+    white-space: nowrap;
+  }
+  .hero-country-chip-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 9999px;
+    background: rgba(4, 120, 87, 0.12);
+    color: #047857;
+    border: 0;
+    cursor: pointer;
+    transition: background 160ms ease, transform 160ms ease;
+  }
+  .hero-country-chip-clear:hover {
+    background: rgba(4, 120, 87, 0.22);
+    transform: rotate(90deg);
+  }
+
+  /* Hero search wrapper — temporary pulse when the user clicks a country card */
+  #hero-search.is-pulsing .hero-search-premium {
+    animation: heroSearchPulse 1.4s ease-out 1;
+  }
+  @keyframes heroSearchPulse {
+    0%   { box-shadow: 0 30px 80px -10px rgba(0,0,0,0.45), 0 0 0 0  rgba(52, 211, 153, 0.55); }
+    60%  { box-shadow: 0 30px 80px -10px rgba(0,0,0,0.45), 0 0 0 18px rgba(52, 211, 153, 0); }
+    100% { box-shadow: 0 30px 80px -10px rgba(0,0,0,0.45), 0 0 0 0  rgba(52, 211, 153, 0); }
+  }
+
+  /* City select: dim until a country is chosen */
+  #hero-city-select:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  #hero-city-select.is-ready {
+    color: #0f172a;
+  }
+  .market-selector-shell {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.05)),
+      radial-gradient(circle at 18% 0%, rgba(16, 185, 129, 0.18), transparent 34%),
+      rgba(2, 6, 23, 0.34);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    backdrop-filter: blur(18px) saturate(150%);
+    padding: 0.8rem;
+  }
+  .market-selector-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.10), transparent);
+    opacity: 0.55;
+  }
+  .market-selector-heading {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    text-align: center;
+  }
+  .market-selector-heading::before,
+  .market-selector-heading::after {
+    content: "";
+    height: 1px;
+    width: min(8rem, 18vw);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18));
+  }
+  .market-selector-heading::after {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent);
+  }
+  .market-selector-heading span:first-child {
+    font-size: 0.62rem;
+    font-weight: 950;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgb(110, 231, 183);
+    white-space: nowrap;
+  }
+  .market-selector-heading span:last-child {
+    display: none;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.50);
+    white-space: nowrap;
+  }
+  @media (min-width: 640px) {
+    .market-selector-heading span:last-child {
+      display: inline;
+    }
+  }
+  .market-scroll {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 0.7rem;
+    overflow-x: auto;
+    padding: 0.15rem 0.1rem 0.35rem;
+    scroll-snap-type: x proximity;
+  }
+  @media (min-width: 1024px) {
+    .market-scroll {
+      flex-wrap: wrap;
+      justify-content: center;
+      overflow-x: visible;
+      padding-bottom: 0.1rem;
+    }
+  }
+  .market-card {
+    position: relative;
+    display: block;
+    flex: 0 0 auto;
+    width: 7.4rem;
+    height: 5.35rem;
+    overflow: hidden;
+    scroll-snap-align: center;
+    border-radius: 1.05rem;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(15, 23, 42, 0.72);
+    text-align: left;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.34);
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  }
+  @media (min-width: 640px) {
+    .market-card {
+      width: 8.05rem;
+      height: 5.65rem;
+    }
+  }
+  .market-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(110, 231, 183, 0.55);
+    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(52, 211, 153, 0.22);
+  }
+  .market-card:focus-visible {
+    outline: 2px solid rgba(110, 231, 183, 0.9);
+    outline-offset: 3px;
+  }
+  .market-card.is-active {
+    transform: translateY(-5px) scale(1.035);
+    border-color: rgba(110, 231, 183, 0.92);
+    box-shadow: 0 18px 44px rgba(16, 185, 129, 0.30), 0 0 0 2px rgba(52, 211, 153, 0.62);
+  }
+  .market-card-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    transform: scale(1.01);
+    transition: transform 520ms ease, filter 180ms ease;
+  }
+  .market-card:hover .market-card-bg,
+  .market-card.is-active .market-card-bg {
+    transform: scale(1.12);
+    filter: saturate(1.12) contrast(1.06);
+  }
+  .market-card-scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to top, rgba(2, 6, 23, 0.93) 0%, rgba(2, 6, 23, 0.54) 48%, rgba(2, 6, 23, 0.08) 100%),
+      radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.22), transparent 42%);
+  }
+  .market-card-code {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    background: rgba(255, 255, 255, 0.14);
+    padding: 0.18rem 0.42rem;
+    font-size: 0.58rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    color: rgba(255, 255, 255, 0.92);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  .market-card-check {
+    display: inline-flex;
+    height: 1.05rem;
+    width: 1.05rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: rgb(16, 185, 129);
+    box-shadow: 0 8px 18px rgba(16, 185, 129, 0.38);
+    opacity: 0;
+    transform: scale(0.55);
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+  .market-card.is-active .market-card-check {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .market-card-name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.82rem;
+    font-weight: 900;
+    line-height: 1.05;
+    color: white;
+    text-shadow: 0 1px 14px rgba(0, 0, 0, 0.65);
+  }
+  .market-card-meta {
+    margin-top: 0.24rem;
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1;
+    color: rgb(110, 231, 183);
+    font-variant-numeric: tabular-nums;
+  }
+  .hero-proof-panel {
+    @apply relative overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/60 p-5
+           shadow-[0_32px_90px_rgba(0,0,0,0.45)] backdrop-blur-2xl;
+  }
+  .hero-proof-panel::before {
+    content: "";
+    position: absolute;
+    inset: -30% 20% auto auto;
+    width: 18rem;
+    height: 18rem;
+    border-radius: 9999px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.24), transparent 62%);
+    pointer-events: none;
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     Global Realty-inspired landing top: navbar + hero + filter bar.
+     Class prefix `vv-` (Vivalty) to avoid collisions with legacy
+     `hero-*` / `market-*` components left in place above.
+     ════════════════════════════════════════════════════════════════ */
+
+  /* ── Navbar shell ──────────────────────────────────────────── */
+  .vv-nav {
+    @apply w-full z-50;
+  }
+  .vv-nav--overlay {
+    /* Sits ON TOP of the hero image (home page). */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: transparent;
+  }
+  .vv-nav--solid {
+    @apply sticky top-0 bg-white/90 backdrop-blur-lg border-b border-ink-200 shadow-sm;
+  }
+
+  /* Brand (gold square mark + elegant serif wordmark) */
+  .vv-brand {
+    @apply flex shrink-0 items-center gap-3 transition-opacity duration-150;
+  }
+  .vv-brand-mark {
+    @apply flex h-10 w-10 items-center justify-center rounded-md text-lg font-bold;
+    background: linear-gradient(135deg, #f5d486 0%, #d4a44a 100%);
+    color: #1a1a1a;
+    font-family: "Playfair Display", Georgia, serif;
+    box-shadow: 0 4px 14px rgba(212, 164, 74, 0.35);
+    transition: transform 200ms ease, box-shadow 200ms ease;
+  }
+  .vv-brand:hover .vv-brand-mark {
+    transform: scale(1.04);
+    box-shadow: 0 6px 20px rgba(212, 164, 74, 0.5);
+  }
+  .vv-brand-name {
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    line-height: 1;
+    color: inherit;
+  }
+  .vv-nav--overlay .vv-brand-name {
+    @apply text-white;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.25);
+  }
+  .vv-nav--solid   .vv-brand-name { @apply text-ink-900; }
+
+  /* ── Grouped nav (dropdown panels) ─────────────────────────── */
+  .vv-nav-group {
+    @apply relative;
+  }
+  /* Top-level desktop links (flat editorial style) */
+  .vv-nav-link {
+    @apply relative inline-flex items-center px-2 py-2 text-[12px] font-semibold uppercase
+           transition-colors duration-200 select-none cursor-pointer;
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: 0.32em;
+    background: transparent;
+    border: 0;
+    white-space: nowrap;
+  }
+  .vv-nav-caret {
+    @apply h-3 w-3 opacity-60 transition-transform duration-200;
+  }
+  .vv-nav-group:hover .vv-nav-caret,
+  .vv-nav-group:focus-within .vv-nav-caret {
+    transform: rotate(180deg);
+    opacity: 1;
+  }
+  /* Bridge gap between trigger & panel so hover doesn't break */
+  .vv-nav-group::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 0.75rem;
+    pointer-events: none;
+  }
+  .vv-nav-group:hover::after,
+  .vv-nav-group:focus-within::after {
+    pointer-events: auto;
+  }
+  .vv-nav-panel {
+    position: absolute;
+    top: calc(100% + 0.75rem);
+    left: 50%;
+    transform: translateX(-50%) translateY(-0.5rem);
+    width: 22rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 1rem;
+    box-shadow:
+      0 32px 80px -24px rgba(15, 23, 42, 0.35),
+      0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 180ms ease, transform 200ms ease, visibility 0s linear 180ms;
+    z-index: 90;
+  }
+  .vv-nav-group:hover .vv-nav-panel,
+  .vv-nav-group:focus-within .vv-nav-panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    transition: opacity 180ms ease, transform 200ms ease, visibility 0s;
+  }
+  .vv-nav-item {
+    @apply flex flex-col gap-0.5 rounded-xl px-3.5 py-3 transition-colors duration-150;
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  }
+  .vv-nav-item:hover {
+    background: linear-gradient(135deg, rgba(247, 197, 95, 0.10) 0%, rgba(15, 23, 42, 0.04) 100%);
+  }
+  .vv-nav-item-title {
+    @apply text-[14px] font-semibold text-ink-900;
+    font-family: "Playfair Display", Georgia, serif;
+    letter-spacing: 0;
+  }
+  .vv-nav-item:hover .vv-nav-item-title {
+    color: #8a6612;
+  }
+  .vv-nav-item-desc {
+    @apply text-[11px] font-medium text-ink-500;
+    letter-spacing: 0.01em;
+  }
+  .vv-nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 1px;
+    background: currentColor;
+    opacity: 0;
+    transform: scaleX(0.3);
+    transform-origin: center;
+    transition: opacity 220ms ease, transform 260ms ease;
+  }
+  .vv-nav-link:hover::after,
+  .vv-nav-link.is-active::after,
+  .vv-nav-group:hover .vv-nav-link::after,
+  .vv-nav-group:focus-within .vv-nav-link::after {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  /* Overlay nav (over hero photo) — full white + text-shadow so links stay
+     crisp over bright skies, water, and other busy backgrounds. */
+  .vv-nav--overlay .vv-nav-link {
+    @apply text-white;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.25);
+  }
+  .vv-nav--overlay .vv-nav-link:hover     { @apply text-white; }
+  .vv-nav--overlay .vv-nav-link.is-active { @apply text-white; }
+  .vv-nav--solid   .vv-nav-link        { @apply text-ink-700; }
+  .vv-nav--solid   .vv-nav-link:hover  { @apply text-ink-900; }
+  .vv-nav--solid   .vv-nav-link.is-active { @apply text-ink-900; }
+
+  /* Locale switcher */
+  .vv-locale {
+    @apply inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold
+           transition-colors duration-150;
+  }
+  .vv-locale-text { @apply text-[12px] font-bold tracking-wide; }
+  .vv-nav--overlay .vv-locale {
+    @apply border-white/35 bg-white/10 text-white/95 hover:bg-white/20;
+  }
+  .vv-nav--solid .vv-locale {
+    @apply border-ink-200 bg-white text-ink-700 hover:bg-ink-50 hover:border-ink-300;
+  }
+
+  /* Login link (editorial underline style) */
+  .vv-login {
+    @apply relative inline-flex items-center gap-1.5 py-2 text-[12px] font-semibold uppercase
+           transition-colors duration-200;
+    letter-spacing: 0.24em;
+  }
+  .vv-login svg { display: none; }
+  .vv-login::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 2px;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.85;
+    transition: opacity 200ms ease;
+  }
+  .vv-login:hover::after { opacity: 1; }
+  .vv-nav--overlay .vv-login {
+    @apply text-white;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.25);
+  }
+  .vv-nav--overlay .vv-login.is-active { @apply text-white; }
+  .vv-nav--solid   .vv-login { @apply text-ink-700 hover:text-ink-900; }
+  .vv-nav--solid   .vv-login.is-active { @apply text-ink-900; }
+
+  /* Avatar (authenticated) */
+  .vv-avatar {
+    @apply flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold
+           ring-2 ring-transparent transition-all duration-150;
+  }
+  .vv-nav--overlay .vv-avatar {
+    @apply bg-white/15 text-white hover:ring-white/40 hover:scale-105;
+  }
+  .vv-nav--solid .vv-avatar {
+    @apply bg-gradient-to-br from-brand-100 to-brand-200 text-brand-700 hover:ring-brand-400 hover:scale-105;
+  }
+
+  /* Right-side CTA — signature gold pill (matches the brand mark) */
+  .vv-cta {
+    @apply inline-flex items-center justify-center px-5 py-2.5 text-[12px] font-bold uppercase
+           transition-all duration-200;
+    letter-spacing: 0.22em;
+    color: #1a1a1a;
+    background: linear-gradient(135deg, #f5d486 0%, #d4a44a 100%);
+    border: 1px solid rgba(180, 130, 40, 0.55);
+    border-radius: 2px;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.45) inset,
+      0 6px 18px rgba(212, 164, 74, 0.35);
+  }
+  .vv-cta:hover {
+    background: linear-gradient(135deg, #f7dc94 0%, #c8961f 100%);
+    border-color: rgba(160, 112, 22, 0.75);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.55) inset,
+      0 10px 26px rgba(212, 164, 74, 0.55);
+    transform: translateY(-1px);
+  }
+  .vv-cta:active {
+    transform: translateY(0);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.35) inset,
+      0 4px 12px rgba(212, 164, 74, 0.4);
+  }
+  .vv-cta:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 3px rgba(245, 212, 134, 0.55),
+      0 6px 18px rgba(212, 164, 74, 0.35);
+  }
+  /* Lift slightly more over the dark hero so it pops against imagery */
+  .vv-nav--overlay .vv-cta {
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.55) inset,
+      0 8px 24px rgba(0, 0, 0, 0.35),
+      0 0 0 1px rgba(255, 255, 255, 0.06);
+  }
+  .vv-nav--overlay .vv-cta:hover {
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.6) inset,
+      0 12px 30px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+
+  /* Mobile hamburger */
+  .vv-burger {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-lg border
+           transition-colors duration-150;
+  }
+  .vv-nav--overlay .vv-burger { @apply border-white/30 bg-white/5 text-white hover:bg-white/15; }
+  .vv-nav--solid   .vv-burger { @apply border-ink-200 bg-white text-ink-700 hover:bg-ink-100; }
+
+  /* ════════════════════════════════════════════════════════════════
+     HERO section
+     ════════════════════════════════════════════════════════════════ */
+
+  .vv-hero {
+    @apply relative isolate;
+    background-color: #eef7fb;
+    min-height: clamp(520px, 56vw, 680px);
+    overflow: visible;
+  }
+  .vv-hero-bg {
+    @apply absolute inset-0;
+  }
+  .vv-hero-bg-img {
+    @apply h-full w-full object-cover;
+    object-position: center center;
+  }
+  .vv-hero-scrim {
+    display: none;
+    background: transparent;
+  }
+  /* Soft radial scrim sitting only behind the headline area
+     so the hero photo edges stay bright but text contrast is safe. */
+  .vv-hero-vignette {
+    @apply absolute inset-0 pointer-events-none;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% 38%, rgba(8, 14, 30, 0.42) 0%, rgba(8, 14, 30, 0.18) 35%, transparent 70%),
+      linear-gradient(to bottom, rgba(8, 14, 30, 0.28) 0%, transparent 32%);
+  }
+
+  /* Headline (elegant serif, mixed italic accent) */
+  .vv-hero-title {
+    @apply font-medium tracking-tight text-white;
+    font-family: "Playfair Display", "Cormorant Garamond", Georgia, serif;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    line-height: 1.04;
+    letter-spacing: -0.005em;
+    text-shadow: 0 6px 28px rgba(8, 14, 30, 0.7), 0 2px 8px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(0, 0, 0, 0.2);
+  }
+  .vv-hero-title-em {
+    font-style: italic;
+    font-weight: 500;
+    color: #f5d486; /* warm champagne */
+    font-family: inherit;
+  }
+  .vv-hero-subtitle {
+    @apply mt-4 sm:mt-5 max-w-2xl text-white/90;
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-size: clamp(0.95rem, 1.25vw, 1.1rem);
+    font-weight: 400;
+    line-height: 1.55;
+    letter-spacing: 0.005em;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55);
+  }
+  .vv-hero-markets {
+    @apply mt-3 max-w-2xl uppercase text-white/70;
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-size: clamp(0.7rem, 0.9vw, 0.78rem);
+    font-weight: 600;
+    letter-spacing: 0.32em;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+  }
+  /* Proptech value-prop line under the headline — short, single-line
+     pitch (AI + 7 markets + 60s). Kept tight so it doesn't crowd the hero. */
+  .vv-hero-lede {
+    @apply mt-4 sm:mt-5 max-w-2xl text-white/90;
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-size: clamp(0.95rem, 1.15vw, 1.05rem);
+    font-weight: 400;
+    line-height: 1.5;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  .vv-hero-lede strong {
+    @apply font-semibold text-white;
+  }
+  /* Secondary CTA row pointing at methodology + simulator (the real
+     differentiators). Quiet styling so the primary Search CTA still wins. */
+  .vv-hero-meta {
+    @apply mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[12px] text-white/75;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  }
+  .vv-hero-meta a {
+    @apply font-semibold text-white/85 underline-offset-4 hover:underline hover:text-white transition-colors;
+  }
+  .vv-hero-meta-sep {
+    @apply text-white/35;
+  }
+
+  /* Filter bar */
+  .vv-filter {
+    @apply relative z-[80] mx-auto mt-8 sm:mt-10 w-full max-w-5xl rounded-xl bg-white p-2 sm:p-2 shadow-[0_18px_42px_-14px_rgba(15,23,42,0.55)];
+    border: 1px solid rgba(226, 232, 240, 0.9);
+  }
+  .vv-filter-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  @media (min-width: 640px) {
+    .vv-filter-grid {
+      /* 3 filters (Location / Property type / Price range) + Search CTA */
+      grid-template-columns: 1.2fr 1.05fr 1.05fr auto;
+      gap: 0;
+      align-items: stretch;
+    }
+  }
+  .vv-filter-field {
+    @apply relative block px-3 py-2 cursor-pointer;
+    transition: background-color 150ms ease;
+  }
+  @media (min-width: 640px) {
+    .vv-filter-field {
+      @apply px-4;
+      border-right: 1px solid rgb(226, 232, 240);
+    }
+    .vv-filter-field:last-of-type {
+      border-right: none;
+    }
+  }
+  .vv-filter-field:hover {
+    background-color: rgb(248, 250, 252);
+  }
+  /* Muted grey labels — gold is reserved for the italic "Global" word
+     in the headline so the accent stays expensive and singular. */
+  .vv-filter-label {
+    @apply block text-[10px] font-bold uppercase tracking-[0.18em] text-ink-500;
+  }
+  .vv-filter-control {
+    @apply mt-0.5 flex items-center gap-2;
+  }
+  .vv-filter-icon {
+    @apply h-4 w-4 shrink-0 text-ink-500;
+  }
+  .vv-filter-trigger {
+    @apply mt-0.5 flex w-full items-center gap-2 rounded-lg text-left
+           text-sm font-semibold text-ink-900 transition-colors duration-150
+           focus:outline-none focus:ring-4 focus:ring-sky-500/15;
+    min-height: 1.75rem;
+  }
+  .vv-filter-value {
+    @apply min-w-0 flex-1 truncate;
+  }
+  .vv-filter-caret {
+    @apply h-3.5 w-3.5 shrink-0 text-ink-500 transition-transform duration-150;
+  }
+  .vv-filter-choice.is-open {
+    @apply bg-sky-50/70;
+    z-index: 90;
+  }
+  .vv-filter-choice.is-open .vv-filter-caret {
+    transform: rotate(180deg);
+  }
+  .vv-filter-menu {
+    @apply invisible absolute left-2 right-2 top-[calc(100%+0.5rem)] z-[100]
+           max-h-72 overflow-y-auto rounded-2xl border border-ink-200 bg-white p-1.5
+           opacity-0 shadow-[0_24px_60px_-18px_rgba(15,23,42,0.45)] ring-1 ring-white/70
+           transition-all duration-150;
+    transform: translateY(-0.35rem) scale(0.98);
+    transform-origin: top center;
+  }
+  .vv-filter-choice.is-open .vv-filter-menu {
+    @apply visible opacity-100;
+    transform: translateY(0) scale(1);
+  }
+  .vv-filter-option {
+    @apply flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left
+           text-sm font-semibold text-ink-700 transition-colors duration-150
+           hover:bg-sky-50 hover:text-sky-800 focus:bg-sky-50 focus:text-sky-800 focus:outline-none;
+  }
+  .vv-filter-option::after {
+    content: "";
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 9999px;
+    background: transparent;
+  }
+  .vv-filter-option.is-selected {
+    @apply bg-sky-100 text-sky-900;
+  }
+  .vv-filter-option.is-selected::after {
+    background: #0369a1;
+    box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.14);
+  }
+  .vv-filter-option.is-disabled {
+    @apply cursor-not-allowed text-ink-500 hover:bg-transparent hover:text-ink-500;
+  }
+  .vv-filter-select {
+    @apply w-full bg-transparent border-0 p-0 text-sm font-semibold text-ink-900 cursor-pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0 center;
+    background-size: 12px;
+    padding-right: 18px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+  .vv-filter-select:focus {
+    outline: none;
+    box-shadow: none;
+  }
+  .vv-filter-cta {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl
+           bg-gradient-to-br from-sky-700 to-sky-900 hover:from-sky-800 hover:to-sky-950
+           px-5 py-3 text-[12px] font-extrabold tracking-[0.12em] uppercase text-white
+           shadow-md shadow-sky-900/30 hover:shadow-lg
+           transition-all duration-150;
+  }
+  @media (min-width: 640px) {
+    .vv-filter-cta {
+      @apply m-1;
+    }
+  }
+
+  /* Trust strip under the filter */
+  .vv-hero-trust {
+    @apply mx-auto mt-6 sm:mt-7 inline-flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-5 gap-y-1
+           rounded-full border border-white/25 bg-white/10 px-5 py-2 text-[12px] sm:text-sm font-medium text-white/90 backdrop-blur-md;
+  }
+  .vv-hero-trust strong { @apply text-white font-bold; }
+  .vv-hero-trust-sep { @apply text-white/35 px-1; }
+
+  /* Decorative carousel dots */
+  .vv-hero-dots {
+    @apply flex items-center gap-2;
+  }
+  .vv-hero-dot {
+    @apply h-1.5 w-1.5 rounded-full bg-white/35 transition-all duration-150;
+  }
+  .vv-hero-dot.is-active {
+    @apply h-1.5 w-6 bg-white;
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     Right sidebar cards (Featured listings + Top destinations)
+     ════════════════════════════════════════════════════════════════ */
+
+  .vv-side-card {
+    @apply rounded-2xl bg-white p-4 shadow-[0_18px_50px_-10px_rgba(0,0,0,0.35)];
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+  .vv-side-card-title {
+    @apply mb-3 text-center text-[12px] font-extrabold uppercase tracking-[0.14em] text-ink-900;
+  }
+
+  /* Mini property listing card */
+  .vv-mini-listing {
+    @apply block overflow-hidden rounded-xl border border-ink-200 bg-white
+           transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-brand-300;
+  }
+  .vv-mini-listing-thumb {
+    @apply relative aspect-[4/3] w-full overflow-hidden bg-ink-100;
+  }
+  .vv-mini-listing-body {
+    @apply px-2.5 py-2;
+  }
+  .vv-mini-listing-price {
+    @apply text-[13px] font-extrabold text-ink-900 tabular-nums leading-tight;
+  }
+  .vv-mini-listing-loc {
+    @apply mt-0.5 flex items-center gap-1 text-[11px] text-ink-500 font-medium;
+  }
+  .vv-mini-listing-specs {
+    @apply mt-1.5 flex items-center gap-2 text-[10px] font-semibold text-ink-600;
+  }
+  .vv-spec {
+    @apply inline-flex items-center gap-0.5;
+  }
+  .vv-mini-listing-cta {
+    @apply mt-1.5 inline-flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-sky-700 group-hover:text-sky-900;
+  }
+
+  /* Top destinations section (sits directly below the hero) */
+  .vv-destinations {
+    @apply relative bg-white py-16 sm:py-20;
+  }
+  .vv-destinations-eyebrow {
+    @apply inline-block text-[11px] font-bold uppercase tracking-[0.32em];
+    color: #b78628;
+  }
+  .vv-destinations-title {
+    @apply mt-3 font-medium text-ink-900;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.05;
+    letter-spacing: -0.005em;
+  }
+  .vv-destinations-subtitle {
+    @apply mt-3 max-w-xl text-sm sm:text-base text-ink-600;
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    line-height: 1.6;
+  }
+
+  /* Top destination tile */
+  .vv-dest {
+    @apply relative block aspect-[4/5] overflow-hidden rounded-2xl ring-1 ring-ink-200
+           shadow-[0_8px_24px_-12px_rgba(15,23,42,0.35)]
+           transition-all duration-300 hover:-translate-y-1
+           hover:ring-2 hover:ring-amber-400/60
+           hover:shadow-[0_30px_60px_-20px_rgba(15,23,42,0.55)];
+  }
+  .vv-dest-bg {
+    @apply absolute inset-0 bg-cover bg-center;
+    background-color: #1e293b;
+    background-image: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    opacity: 0;
+    transform: scale(1.02);
+    transition: opacity 600ms ease, transform 600ms ease;
+    will-change: opacity, transform;
+    /* High-DPI sharpening hint */
+    image-rendering: -webkit-optimize-contrast;
+  }
+  .vv-dest-bg.is-loaded {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .vv-dest:hover .vv-dest-bg.is-loaded { transform: scale(1.08); }
+  .vv-dest-scrim {
+    @apply absolute inset-0 pointer-events-none;
+    background:
+      linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.68) 100%),
+      linear-gradient(180deg, rgba(8, 14, 30, 0.10) 0%, rgba(8, 14, 30, 0) 40%);
+  }
+  .vv-dest::after {
+    /* Subtle warm rim-light on hover for an editorial feel */
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+                inset 0 -40px 60px -28px rgba(247, 197, 95, 0);
+    pointer-events: none;
+    transition: box-shadow 300ms ease;
+  }
+  .vv-dest:hover::after {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+                inset 0 -40px 60px -28px rgba(247, 197, 95, 0.25);
+  }
+  /* CTA tile that fills the trailing grid slot — matches the country card
+     shape but uses an editorial dark gradient + arrow instead of a photo. */
+  .vv-dest--cta {
+    @apply ring-1 ring-ink-200;
+    background:
+      radial-gradient(ellipse 90% 60% at 20% 0%, rgba(247, 197, 95, 0.18) 0%, transparent 60%),
+      linear-gradient(150deg, #0f172a 0%, #1e293b 55%, #064e3b 100%);
+  }
+  .vv-dest--cta::after { content: none; }
+  .vv-dest-cta-inner {
+    @apply relative z-10 flex h-full flex-col items-start justify-between p-5 sm:p-6 text-left;
+  }
+  .vv-dest-cta-eyebrow {
+    @apply inline-block text-[10px] font-bold uppercase tracking-[0.32em];
+    color: #f5d486; /* champagne — matches the headline accent */
+  }
+  .vv-dest-cta-title {
+    @apply block text-white font-medium;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: clamp(1.35rem, 2vw, 1.65rem);
+    line-height: 1.1;
+    letter-spacing: -0.005em;
+  }
+  .vv-dest-cta-arrow {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-full
+           bg-white/10 text-white ring-1 ring-white/25
+           transition-all duration-200;
+  }
+  .vv-dest--cta:hover .vv-dest-cta-arrow {
+    @apply bg-white text-ink-900 ring-white translate-x-0.5;
+  }
+  .vv-dest-chip {
+    @apply absolute inset-x-3 bottom-3 flex items-center justify-center gap-1.5
+           rounded-lg bg-white/95 backdrop-blur-sm px-2.5 py-1.5
+           text-[12px] font-extrabold uppercase tracking-[0.06em] text-ink-900;
+    line-height: 1.1;
   }
 }
 
@@ -261,6 +1958,135 @@
 /* Scroll-reveal (JS adds .revealed via IntersectionObserver) */
 .reveal             { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
 .reveal.revealed    { opacity: 1; transform: translateY(0); }
+
+
+/* ════════════════════════════════════════════════════════════════════════
+   List-your-property wizard
+   ──────────────────────────────────────────────────────────────────────── */
+
+@layer components {
+  /* ── Progress bar (sticky at the top of /list/*) ─────────────────── */
+  .vv-listing-progress {
+    @apply min-h-[64px] flex items-center;
+  }
+  .vv-progress-row {
+    @apply flex-1;
+  }
+  .vv-progress-dot {
+    @apply inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full
+           bg-ink-100 text-ink-500 text-[11px] font-bold ring-1 ring-ink-200
+           transition-all duration-200;
+  }
+  .vv-progress-dot.is-active {
+    @apply bg-gradient-to-br from-brand-500 to-brand-700 text-white ring-2 ring-brand-200
+           shadow-md shadow-brand-500/30 scale-110;
+  }
+  .vv-progress-dot.is-complete {
+    @apply bg-emerald-500 text-white ring-emerald-200;
+  }
+  .vv-progress-line {
+    @apply mx-2 sm:mx-4 flex-1 h-px bg-ink-200 transition-colors duration-300;
+  }
+  .vv-progress-line.is-complete {
+    @apply bg-emerald-400;
+  }
+
+  /* ── Step action bar (Cancel / Back / Continue) ──────────────────── */
+  .vv-listing-actions {
+    @apply flex items-center justify-between gap-3 pt-2;
+  }
+
+  /* ── Step 1: property-type cards ─────────────────────────────────── */
+  .vv-listing-type-card {
+    @apply flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-ink-200
+           bg-white p-4 sm:p-5 cursor-pointer text-center
+           transition-all duration-150
+           hover:border-brand-300 hover:bg-brand-50/40 hover:shadow-md
+           focus-within:ring-2 focus-within:ring-brand-400 focus-within:ring-offset-1;
+  }
+  .vv-listing-type-card.is-selected {
+    @apply border-brand-600 bg-brand-50 shadow-lg shadow-brand-500/15;
+  }
+  .vv-listing-type-icon {
+    @apply text-3xl sm:text-4xl leading-none;
+  }
+  .vv-listing-type-label {
+    @apply text-xs sm:text-sm font-semibold text-ink-900;
+  }
+  .vv-listing-type-card.is-selected .vv-listing-type-label {
+    @apply text-brand-700;
+  }
+
+  /* ── Step 4: photo dropzone + thumbnail grid ─────────────────────── */
+  .vv-dropzone {
+    @apply flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed
+           border-ink-300 bg-ink-50 p-8 sm:p-10 cursor-pointer
+           transition-all duration-200
+           hover:border-brand-400 hover:bg-brand-50/30;
+  }
+  .vv-dropzone.is-dragging {
+    @apply border-brand-500 bg-brand-50 ring-4 ring-brand-200/40 scale-[1.01];
+  }
+  .vv-image-thumb {
+    @apply relative aspect-[4/3] overflow-hidden rounded-xl border border-ink-200 bg-ink-100;
+  }
+  .vv-image-thumb img {
+    @apply h-full w-full object-cover transition-transform duration-200;
+  }
+  .vv-image-thumb:hover img {
+    @apply scale-105;
+  }
+  .vv-image-thumb.is-cover {
+    @apply ring-2 ring-brand-500 ring-offset-2;
+  }
+  .vv-image-cover-badge {
+    @apply absolute left-2 top-2 inline-flex items-center rounded-full bg-white px-2 py-0.5
+           text-[10px] font-bold uppercase tracking-widest text-brand-700 shadow ring-1 ring-ink-100;
+  }
+  .vv-image-delete {
+    @apply absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full
+           bg-white/90 text-ink-700 shadow ring-1 ring-ink-200 backdrop-blur
+           opacity-0
+           hover:bg-rose-50 hover:text-rose-600 hover:ring-rose-200
+           transition-all duration-150;
+  }
+  .vv-image-thumb:hover .vv-image-delete,
+  .vv-image-thumb:focus-within .vv-image-delete {
+    @apply opacity-100;
+  }
+
+  /* ── Live AI-score gauge (side rail + review page) ────────────────── */
+  .vv-score-gauge {
+    @apply relative flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full
+           bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-lg shadow-brand-500/40
+           ring-4 ring-brand-100;
+  }
+  .vv-score-gauge > span {
+    @apply font-display text-lg font-black leading-none tabular-nums;
+  }
+  .vv-score-gauge > small {
+    @apply mt-0.5 text-[8px] font-bold uppercase tracking-[0.2em] opacity-80;
+  }
+  .vv-score-gauge.is-large {
+    @apply h-20 w-20 ring-[6px];
+  }
+  .vv-score-gauge.is-large > span {
+    @apply text-2xl;
+  }
+
+  /* ── Description shell after AI rewrite ──────────────────────────── */
+  .htmx-not-indicator { @apply inline-flex; }
+  .htmx-request .htmx-not-indicator { @apply hidden; }
+  .htmx-request .htmx-indicator     { @apply inline-flex; }
+}
+
+/* On screens < 1024px the wizard actions stick to the bottom for thumb reach. */
+@media (max-width: 1023px) {
+  .vv-listing-actions {
+    @apply sticky bottom-0 -mx-4 px-4 py-3 bg-white/95 border-t border-ink-200
+           backdrop-blur-sm z-20 sm:-mx-6 sm:px-6;
+  }
+}
 
 @layer utilities {
   .bg-radial-brand {

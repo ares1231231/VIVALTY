@@ -1,0 +1,56 @@
+{% load web_extras %}
+{% comment %}
+  Inline AI-score preview shown on the price step (mobile + side rail).
+
+  Swap target wrapper has a stable id so HTMX `hx-swap-oob` updates work.
+{% endcomment %}
+<div id="score-preview-inline" class="rounded-2xl border border-ink-200 bg-gradient-to-br from-brand-50/40 to-white p-4">
+  {% if score %}
+    <div class="flex items-center gap-4">
+      <div class="vv-score-gauge is-large" data-score="{{ score.score }}">
+        <span>{{ score.score }}</span>
+        <small>AI</small>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <div class="text-base font-bold text-ink-900">{{ score.score|score_label }}</div>
+          <span class="pill {{ score.score|score_color }} text-[10px]">{{ score.score }}/100</span>
+        </div>
+        <div class="text-[11px] text-ink-500 leading-tight mt-0.5">{{ score.confidence_label }}</div>
+        <div class="mt-2 flex flex-wrap gap-2 text-[11px]">
+          <span class="pill bg-brand-50 text-brand-700">
+            ROI {{ score.roi_min|pct }}–{{ score.roi_max|pct }}
+          </span>
+          <span class="pill bg-sky-50 text-sky-700">
+            Yield {{ score.yield_pct|pct }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    {% if score.breakdown.factors %}
+      <div class="mt-3 pt-3 border-t border-ink-100 grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
+        {% for f in score.breakdown.factors %}
+          {% if f.key != "risk_penalty" %}
+            <div class="flex items-center gap-1.5">
+              <span class="h-1.5 flex-1 rounded-full bg-ink-100 overflow-hidden">
+                <span class="block h-full bg-brand-500"
+                      style="width: {{ f.pct }}%"></span>
+              </span>
+              <span class="text-ink-500 shrink-0">{{ f.label }}</span>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="flex items-center gap-3 text-xs text-ink-500">
+      <span class="flex h-9 w-9 items-center justify-center rounded-full bg-ink-100 text-ink-400">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </span>
+      Add a price to see your AI score update in real time.
+    </div>
+  {% endif %}
+</div>

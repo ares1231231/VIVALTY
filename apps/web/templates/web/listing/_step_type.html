@@ -1,0 +1,71 @@
+{# Step 1 — Title + property type. #}
+<form method="post" novalidate class="space-y-6">
+  {% csrf_token %}
+
+  {# Title #}
+  <div class="card p-6">
+    <label for="id_title" class="label">Headline title</label>
+    {{ form.title }}
+    {% if form.title.errors %}
+      <p class="mt-2 text-xs text-rose-700">{{ form.title.errors|join:", " }}</p>
+    {% endif %}
+    <p class="mt-2 text-xs text-ink-500">
+      {{ form.title.help_text }}
+    </p>
+  </div>
+
+  {# Property type — large clickable cards #}
+  <div class="card p-6">
+    <div class="label">Property type</div>
+    {% comment %}
+      `checked` is computed once outside the loop so we don't repeat the
+      form-value vs. draft fallback for every option.
+    {% endcomment %}
+    {% with form_value=form.property_type.value draft_value=draft.property_type %}
+      {% with checked=form_value|default_if_none:draft_value|default:"" %}
+        <div role="radiogroup" aria-label="Property type" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {% for value, label in property_types %}
+            <label class="vv-listing-type-card {% if checked == value %}is-selected{% endif %}">
+              <input type="radio"
+                     name="property_type"
+                     value="{{ value }}"
+                     {% if checked == value %}checked{% endif %}
+                     class="sr-only vv-listing-type-input"
+                     required>
+              <span class="vv-listing-type-icon" aria-hidden="true">
+                {% if value == "apartment" %}🏙️{% endif %}
+                {% if value == "villa"     %}🏖️{% endif %}
+                {% if value == "house"     %}🏡{% endif %}
+                {% if value == "commercial"%}🏢{% endif %}
+                {% if value == "land"      %}🗺️{% endif %}
+                {% if value == "office"    %}💼{% endif %}
+                {% if value == "retail"    %}🛍️{% endif %}
+              </span>
+              <span class="vv-listing-type-label">{{ label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+      {% endwith %}
+    {% endwith %}
+    {% if form.property_type.errors %}
+      <p class="mt-2 text-xs text-rose-700">{{ form.property_type.errors|join:", " }}</p>
+    {% endif %}
+  </div>
+
+  {% include "web/listing/_step_actions.html" %}
+</form>
+
+{% comment %}
+  Tiny progressive enhancement: toggle the "is-selected" ring without
+  waiting for a server round-trip when the user clicks a card.
+{% endcomment %}
+<script>
+  (function () {
+    document.querySelectorAll('.vv-listing-type-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.vv-listing-type-card').forEach(c => c.classList.remove('is-selected'));
+        card.classList.add('is-selected');
+      });
+    });
+  })();
+</script>

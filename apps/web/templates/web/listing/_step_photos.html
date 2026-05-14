@@ -1,0 +1,92 @@
+{# Step 4 — photos. Drag-drop file upload with paste-URL fallback. #}
+<form method="post" novalidate class="space-y-6">
+  {% csrf_token %}
+
+  {# Dropzone — clicking it opens the file picker, dragging files over highlights it. #}
+  <div class="card p-6 space-y-5">
+    <label for="id_image_upload" id="vv-dropzone"
+           class="vv-dropzone group">
+      <div class="flex flex-col items-center gap-2 text-center pointer-events-none">
+        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-700 ring-1 ring-brand-200 group-hover:bg-brand-100">
+          <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M3 16.5V19a2 2 0 002 2h14a2 2 0 002-2v-2.5M16 6.5l-4-4-4 4M12 2.5v13"/>
+          </svg>
+        </div>
+        <div class="text-sm font-bold text-ink-900">Drag photos here, or click to browse</div>
+        <div class="text-xs text-ink-500">JPG, PNG or WebP · up to 8 MB each · 6–10 photos recommended</div>
+      </div>
+      <input id="id_image_upload"
+             type="file"
+             name="images"
+             accept="image/*"
+             multiple
+             class="sr-only"
+             hx-post="{% url 'web:listing_image_upload' %}"
+             hx-trigger="change"
+             hx-encoding="multipart/form-data"
+             hx-target="#image-grid"
+             hx-swap="outerHTML"
+             hx-indicator="#upload-spinner">
+    </label>
+
+    <div id="upload-spinner" class="htmx-indicator flex items-center gap-2 text-xs text-ink-500">
+      <svg class="h-4 w-4 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" stroke-opacity="0.25"/>
+        <path d="M21 12a9 9 0 00-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      Uploading…
+    </div>
+
+    {# Paste-URL fallback #}
+    <div class="flex items-center gap-2 pt-2 border-t border-ink-100">
+      <input type="url"
+             name="url"
+             id="paste-image-url"
+             placeholder="…or paste an image URL (Unsplash, Cloudinary, etc.)"
+             class="input flex-1 text-sm">
+      <button type="button"
+              class="btn-secondary rounded-xl text-xs px-4"
+              hx-post="{% url 'web:listing_image_url' %}"
+              hx-include="#paste-image-url"
+              hx-target="#image-grid"
+              hx-swap="outerHTML"
+              hx-on::after-request="document.getElementById('paste-image-url').value=''">
+        Add URL
+      </button>
+    </div>
+  </div>
+
+  {# Grid of uploaded images — swapped after each upload/delete. #}
+  {% include "web/listing/_image_grid.html" with images=draft.images %}
+
+  {% include "web/listing/_step_actions.html" %}
+</form>
+
+{# Drag-and-drop highlight (vanilla, no external dep). #}
+<script>
+  (function () {
+    var zone = document.getElementById('vv-dropzone');
+    if (!zone) return;
+    ['dragenter', 'dragover'].forEach(function (ev) {
+      zone.addEventListener(ev, function (e) {
+        e.preventDefault();
+        zone.classList.add('is-dragging');
+      });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+      zone.addEventListener(ev, function (e) {
+        e.preventDefault();
+        zone.classList.remove('is-dragging');
+      });
+    });
+    zone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      if (!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+      var input = document.getElementById('id_image_upload');
+      input.files = e.dataTransfer.files;
+      // Manually trigger the HTMX listener.
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  })();
+</script>

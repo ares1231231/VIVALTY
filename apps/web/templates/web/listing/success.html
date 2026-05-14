@@ -1,0 +1,113 @@
+{% extends "web/base.html" %}
+{% load web_extras %}
+
+{% block title %}Listing submitted · Vivalty{% endblock %}
+
+{% block content %}
+<div class="bg-radial-brand min-h-[calc(100vh-84px)]">
+  <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24 text-center">
+
+    {% comment %}
+      Status badge — different copy depending on whether the listing went
+      straight live (admin / staff) or is pending review (owners).
+    {% endcomment %}
+    {% if p.status == "active" %}
+      <div class="inline-flex items-center gap-2 rounded-full bg-emerald-100 text-emerald-800 px-4 py-1.5 text-xs font-bold tracking-wide ring-1 ring-emerald-200">
+        <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+        Live to investors
+      </div>
+    {% else %}
+      <div class="inline-flex items-center gap-2 rounded-full bg-amber-100 text-amber-800 px-4 py-1.5 text-xs font-bold tracking-wide ring-1 ring-amber-200">
+        <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
+        Submitted · in editorial review
+      </div>
+    {% endif %}
+
+    <h1 class="mt-6 font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-ink-900 leading-[1.05]">
+      {% if p.status == "active" %}
+        Your listing is live.
+      {% else %}
+        Thank you — we'll be in touch shortly.
+      {% endif %}
+    </h1>
+    <p class="mt-4 text-base sm:text-lg text-ink-600 max-w-prose mx-auto leading-relaxed">
+      {% if p.status == "active" %}
+        “{{ p.title }}” is now searchable by investors across the platform and the AI advisor.
+      {% else %}
+        “{{ p.title }}” is queued for editorial review. Most listings are approved within 24 hours; we'll email you the moment it goes live.
+      {% endif %}
+    </p>
+
+    {# Mini summary card with cover image and KPIs #}
+    <div class="card mt-10 overflow-hidden text-left">
+      <div class="grid sm:grid-cols-[200px_1fr] gap-0">
+        <div class="aspect-[4/3] sm:aspect-auto bg-ink-100 relative">
+          {% if p.primary_image_url %}
+            <img src="{{ p.primary_image_url }}" alt="{{ p.title }}" class="h-full w-full object-cover">
+          {% endif %}
+        </div>
+        <div class="p-5 sm:p-6 flex flex-col gap-3">
+          <div>
+            <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400">
+              {{ p.city.name }}, {{ p.country.name }}
+            </div>
+            <div class="mt-1 font-display text-xl font-bold text-ink-900 line-clamp-2">{{ p.title }}</div>
+          </div>
+          {% if p.metric %}
+            <div class="flex items-center gap-4">
+              <div class="vv-score-gauge" data-score="{{ p.metric.investment_score }}">
+                <span>{{ p.metric.investment_score }}</span>
+                <small>AI</small>
+              </div>
+              <div class="text-xs space-y-0.5">
+                <div class="font-bold text-ink-900">{{ p.metric.investment_score|score_label }}</div>
+                <div class="text-ink-500">Yield {{ p.metric.rental_yield|pct }} · ROI {{ p.metric.estimated_roi_min|pct }}–{{ p.metric.estimated_roi_max|pct }}</div>
+              </div>
+            </div>
+          {% endif %}
+          <div class="mt-auto pt-2 text-base font-extrabold text-ink-900 tabular-nums">
+            {{ p.price|money:p.currency }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Next-step CTAs #}
+    <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
+      {% if p.status == "active" %}
+        <a href="{% url 'web:property_detail' p.pk %}" class="btn-primary rounded-xl px-6 py-3 text-sm">
+          View listing →
+        </a>
+      {% endif %}
+      <a href="{% url 'web:listing_edit' p.pk %}" class="btn-secondary rounded-xl px-6 py-3 text-sm">
+        Edit details
+      </a>
+      <a href="{% url 'web:dashboard' %}" class="btn-secondary rounded-xl px-6 py-3 text-sm">
+        Go to dashboard
+      </a>
+      <a href="{% url 'web:listing_start' %}" class="text-xs font-semibold text-ink-600 hover:text-brand-700 ml-2">
+        + List another property
+      </a>
+    </div>
+
+    {# Editorial cross-sell #}
+    <div class="mt-12 grid sm:grid-cols-3 gap-3 text-left">
+      <a href="{% url 'web:methodology' %}" class="card p-4 hover:shadow-lg transition-shadow">
+        <div class="text-2xl">🧠</div>
+        <div class="mt-1 text-sm font-bold text-ink-900">How the AI score works</div>
+        <div class="text-[11px] text-ink-500 mt-0.5">Transparent factor breakdown.</div>
+      </a>
+      <a href="{% url 'web:simulator' %}" class="card p-4 hover:shadow-lg transition-shadow">
+        <div class="text-2xl">📊</div>
+        <div class="mt-1 text-sm font-bold text-ink-900">Investment simulator</div>
+        <div class="text-[11px] text-ink-500 mt-0.5">Model returns from your asking price.</div>
+      </a>
+      <a href="{% url 'web:chat' %}" class="card p-4 hover:shadow-lg transition-shadow">
+        <div class="text-2xl">💬</div>
+        <div class="mt-1 text-sm font-bold text-ink-900">Ask the AI advisor</div>
+        <div class="text-[11px] text-ink-500 mt-0.5">Comparable markets, yield benchmarks.</div>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

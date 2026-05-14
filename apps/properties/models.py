@@ -7,6 +7,7 @@ scoring data and an indexed `slug` for SEO URLs.
 
 from __future__ import annotations
 
+import builtins
 from decimal import Decimal
 
 from django.conf import settings
@@ -88,6 +89,18 @@ class Property(models.Model):
     contact_email = models.EmailField(blank=True)
     contact_phone = models.CharField(max_length=32, blank=True)
 
+    listing_agency = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Brokerage or developer marketing this listing.",
+    )
+    listing_ref = models.CharField(
+        max_length=64,
+        blank=True,
+        db_index=True,
+        help_text="Internal or MLS-style reference shown to investors.",
+    )
+
     tags = models.ManyToManyField(InvestmentTag, blank=True, related_name="properties")
 
     is_featured = models.BooleanField(default=False, db_index=True)
@@ -120,12 +133,23 @@ class Property(models.Model):
     @property
     def primary_image_url(self) -> str | None:
         first = self.images.order_by("position").first()
-        return first.url if first else None
+        return first.display_url if first else None
 
 
 class PropertyImage(models.Model):
+    """Image for a property.
+
+    Two ways to populate the visual:
+    - ``image``  → file upload (drag-and-drop in the listing wizard, served
+      from MEDIA_ROOT)
+    - ``url``    → externally hosted URL (legacy, paste-URL fallback)
+
+    Use :pyattr:`display_url` to read whichever is available without caring.
+    """
+
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="images")
-    url = models.URLField(max_length=1000)
+    image = models.ImageField(upload_to="properties/%Y/%m/", null=True, blank=True)
+    url = models.URLField(max_length=1000, blank=True)
     caption = models.CharField(max_length=200, blank=True)
     position = models.PositiveSmallIntegerField(default=0)
 
@@ -134,6 +158,17 @@ class PropertyImage(models.Model):
 
     def __str__(self) -> str:
         return f"Image for {self.property_id}"
+
+    # ``property`` is a foreign-key field on this model, which shadows the
+    # builtin inside the class body. Reach for the builtin via the module.
+    @builtins.property
+    def display_url(self) -> str | None:
+        if self.image:
+            try:
+                return self.image.url
+            except ValueError:
+                return None
+        return self.url or None
 
 
 class InvestmentMetric(models.Model):
@@ -163,6 +198,11 @@ class InvestmentMetric(models.Model):
         help_text="True when values were derived from market baselines rather than verified data.",
     )
     notes = models.TextField(blank=True)
+    score_breakdown = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Explainability payload: factor scores, strengths, risks.",
+    )
     computed_at = models.DateTimeField(auto_now=True)
 
     class Meta:

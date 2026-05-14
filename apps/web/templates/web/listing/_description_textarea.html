@@ -1,0 +1,16 @@
+{# Description textarea — re-rendered after AI rewrite via HTMX. #}
+<div id="description-shell" class="space-y-2">
+  <textarea name="description"
+            id="id_description"
+            rows="6"
+            placeholder="Tell the investor story: location & lifestyle, what makes this property distinctive, why now."
+            class="input">{{ description|default_if_none:"" }}</textarea>
+  {% if polished %}
+    <div class="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs text-emerald-800">
+      <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+      </svg>
+      Polished by the Vivalty AI. Tweak any line if you prefer.
+    </div>
+  {% endif %}
+</div>

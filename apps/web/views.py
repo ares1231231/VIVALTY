@@ -1,33 +1,86 @@
 """Server-rendered website views.
 
-Thin handlers — every piece of business logic lives in the existing service
-layer (`apps/properties/services/scoring.py`, `apps/ai_advisor/services/*`).
+Thin handlers — every piece of business logic lives in the service layer
+(`apps/properties/services/scoring.py`, `apps/properties/services/simulator.py`,
+`apps/ai_advisor/services/*`).
 """
 
 from __future__ import annotations
 
 import json
-from decimal import Decimal
+from dataclasses import asdict
+from decimal import Decimal, InvalidOperation
 from typing import Iterator
 
 from django.contrib import messages
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, F, Q
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, StreamingHttpResponse
+from django.db.models import Avg, Count, F, Max, Min, Q
+from django.http import (
+    HttpRequest,
+    HttpResponse,
+    HttpResponseBadRequest,
+    JsonResponse,
+    StreamingHttpResponse,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST, require_http_methods
 
 from apps.ai_advisor.models import AIConversationSession, ChatMessage, Role as ChatRole
 from apps.ai_advisor.services.advisor import generate, stream as advisor_stream
 from apps.geo.models import City, Country
 from apps.properties.models import Favorite, Property, PropertyType, Status
-from .forms import EmailLoginForm, LeadForm, PropertyForm, RegisterForm
+from apps.properties.services.scoring import FACTOR_WEIGHTS
+from apps.properties.services.simulator import (
+    COUNTRY_ASSUMPTIONS,
+    SimulatorInputs,
+    simulate,
+    simulate_for_property,
+)
+from apps.users.models import Role
+from apps.web.services import geocoding, listing_ai, listing_wizard
+from .forms import (
+    BecomeOwnerForm,
+    EmailLoginForm,
+    InvestorInquiryForm,
+    LeadForm,
+    ListingLocationForm,
+    ListingPriceForm,
+    ListingSpecsForm,
+    ListingTypeForm,
+    PropertyEditForm,
+    PropertyForm,
+    RegisterForm,
+)
 
 
-# --- Public pages -----------------------------------------------------------
+# ─── helpers ────────────────────────────────────────────────────────────────
+
+def _safe_decimal(raw: str | None, default: Decimal | None = None) -> Decimal | None:
+    if raw in (None, ""):
+        return default
+    try:
+        return Decimal(raw)
+    except (InvalidOperation, TypeError, ValueError):
+        return default
+
+
+def _safe_int(raw: str | None, default: int) -> int:
+    try:
+        return int(raw) if raw not in (None, "") else default
+    except (TypeError, ValueError):
+        return default
+
+
+def _safe_float(raw: str | None, default: float) -> float:
+    try:
+        return float(raw) if raw not in (None, "") else default
+    except (TypeError, ValueError):
+        return default
+
+
+# ─── Public pages ───────────────────────────────────────────────────────────
 
 def home(request: HttpRequest) -> HttpResponse:
     featured = (
@@ -43,8 +96,69 @@ def home(request: HttpRequest) -> HttpResponse:
             .filter(status="active")
             .order_by("-metric__investment_score")[:6]
         )
-    countries = Country.objects.annotate(cities_count=Count("cities")).order_by("name")
-    return render(request, "web/home.html", {"featured": featured, "countries": countries})
+
+    # Hero gallery — pick the highest-scored listing per country (max 3)
+    # so the floating mosaic feels diverse and product-led.
+    seen_countries: set[str] = set()
+    hero_gallery: list[Property] = []
+    for prop in (
+        Property.objects.select_related("country", "city", "metric")
+        .prefetch_related("images")
+        .filter(status="active")
+        .order_by("-metric__investment_score", "-is_featured")
+    ):
+        if prop.country.code in seen_countries:
+            continue
+        if not prop.primary_image_url:
+            continue
+        hero_gallery.append(prop)
+        seen_countries.add(prop.country.code)
+        if len(hero_gallery) >= 3:
+            break
+
+    countries = (
+        Country.objects.annotate(
+            cities_count=Count("cities"),
+            avg_score=Avg("cities__investment_score"),
+        )
+        .order_by("name")
+    )
+
+    # Cities grouped by country code — JSON-serialised for the hero search bar
+    # so clicking a country card can repopulate the city dropdown client-side.
+    cities_by_country: dict[str, list[dict[str, str]]] = {}
+    for city in City.objects.select_related("country").order_by("country__name", "name"):
+        cities_by_country.setdefault(city.country.code, []).append(
+            {"slug": city.slug, "name": city.name}
+        )
+
+    # Aggregate platform stats — surfaced in the institutional trust strip.
+    agg = Property.objects.filter(status="active").aggregate(
+        total=Count("id"),
+        avg_score=Avg("metric__investment_score"),
+        max_yield=Max("metric__rental_yield"),
+    )
+    stats = {
+        "total_listings": agg["total"] or 0,
+        "avg_score": int(agg["avg_score"] or 0),
+        "max_yield": float(agg["max_yield"] or 0),
+        "countries": Country.objects.count(),
+        "cities": City.objects.count(),
+    }
+
+    investor_form = InvestorInquiryForm()
+    return render(
+        request,
+        "web/home.html",
+        {
+            "featured": featured,
+            "hero_gallery": hero_gallery,
+            "countries": countries,
+            "cities_by_country": cities_by_country,
+            "stats": stats,
+            "investor_form": investor_form,
+        },
+    )
 
 
 def marketplace(request: HttpRequest) -> HttpResponse:
@@ -57,11 +171,17 @@ def marketplace(request: HttpRequest) -> HttpResponse:
     p = request.GET
     if (search := p.get("search")):
         qs = qs.filter(
-            Q(title__icontains=search) | Q(description__icontains=search) |
-            Q(city__name__icontains=search) | Q(country__name__icontains=search)
+            Q(title__icontains=search)
+            | Q(description__icontains=search)
+            | Q(city__name__icontains=search)
+            | Q(country__name__icontains=search)
+            | Q(listing_agency__icontains=search)
+            | Q(listing_ref__icontains=search)
         )
     if (country := p.get("country")):
         qs = qs.filter(country__code__iexact=country)
+    if (city := p.get("city")):
+        qs = qs.filter(city__slug=city)
     if (ptype := p.get("type")):
         qs = qs.filter(property_type=ptype)
     if (price_min := p.get("price_min")):
@@ -76,11 +196,17 @@ def marketplace(request: HttpRequest) -> HttpResponse:
     if (roi_min := p.get("roi_min")):
         try: qs = qs.filter(metric__estimated_roi_min__gte=float(roi_min))
         except ValueError: pass
+    if (mx := p.get("max_budget")):
+        try:
+            qs = qs.filter(price__lte=float(mx))
+        except ValueError:
+            pass
 
     ordering = p.get("ordering") or "-is_featured,-created_at"
+    if p.get("best_match") == "1":
+        ordering = "-metric__investment_score,-is_featured,-created_at"
     qs = qs.order_by(*[o.strip() for o in ordering.split(",") if o.strip()])
 
-    # Simple pagination
     try:
         page = max(1, int(p.get("page", 1)))
     except ValueError:
@@ -91,7 +217,6 @@ def marketplace(request: HttpRequest) -> HttpResponse:
 
     countries = Country.objects.order_by("name")
 
-    # City-level approximate lat/lon lookup for map pins (no DB column needed)
     CITY_COORDS: dict[str, tuple[float, float]] = {
         "paris": (48.85, 2.35), "lyon": (45.75, 4.83), "marseille": (43.30, 5.37),
         "nice": (43.71, 7.26), "bordeaux": (44.84, -0.58), "toulouse": (43.60, 1.44),
@@ -100,9 +225,11 @@ def marketplace(request: HttpRequest) -> HttpResponse:
         "madrid": (40.42, -3.70), "barcelona": (41.39, 2.15), "valencia": (39.47, -0.38),
         "seville": (37.38, -5.99), "malaga": (36.72, -4.42), "marbella": (36.51, -4.88),
         "zurich": (47.38, 8.54), "geneva": (46.20, 6.14), "basel": (47.56, 7.59),
+        "lausanne": (46.52, 6.63),
         "rome": (41.90, 12.50), "milan": (45.47, 9.19), "florence": (43.77, 11.26),
         "venice": (45.44, 12.33), "naples": (40.85, 14.27),
-        "dubai": (25.20, 55.27), "abu dhabi": (24.47, 54.37),
+        "dubai marina": (25.08, 55.14), "business bay": (25.19, 55.27),
+        "jumeirah village circle": (25.06, 55.21), "abu dhabi": (24.47, 54.37),
         "lisbon": (38.72, -9.14), "porto": (41.16, -8.63), "algarve": (37.10, -8.25),
         "faro": (37.02, -7.94),
     }
@@ -127,9 +254,6 @@ def marketplace(request: HttpRequest) -> HttpResponse:
             "lon": coords[1] if coords else None,
         }
 
-    # HTMX filter/pagination uses hx-target="#results" and must get the grid fragment only.
-    # hx-boosted navigations also send HX-Request but target <body> — they need the full page
-    # (navbar, filters, map data). Using "any HX-Request => partial" strips the header.
     _hx_target = (request.headers.get("HX-Target") or "").strip()
     _target_id = _hx_target[1:] if _hx_target.startswith("#") else _hx_target
     is_results_partial = bool(request.headers.get("HX-Request")) and _target_id == "results"
@@ -151,6 +275,7 @@ def marketplace(request: HttpRequest) -> HttpResponse:
         "next_page": page + 1,
         "prev_page": page - 1,
         "map_props_json": map_props_json,
+        "show_compare": True,
     }
     template = "web/_marketplace_grid.html" if is_results_partial else "web/marketplace.html"
     return render(request, template, ctx)
@@ -174,23 +299,393 @@ def property_detail(request: HttpRequest, pk: int) -> HttpResponse:
         request.user.is_authenticated
         and Favorite.objects.filter(user=request.user, property=prop).exists()
     )
+
+    # Default simulator output for the right-rail / share card.
+    sim = simulate_for_property(prop)
+
+    # Local market insight from the city + country baselines.
+    city_insight = {
+        "avg_price_sqm": float(prop.city.avg_price_sqm) if prop.city.avg_price_sqm else None,
+        "avg_rental_yield": float(prop.city.avg_rental_yield) if prop.city.avg_rental_yield else None,
+        "investment_score": prop.city.investment_score,
+        "demand": prop.city.demand or prop.country.base_demand,
+        "trend": prop.city.trend or prop.country.base_trend,
+        "risk": prop.city.risk or prop.country.base_risk,
+        "population": prop.city.population,
+        "summary": prop.city.summary,
+        "country_summary": prop.country.summary,
+    }
+
     return render(
         request,
         "web/property_detail.html",
-        {"p": prop, "similar": similar, "lead_form": LeadForm(), "is_favorited": is_favorited},
+        {
+            "p": prop,
+            "similar": similar,
+            "lead_form": LeadForm(),
+            "is_favorited": is_favorited,
+            "simulation": sim,
+            "city_insight": city_insight,
+        },
     )
 
 
 def markets(request: HttpRequest) -> HttpResponse:
-    countries = Country.objects.annotate(cities_count=Count("cities")).order_by("name")
+    countries = (
+        Country.objects.annotate(
+            cities_count=Count("cities"),
+            heat_avg_score=Avg("cities__investment_score"),
+            heat_avg_yield=Avg("cities__avg_rental_yield"),
+            listings_count=Count("properties", filter=Q(properties__status="active")),
+        )
+        .order_by("name")
+    )
     cities = (
         City.objects.select_related("country")
+        .annotate(listings_count=Count("properties", filter=Q(properties__status="active")))
         .order_by(F("investment_score").desc(nulls_last=True))[:30]
     )
-    return render(request, "web/markets.html", {"countries": countries, "cities": cities})
+    # Heatmap data (country-level avg score & yield).
+    heatmap = [
+        {
+            "code": c.code,
+            "name": c.name,
+            "flag": c.flag_emoji,
+            "score": int(c.heat_avg_score or 0),
+            "yield": float(c.heat_avg_yield or 0),
+            "roi_min": float(c.base_roi_min or 0),
+            "roi_max": float(c.base_roi_max or 0),
+            "risk": c.base_risk,
+            "trend": c.base_trend,
+            "listings": c.listings_count,
+        }
+        for c in countries
+    ]
+    return render(
+        request,
+        "web/markets.html",
+        {
+            "countries": countries,
+            "cities": cities,
+            "heatmap_json": json.dumps(heatmap),
+        },
+    )
 
 
-# --- Auth -------------------------------------------------------------------
+def methodology(request: HttpRequest) -> HttpResponse:
+    """How Our AI Score Works — transparent factor breakdown + data sources."""
+
+    factors = [
+        {
+            "key": "yield",
+            "label": "Rental yield",
+            "max": FACTOR_WEIGHTS["yield"],
+            "icon": "📈",
+            "desc": "Gross rental yield estimated from city benchmarks and the asking price. "
+                    "Each 1% of yield earns 5 points, capped at 40.",
+            "sources": [
+                "City avg €/m² and rental yield benchmarks",
+                "Country base rental yield",
+                "Listing's asking price + area",
+            ],
+        },
+        {
+            "key": "demand",
+            "label": "Rental demand",
+            "max": FACTOR_WEIGHTS["demand"],
+            "icon": "🏘️",
+            "desc": "Local rental demand classification (low / medium / high) tied to the city, "
+                    "with country fallback when city signal is unavailable.",
+            "sources": [
+                "City demand classification (admin-curated)",
+                "Country base demand",
+            ],
+        },
+        {
+            "key": "trend",
+            "label": "Market trend",
+            "max": FACTOR_WEIGHTS["trend"],
+            "icon": "📊",
+            "desc": "Twelve-month price trend (declining / stable / growth). Growing markets earn the full 20 points.",
+            "sources": [
+                "City trend (admin-curated)",
+                "Country trend baseline",
+            ],
+        },
+        {
+            "key": "value_for_money",
+            "label": "Value for money",
+            "max": FACTOR_WEIGHTS["value_for_money"],
+            "icon": "💰",
+            "desc": "Implied price per m² versus the city benchmark. Up to +10 when priced ≥15% below city average; "
+                    "−8 when priced ≥25% above.",
+            "sources": ["City €/m² benchmark", "Listing area + price"],
+        },
+        {
+            "key": "verification",
+            "label": "Verification",
+            "max": FACTOR_WEIGHTS["verification"],
+            "icon": "🛡️",
+            "desc": "Editorial review by Vivalty's investor desk. +5 when the listing has been verified.",
+            "sources": ["Vivalty editorial review", "Agency credentials"],
+        },
+        {
+            "key": "risk_penalty",
+            "label": "Country / city risk",
+            "max": FACTOR_WEIGHTS["risk_penalty"],
+            "icon": "⚠️",
+            "desc": "Subtracted from the raw score — up to −18 points for elevated jurisdiction risk.",
+            "sources": ["Country / city risk classification (low / medium / high)"],
+        },
+    ]
+
+    data_sources = [
+        {
+            "title": "Public market benchmarks",
+            "icon": "🏛️",
+            "items": [
+                "INSEE & Notaires de France (FR pricing)",
+                "ONS / Land Registry (UK pricing)",
+                "Idealista, Tinsa & INE (ES pricing)",
+                "Wüest Partner & SNB (CH pricing)",
+                "Idealista.it & OMI (IT pricing)",
+                "DXB Land & Property Monitor (AE pricing)",
+                "Confidencial Imobiliário & INE (PT pricing)",
+            ],
+        },
+        {
+            "title": "Rental yield references",
+            "icon": "📐",
+            "items": [
+                "Country and city-level yield benchmarks (admin-curated)",
+                "Listing-level yield estimates derived from asking price ÷ market rent",
+                "Tourist short-let benchmarks for Algarve, Florence, Dubai",
+            ],
+        },
+        {
+            "title": "Macro & risk inputs",
+            "icon": "🌐",
+            "items": [
+                "OECD & IMF country economic outlooks",
+                "ECB & SNB policy rate guidance",
+                "Local property tax / acquisition fee schedules",
+            ],
+        },
+        {
+            "title": "Vivalty proprietary signals",
+            "icon": "🧠",
+            "items": [
+                "Editorial verification by the Vivalty investor desk",
+                "Agency credential checks",
+                "User-engagement signal aggregation (saved, viewed, contacted)",
+            ],
+        },
+    ]
+
+    confidence_levels = [
+        ("Verified", "bg-emerald-100 text-emerald-700",
+         "City-level data + listing-level data are both present and recent."),
+        ("Estimated", "bg-amber-100 text-amber-700",
+         "Some city or listing inputs use country-level fallbacks — refine with admin overrides."),
+        ("Country baseline", "bg-rose-100 text-rose-700",
+         "Only country baseline data is available. Yield, demand and trend are country-wide."),
+    ]
+
+    investor_form = InvestorInquiryForm()
+    return render(
+        request,
+        "web/methodology.html",
+        {
+            "factors": factors,
+            "data_sources": data_sources,
+            "confidence_levels": confidence_levels,
+            "weights_total": sum(w for k, w in FACTOR_WEIGHTS.items() if k != "risk_penalty"),
+            "investor_form": investor_form,
+        },
+    )
+
+
+def compare(request: HttpRequest) -> HttpResponse:
+    raw_ids = (request.GET.get("ids") or "").replace(" ", "")
+    pk_list: list[int] = []
+    for part in raw_ids.split(","):
+        if not part:
+            continue
+        try:
+            pk_list.append(int(part))
+        except ValueError:
+            continue
+        if len(pk_list) >= 4:
+            break
+
+    props: list = []
+    sims: list = []
+    if pk_list:
+        props = list(
+            Property.objects.select_related("country", "city", "metric")
+            .prefetch_related("images", "tags")
+            .filter(pk__in=pk_list, status="active")
+        )
+        order_map = {pk: i for i, pk in enumerate(pk_list)}
+        props.sort(key=lambda x: order_map.get(x.pk, 99))
+        sims = [simulate_for_property(p) for p in props]
+
+    rows = list(zip(props, sims)) if props else []
+
+    return render(
+        request,
+        "web/compare.html",
+        {
+            "rows": rows,
+            "compare_properties": props,
+            "requested_ids": pk_list,
+        },
+    )
+
+
+def simulator(request: HttpRequest, pk: int | None = None) -> HttpResponse:
+    """Standalone investment simulator. When `pk` is given we pre-fill with
+    the property's current asking price + yield so investors can iterate on
+    a real listing.
+    """
+    prop = None
+    if pk:
+        prop = get_object_or_404(
+            Property.objects.select_related("country", "city", "metric"), pk=pk
+        )
+
+    # Default scenario inputs — read from query string for shareable links.
+    p = request.GET
+    default_country = (prop.country.code if prop else (p.get("country") or "PT"))
+    default_price = _safe_float(
+        p.get("price"),
+        float(prop.price) if prop else 350_000.0,
+    )
+    default_yield = _safe_float(
+        p.get("yield"),
+        float(prop.metric.rental_yield) if (prop and getattr(prop, "metric", None) and prop.metric.rental_yield) else 5.5,
+    )
+    inputs = SimulatorInputs(
+        price=default_price,
+        currency=(prop.currency if prop else (p.get("currency") or "EUR")),
+        country_code=default_country,
+        rental_yield_pct=default_yield,
+        down_payment_pct=_safe_float(p.get("down"), 30.0),
+        mortgage_years=_safe_int(p.get("years"), 25),
+        mortgage_rate_pct=_safe_float(p.get("rate"), -1.0) if p.get("rate") else None,
+        appreciation_pct=_safe_float(p.get("appreciation"), -1.0) if p.get("appreciation") else None,
+        horizon_years=_safe_int(p.get("horizon"), 10),
+    )
+    if inputs.mortgage_rate_pct == -1.0:
+        inputs = SimulatorInputs(**{**asdict(inputs), "mortgage_rate_pct": None})
+    if inputs.appreciation_pct == -1.0:
+        inputs = SimulatorInputs(**{**asdict(inputs), "appreciation_pct": None})
+
+    result = simulate(inputs)
+    return render(
+        request,
+        "web/simulator.html",
+        {
+            "prop": prop,
+            "inputs": inputs,
+            "sim": result,
+            "country_assumptions_json": json.dumps(COUNTRY_ASSUMPTIONS),
+            "countries": Country.objects.order_by("name"),
+        },
+    )
+
+
+@require_POST
+def simulator_compute(request: HttpRequest) -> HttpResponse:
+    """HTMX endpoint that re-runs the simulator and swaps the result panel."""
+    p = request.POST
+    pk = _safe_int(p.get("property_id"), 0)
+    prop = None
+    if pk:
+        prop = (
+            Property.objects.select_related("country", "city", "metric").filter(pk=pk).first()
+        )
+
+    inputs = SimulatorInputs(
+        price=_safe_float(p.get("price"), float(prop.price) if prop else 350_000.0),
+        currency=(prop.currency if prop else (p.get("currency") or "EUR")),
+        country_code=(prop.country.code if prop else (p.get("country") or "PT")),
+        rental_yield_pct=_safe_float(p.get("rental_yield_pct"), 5.5),
+        down_payment_pct=_safe_float(p.get("down_payment_pct"), 30.0),
+        mortgage_years=_safe_int(p.get("mortgage_years"), 25),
+        mortgage_rate_pct=_safe_float(p.get("mortgage_rate_pct"), -1.0) if p.get("mortgage_rate_pct") else None,
+        appreciation_pct=_safe_float(p.get("appreciation_pct"), -1.0) if p.get("appreciation_pct") else None,
+        horizon_years=_safe_int(p.get("horizon_years"), 10),
+    )
+    if inputs.mortgage_rate_pct == -1.0:
+        inputs = SimulatorInputs(**{**asdict(inputs), "mortgage_rate_pct": None})
+    if inputs.appreciation_pct == -1.0:
+        inputs = SimulatorInputs(**{**asdict(inputs), "appreciation_pct": None})
+
+    result = simulate(inputs)
+    return render(
+        request,
+        "web/components/simulator_result.html",
+        {"sim": result, "inputs": inputs, "prop": prop},
+    )
+
+
+def smart_search(request: HttpRequest) -> HttpResponse:
+    """“Find the best investment under your budget.”
+
+    Ranks active listings by AI score subject to a budget ceiling and optional
+    market filter. Renders the result fragment for HTMX swap on the home page.
+    """
+    p = request.GET
+    budget = _safe_float(p.get("budget"), 500_000.0)
+    country = (p.get("country") or "").strip().upper()
+    horizon = _safe_int(p.get("horizon"), 10)
+
+    qs = (
+        Property.objects.select_related("country", "city", "metric")
+        .prefetch_related("images")
+        .filter(status="active", price__lte=budget)
+    )
+    if country:
+        qs = qs.filter(country__code=country)
+    qs = qs.order_by("-metric__investment_score", "-metric__rental_yield")
+
+    items = list(qs[:6])
+    enriched = []
+    for prop in items:
+        sim = simulate_for_property(prop, horizon_years=horizon)
+        enriched.append({"p": prop, "sim": sim})
+
+    return render(
+        request,
+        "web/components/smart_search_results.html",
+        {
+            "items": enriched,
+            "budget": budget,
+            "country": country,
+            "horizon": horizon,
+        },
+    )
+
+
+@require_http_methods(["POST"])
+def investor_inquiry(request: HttpRequest) -> HttpResponse:
+    form = InvestorInquiryForm(request.POST)
+    nxt = request.POST.get("next") or reverse("web:home")
+    if form.is_valid():
+        obj = form.save(commit=False)
+        obj.source_page = (request.POST.get("source_page") or "")[:120]
+        obj.save()
+        messages.success(
+            request,
+            "Thank you. Our investor relations desk typically responds within one business day.",
+        )
+    else:
+        messages.error(request, "Please check the form fields and try again.")
+    return redirect(nxt)
+
+
+# ─── Auth ───────────────────────────────────────────────────────────────────
 
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
@@ -221,7 +716,7 @@ def logout_view(request: HttpRequest) -> HttpResponse:
     return redirect("web:home")
 
 
-# --- Dashboard --------------------------------------------------------------
+# ─── Dashboard ──────────────────────────────────────────────────────────────
 
 @login_required
 def dashboard(request: HttpRequest) -> HttpResponse:
@@ -238,23 +733,439 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             .filter(owner=request.user)
             .order_by("-created_at")
         )
-    return render(request, "web/dashboard.html", {"favorites": favorites, "mine": mine})
+
+    # Watchlist analytics — institutional-feeling KPIs at the top of the dashboard.
+    fav_props = [f.property for f in favorites]
+    if fav_props:
+        avg_score = round(
+            sum((f.property.metric.investment_score if getattr(f.property, "metric", None) else 0) for f in favorites)
+            / max(1, len(favorites)),
+            1,
+        )
+        avg_yield = round(
+            sum(
+                float(f.property.metric.rental_yield)
+                for f in favorites
+                if getattr(f.property, "metric", None) and f.property.metric.rental_yield
+            )
+            / max(1, len(favorites)),
+            2,
+        )
+        total_value = sum(float(f.property.price) for f in favorites)
+    else:
+        avg_score, avg_yield, total_value = 0, 0, 0
+
+    return render(
+        request,
+        "web/dashboard.html",
+        {
+            "favorites": favorites,
+            "mine": mine,
+            "watchlist_kpis": {
+                "count": len(favorites),
+                "avg_score": avg_score,
+                "avg_yield": avg_yield,
+                "total_value": total_value,
+            },
+        },
+    )
+
+
+# ─── List your property — multi-step wizard ────────────────────────────────
+#
+# Entry point: /list/  (alias: legacy /owner/new/ → 302 to /list/).
+# - If the user is anonymous            → redirect to register with next=/list/
+# - If the user is an investor          → /list/become-owner/ (one-screen upgrade)
+# - If the user is an owner / admin / staff → wizard step 1
+#
+# Per-step form posts redirect to the next step. No HTMX swap on step
+# transitions on purpose (browser-back works, refresh-resistant, easier to
+# debug). HTMX is reserved for the live score preview, AI description
+# rewrite, image uploads, and the address autocomplete.
+
+_STEP_FORM_CLASSES = {
+    "type": ListingTypeForm,
+    "location": ListingLocationForm,
+    "specs": ListingSpecsForm,
+    "price": ListingPriceForm,
+}
+
+_STEP_TEMPLATES = {
+    "type": "web/listing/_step_type.html",
+    "location": "web/listing/_step_location.html",
+    "specs": "web/listing/_step_specs.html",
+    "photos": "web/listing/_step_photos.html",
+    "price": "web/listing/_step_price.html",
+}
+
+
+def _is_owner_or_admin(user) -> bool:
+    return user.is_staff or getattr(user, "role", None) in {Role.OWNER, Role.ADMIN}
+
+
+def _initial_for_step(step: str, draft: dict) -> dict:
+    """Map the session draft back onto the per-step form's `initial=` kwarg."""
+    if step == "type":
+        return {"title": draft.get("title"), "property_type": draft.get("property_type")}
+    if step == "location":
+        return {
+            "country": draft.get("country_id"),
+            "city": draft.get("city_id"),
+            "address": draft.get("address"),
+            "latitude": draft.get("latitude") or None,
+            "longitude": draft.get("longitude") or None,
+        }
+    if step == "specs":
+        return {
+            "bedrooms": draft.get("bedrooms"),
+            "bathrooms": draft.get("bathrooms"),
+            "area_sqm": draft.get("area_sqm"),
+            "year_built": draft.get("year_built"),
+            "description": draft.get("description"),
+        }
+    if step == "price":
+        return {
+            "price": draft.get("price"),
+            "currency": draft.get("currency") or listing_wizard.CURRENCY_BY_COUNTRY.get(
+                draft.get("country_code", ""), "EUR"
+            ),
+            "contact_name": draft.get("contact_name"),
+            "contact_email": draft.get("contact_email"),
+            "contact_phone": draft.get("contact_phone"),
+            "listing_agency": draft.get("listing_agency"),
+            "listing_ref": draft.get("listing_ref"),
+        }
+    return {}
+
+
+def _render_step(request: HttpRequest, step: str, form=None) -> HttpResponse:
+    draft = listing_wizard.get_draft(request)
+    if form is None and step in _STEP_FORM_CLASSES:
+        form_cls = _STEP_FORM_CLASSES[step]
+        form = form_cls(initial=_initial_for_step(step, draft))
+
+    countries = Country.objects.order_by("name")
+    cities_by_country = {}
+    for city in City.objects.select_related("country").order_by("country__name", "name"):
+        cities_by_country.setdefault(city.country.code, []).append(
+            {"id": city.id, "name": city.name, "slug": city.slug}
+        )
+
+    ctx = {
+        "step": step,
+        "step_label": listing_wizard.STEP_LABELS[step],
+        "form": form,
+        "draft": draft,
+        "progress_rows": listing_wizard.progress(draft, step),
+        "prev_step": listing_wizard.prev_step(step),
+        "next_step": listing_wizard.next_step(step),
+        "countries": countries,
+        "cities_by_country_json": json.dumps(cities_by_country),
+        "property_types": PropertyType.choices,
+        "score": listing_wizard.score_preview(draft) if step == "price" else None,
+    }
+    return render(request, "web/listing/wizard.html", {**ctx, "step_template": _STEP_TEMPLATES[step]})
 
 
 @login_required
-def owner_new(request: HttpRequest) -> HttpResponse:
-    if request.user.role not in {"owner", "admin"} and not request.user.is_staff:
-        messages.error(request, "Only owners / agencies can create listings.")
-        return redirect("web:dashboard")
-    form = PropertyForm(request.POST or None)
+def listing_start(request: HttpRequest) -> HttpResponse:
+    """Entry point: /list/. Routes investors through the upgrade form,
+    owners straight to step 1.
+    """
+    user = request.user
+    if not _is_owner_or_admin(user):
+        return redirect("web:become_owner")
+    return redirect("web:listing_step", step=listing_wizard.STEPS[0])
+
+
+@login_required
+def listing_step(request: HttpRequest, step: str) -> HttpResponse:
+    """Render or process a single wizard step."""
+    if step not in listing_wizard.STEPS:
+        return redirect("web:listing_start")
+    if not _is_owner_or_admin(request.user):
+        return redirect("web:become_owner")
+
+    if request.method == "POST":
+        return _handle_step_post(request, step)
+    return _render_step(request, step)
+
+
+def _handle_step_post(request: HttpRequest, step: str) -> HttpResponse:
+    if step == "photos":
+        # Photos step has no Django Form — its content is managed via the
+        # HTMX upload endpoints. Submitting just advances to the next step.
+        return redirect("web:listing_step", step=listing_wizard.next_step(step) or "price")
+
+    form_cls = _STEP_FORM_CLASSES[step]
+    form = form_cls(request.POST)
+    if not form.is_valid():
+        return _render_step(request, step, form=form)
+    listing_wizard.update_draft(request, form.to_draft())
+
+    # Step 1 may also include a chosen property_type label for display.
+    if step == "type":
+        ptype = form.cleaned_data["property_type"]
+        listing_wizard.update_draft(
+            request, {"property_type_display": dict(PropertyType.choices).get(ptype, ptype)}
+        )
+
+    nxt = listing_wizard.next_step(step)
+    if nxt is None:
+        return redirect("web:listing_review")
+    return redirect("web:listing_step", step=nxt)
+
+
+@login_required
+def listing_review(request: HttpRequest) -> HttpResponse:
+    if not _is_owner_or_admin(request.user):
+        return redirect("web:become_owner")
+    draft = listing_wizard.get_draft(request)
+    if not listing_wizard.can_review(draft):
+        messages.info(request, "A few details are still missing — let's finish them first.")
+        # Send them back to the first incomplete required step.
+        for s in listing_wizard.STEPS:
+            if not listing_wizard.is_step_complete(draft, s):
+                return redirect("web:listing_step", step=s)
+        return redirect("web:listing_start")
+
+    return render(
+        request,
+        "web/listing/review.html",
+        {
+            "draft": draft,
+            "score": listing_wizard.score_preview(draft),
+            "progress_rows": listing_wizard.progress(draft, "price"),
+            "step_labels": listing_wizard.STEP_LABELS,
+        },
+    )
+
+
+@login_required
+@require_POST
+def listing_publish(request: HttpRequest) -> HttpResponse:
+    if not _is_owner_or_admin(request.user):
+        return redirect("web:become_owner")
+    try:
+        prop = listing_wizard.publish_draft(request)
+    except ValueError:
+        messages.error(request, "Your draft is incomplete. Please review every step.")
+        return redirect("web:listing_review")
+    return redirect("web:listing_success", pk=prop.pk)
+
+
+@login_required
+def listing_success(request: HttpRequest, pk: int) -> HttpResponse:
+    prop = get_object_or_404(
+        Property.objects.select_related("country", "city", "metric")
+        .prefetch_related("images"),
+        pk=pk,
+        owner=request.user,
+    )
+    return render(request, "web/listing/success.html", {"p": prop})
+
+
+@login_required
+def listing_cancel(request: HttpRequest) -> HttpResponse:
+    """Clear the in-flight draft and return to the dashboard."""
+    listing_wizard.clear_draft(request)
+    messages.info(request, "Listing draft discarded.")
+    return redirect("web:dashboard")
+
+
+# ─── Become-owner intercept ────────────────────────────────────────────────
+
+
+@login_required
+def become_owner(request: HttpRequest) -> HttpResponse:
+    """Investors who hit the listing flow land here for a one-screen role
+    upgrade before continuing into the wizard. Owners / admins bypass.
+    """
+    if _is_owner_or_admin(request.user):
+        return redirect("web:listing_start")
+
+    form = BecomeOwnerForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        prop = form.save(owner=request.user)
-        messages.success(request, "Listing published.")
+        form.apply(request.user)
+        messages.success(request, "You're set up as an owner. Let's list your first property.")
+        return redirect("web:listing_start")
+    return render(request, "web/listing/become_owner.html", {"form": form})
+
+
+# ─── Edit / delete (post-publish, single page) ─────────────────────────────
+
+
+@login_required
+def listing_edit(request: HttpRequest, pk: int) -> HttpResponse:
+    prop = get_object_or_404(Property, pk=pk)
+    if prop.owner_id != request.user.id and not (request.user.is_staff or request.user.role == Role.ADMIN):
+        messages.error(request, "You can't edit this listing.")
+        return redirect("web:dashboard")
+    form = PropertyEditForm(request.POST or None, instance=prop)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Listing updated.")
         return redirect("web:property_detail", pk=prop.pk)
-    return render(request, "web/owner_new.html", {"form": form})
+    return render(request, "web/listing/edit.html", {"p": prop, "form": form})
 
 
-# --- HTMX endpoints ---------------------------------------------------------
+@login_required
+@require_POST
+def listing_delete(request: HttpRequest, pk: int) -> HttpResponse:
+    prop = get_object_or_404(Property, pk=pk)
+    if prop.owner_id != request.user.id and not (request.user.is_staff or request.user.role == Role.ADMIN):
+        messages.error(request, "You can't delete this listing.")
+        return redirect("web:dashboard")
+    title = prop.title
+    prop.delete()
+    messages.success(request, f"Listing “{title}” deleted.")
+    return redirect("web:dashboard")
+
+
+# ─── HTMX endpoints for the wizard ─────────────────────────────────────────
+
+
+@login_required
+@require_POST
+def listing_score_preview(request: HttpRequest) -> HttpResponse:
+    """Recompute the score preview from the in-flight price / currency
+    fields (and the draft's location + area) and swap the gauge.
+    """
+    p = request.POST
+    patch: dict = {}
+    if (raw := p.get("price")) is not None and raw != "":
+        patch["price"] = raw
+    if (cur := p.get("currency")):
+        patch["currency"] = cur
+    if patch:
+        listing_wizard.update_draft(request, patch)
+    draft = listing_wizard.get_draft(request)
+    return render(
+        request,
+        "web/listing/_score_preview.html",
+        {"score": listing_wizard.score_preview(draft), "draft": draft},
+    )
+
+
+@login_required
+@require_POST
+def listing_ai_rewrite(request: HttpRequest) -> HttpResponse:
+    """Polish the owner-typed description using the AI rewriter and swap the
+    textarea contents in-place.
+    """
+    raw = (request.POST.get("description") or "").strip()
+    draft = listing_wizard.get_draft(request)
+    polished = listing_ai.rewrite_description(
+        raw,
+        context={
+            "title": draft.get("title"),
+            "property_type": draft.get("property_type_display") or draft.get("property_type"),
+            "city_name": draft.get("city_name"),
+            "country_name": draft.get("country_name"),
+            "area_sqm": draft.get("area_sqm"),
+            "bedrooms": draft.get("bedrooms"),
+            "bathrooms": draft.get("bathrooms"),
+        },
+    )
+    listing_wizard.update_draft(request, {"description": polished})
+    return render(
+        request,
+        "web/listing/_description_textarea.html",
+        {"description": polished, "polished": polished != raw},
+    )
+
+
+@login_required
+def listing_price_suggest(request: HttpRequest) -> HttpResponse:
+    """Render an inline price suggestion chip for the price step, given the
+    draft's city and area.
+    """
+    draft = listing_wizard.get_draft(request)
+    city = None
+    country = None
+    if draft.get("city_id"):
+        city = City.objects.select_related("country").filter(pk=draft["city_id"]).first()
+    if draft.get("country_id"):
+        country = Country.objects.filter(pk=draft["country_id"]).first()
+    area = None
+    if draft.get("area_sqm"):
+        try:
+            area = Decimal(str(draft["area_sqm"]))
+        except (InvalidOperation, TypeError, ValueError):
+            area = None
+    suggestion = listing_ai.suggest_price(city=city, country=country, area_sqm=area)
+    return render(request, "web/listing/_price_suggestion.html", {"s": suggestion})
+
+
+@login_required
+@require_POST
+def listing_image_upload(request: HttpRequest) -> HttpResponse:
+    """Receive one or more file uploads and append them to the draft stash.
+    Returns the refreshed image grid fragment.
+    """
+    files = request.FILES.getlist("images") or ([request.FILES["image"]] if "image" in request.FILES else [])
+    if not files:
+        return HttpResponseBadRequest("No file uploaded.")
+    for fh in files:
+        if fh.size > 8 * 1024 * 1024:  # 8 MB per image
+            messages.error(request, f"“{fh.name}” is over the 8 MB per-image limit.")
+            continue
+        if not (fh.content_type or "").startswith("image/"):
+            messages.error(request, f"“{fh.name}” is not an image.")
+            continue
+        listing_wizard.add_image(request, fh)
+    return render(
+        request,
+        "web/listing/_image_grid.html",
+        {"images": listing_wizard.get_draft(request).get("images", [])},
+    )
+
+
+@login_required
+@require_POST
+def listing_image_url(request: HttpRequest) -> HttpResponse:
+    """Append a paste-URL image to the draft and refresh the grid."""
+    raw = (request.POST.get("url") or "").strip()
+    if raw and (raw.startswith("http://") or raw.startswith("https://")):
+        listing_wizard.add_image_url(request, raw)
+    else:
+        messages.error(request, "Paste a valid http(s) image URL.")
+    return render(
+        request,
+        "web/listing/_image_grid.html",
+        {"images": listing_wizard.get_draft(request).get("images", [])},
+    )
+
+
+@login_required
+@require_POST
+def listing_image_delete(request: HttpRequest, image_id: str) -> HttpResponse:
+    listing_wizard.remove_image(request, image_id)
+    return render(
+        request,
+        "web/listing/_image_grid.html",
+        {"images": listing_wizard.get_draft(request).get("images", [])},
+    )
+
+
+@login_required
+def listing_address_search(request: HttpRequest) -> HttpResponse:
+    """Address autocomplete via Nominatim. Used by the location step."""
+    query = (request.GET.get("q") or "").strip()
+    country_code = (request.GET.get("cc") or "").strip().upper() or None
+    suggestions = geocoding.search(query, country_code=country_code, limit=6) if len(query) >= 3 else []
+    return render(request, "web/listing/_address_suggestions.html", {"suggestions": suggestions})
+
+
+@login_required
+def owner_new_legacy(request: HttpRequest) -> HttpResponse:
+    """Legacy /owner/new/ endpoint → 302 redirect to the new wizard so old
+    bookmarks and the admin's "View site" link keep working.
+    """
+    return redirect("web:listing_start")
+
+
+# ─── HTMX endpoints ─────────────────────────────────────────────────────────
 
 @login_required
 @require_POST
@@ -288,7 +1199,7 @@ def lead_create(request: HttpRequest, pk: int) -> HttpResponse:
     return render(request, "web/components/lead_form.html", {"p": prop, "lead_form": form})
 
 
-# --- AI advisor (server-rendered chat) --------------------------------------
+# ─── AI advisor (server-rendered chat) ──────────────────────────────────────
 
 @login_required
 def chat(request: HttpRequest, session_id: int | None = None) -> HttpResponse:
@@ -318,12 +1229,7 @@ def chat_new(request: HttpRequest) -> HttpResponse:
 @login_required
 @require_http_methods(["POST"])
 def chat_stream(request: HttpRequest, session_id: int) -> HttpResponse:
-    """SSE endpoint scoped to the website (session auth + CSRF).
-
-    The browser POSTs the message with the CSRF token and consumes the SSE stream
-    via vanilla fetch + ReadableStream. Each frame is JSON: {"delta": "..."} and
-    the final frame is {"event": "done"}.
-    """
+    """SSE endpoint scoped to the website (session auth + CSRF)."""
     sess = get_object_or_404(AIConversationSession, pk=session_id, user=request.user)
     payload: dict
     try:
@@ -332,7 +1238,7 @@ def chat_stream(request: HttpRequest, session_id: int) -> HttpResponse:
         payload = {}
     message = (payload.get("message") or "").strip()
     if not message:
-        return HttpResponse(status=400)
+        return HttpResponseBadRequest()
 
     def event_stream() -> Iterator[bytes]:
         for delta in advisor_stream(sess, message):

@@ -23,6 +23,9 @@ module.exports = {
     {
       pattern: /^(bg|text|border)-(emerald|amber|sky|rose|indigo|lime|cyan|brand|ink|slate|orange)-(50|100|200|300|400|500|600|700|900)$/,
     },
+    {
+      pattern: /^vv-/,
+    },
   ],
   theme: {
     extend: {
@@ -61,6 +64,22 @@ module.exports = {
           "Roboto",
           "Helvetica Neue",
           "sans-serif",
+        ],
+        display: [
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
+          "Roboto",
+          "Helvetica Neue",
+          "sans-serif",
+        ],
+        mono: [
+          "ui-monospace",
+          "SFMono-Regular",
+          "Menlo",
+          "Consolas",
+          "monospace",
         ],
       },
     },

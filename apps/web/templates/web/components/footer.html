@@ -91,28 +91,29 @@
       </div>
 
       <div>
-        <div class="text-xs font-bold uppercase tracking-widest text-white mb-4">Platform</div>
+        <div class="text-xs font-bold uppercase tracking-widest text-white mb-4">Tools</div>
         <ul class="space-y-2.5 text-sm">
-          <li><a href="{% url 'web:chat' %}" class="hover:text-white transition-colors">AI Advisor</a></li>
+          <li><a href="{% url 'web:simulator' %}" class="hover:text-white transition-colors">Investment simulator</a></li>
+          <li><a href="{% url 'web:compare' %}" class="hover:text-white transition-colors">Compare listings</a></li>
+          <li><a href="{% url 'web:methodology' %}" class="hover:text-white transition-colors">How our AI score works</a></li>
           <li><a href="{% url 'web:markets' %}" class="hover:text-white transition-colors">Market data</a></li>
+          <li><a href="{% url 'web:chat' %}" class="hover:text-white transition-colors">AI Advisor</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="text-xs font-bold uppercase tracking-widest text-white mb-4">Investor relations</div>
+        <ul class="space-y-2.5 text-sm">
+          <li><a href="{% url 'web:methodology' %}" class="hover:text-white transition-colors">Methodology &amp; data sources</a></li>
+          <li><a href="{% url 'web:home' %}#investor-desk" class="hover:text-white transition-colors">Speak to the desk</a></li>
           {% if user.is_authenticated %}
-            <li><a href="{% url 'web:dashboard' %}" class="hover:text-white transition-colors">Dashboard</a></li>
+            <li><a href="{% url 'web:dashboard' %}" class="hover:text-white transition-colors">My dashboard</a></li>
             <li><a href="{% url 'web:owner_new' %}" class="hover:text-white transition-colors">List a property</a></li>
           {% else %}
             <li><a href="{% url 'web:register' %}" class="hover:text-white transition-colors">Create account</a></li>
             <li><a href="{% url 'web:login' %}" class="hover:text-white transition-colors">Sign in</a></li>
           {% endif %}
-        </ul>
-      </div>
-
-      <div>
-        <div class="text-xs font-bold uppercase tracking-widest text-white mb-4">Company</div>
-        <ul class="space-y-2.5 text-sm">
-          <li><a href="#" class="hover:text-white transition-colors">About Vivalty</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">How it works</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Investment guide</a></li>
-          <li><a href="mailto:hello@vivalty.com" class="hover:text-white transition-colors">Contact</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Press</a></li>
+          <li><a href="mailto:investors@vivalty.com" class="hover:text-white transition-colors">investors@vivalty.com</a></li>
         </ul>
       </div>
     </div>

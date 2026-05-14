@@ -1,0 +1,245 @@
+{% extends "web/base.html" %}
+{% load static web_extras %}
+
+{% block title %}How our AI score works · Vivalty{% endblock %}
+
+{% block content %}
+
+<section class="bg-ink-900 text-white">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 py-16">
+    <div class="flex items-center gap-2 text-xs text-white/50 mb-4">
+      <a href="{% url 'web:home' %}" class="hover:text-white transition-colors">Home</a>
+      <span>›</span>
+      <span class="text-white/80 font-medium">Methodology</span>
+    </div>
+    <div class="grid lg:grid-cols-[1.4fr_1fr] gap-10 items-end">
+      <div>
+        <span class="trust-badge-dark">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          Transparent · Reproducible · Explainable
+        </span>
+        <h1 class="mt-5 font-display text-4xl sm:text-5xl font-black tracking-tight leading-[1.05]">
+          How the Vivalty<br/>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-emerald-300">
+            investment score
+          </span> is calculated.
+        </h1>
+        <p class="mt-5 max-w-xl text-white/65 leading-relaxed">
+          Every property on Vivalty is rated 0–100 across six factors. We don't hide the formula
+          and we don't invent numbers. This page documents the exact weights, source data and
+          confidence levels behind every figure you see on a listing page.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3">
+        <div class="stat-card-dark text-center">
+          <div class="stat-label !text-white/45">Factors</div>
+          <div class="font-display text-2xl font-black text-white">{{ factors|length }}</div>
+        </div>
+        <div class="stat-card-dark text-center">
+          <div class="stat-label !text-white/45">Pos. range</div>
+          <div class="font-display text-2xl font-black text-white">+{{ weights_total }}</div>
+        </div>
+        <div class="stat-card-dark text-center">
+          <div class="stat-label !text-white/45">Risk penalty</div>
+          <div class="font-display text-2xl font-black text-rose-300">−18</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+{# ─── Factor breakdown ─────────────────────────────────────────── #}
+<section class="bg-white py-16">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6">
+    <div class="text-center mb-12">
+      <span class="pill bg-brand-50 text-brand-700 border border-brand-200">The six factors</span>
+      <h2 class="mt-4 section-title">Each property's score is the sum of six explainable factors.</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 stagger-children">
+      {% for f in factors %}
+        <div class="card p-6 flex flex-col">
+          <div class="flex items-start gap-4">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-ink-50 ring-1 ring-ink-200 text-2xl shrink-0">
+              {{ f.icon }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-3">
+                <h3 class="text-lg font-extrabold text-ink-900">{{ f.label }}</h3>
+                <div class="text-right">
+                  <div class="font-display text-xl font-black {% if f.key == 'risk_penalty' %}text-rose-600{% else %}text-brand-700{% endif %} tabular-nums">
+                    {% if f.key == 'risk_penalty' %}−{% else %}+{% endif %}{{ f.max }}
+                  </div>
+                  <div class="text-[10px] uppercase tracking-widest text-ink-400">max points</div>
+                </div>
+              </div>
+              <p class="mt-2 text-sm text-ink-600 leading-relaxed">{{ f.desc }}</p>
+            </div>
+          </div>
+          <div class="mt-5 factor-bar-track">
+            <div class="{% if f.key == 'risk_penalty' %}factor-bar-fill-warn{% else %}factor-bar-fill{% endif %}"
+                 style="width: {% widthratio f.max weights_total 100 %}%"></div>
+          </div>
+          <div class="mt-4 grid grid-cols-1 gap-1.5">
+            <div class="text-[10px] uppercase tracking-widest text-ink-400 font-bold">Inputs</div>
+            {% for src in f.sources %}
+              <div class="flex items-start gap-2 text-xs text-ink-600">
+                <span class="mt-1.5 h-1 w-1 rounded-full bg-ink-300 shrink-0"></span>
+                <span>{{ src }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="mt-10 rounded-2xl border border-ink-200 bg-ink-50 p-6 grid lg:grid-cols-[2fr_1fr] gap-6 items-center">
+      <div>
+        <h3 class="font-bold text-ink-900">The maths in one line.</h3>
+        <p class="mt-2 text-sm text-ink-700">
+          <span class="font-mono text-xs bg-white border border-ink-200 px-2 py-1 rounded">
+            score = clamp(0, 100, yield + demand + trend + value + verification − risk)
+          </span>
+        </p>
+        <p class="mt-3 text-xs text-ink-500">
+          Each component caps at the maximum points listed above. We persist the breakdown
+          alongside the score, so any dispute can be re-traced to the source inputs.
+        </p>
+      </div>
+      <div class="rounded-xl bg-white border border-ink-200 p-4 text-xs text-ink-700">
+        <div class="font-bold text-ink-900 mb-1">Anti-hallucination contract</div>
+        We never let the AI advisor invent numbers. Every figure quoted in chat or on a listing
+        page is sourced from the database; estimates are flagged with a yellow disclosure pill.
+      </div>
+    </div>
+  </div>
+</section>
+
+
+{# ─── Confidence levels ─────────────────────────────────────────── #}
+<section class="bg-ink-50 py-16">
+  <div class="mx-auto max-w-5xl px-4 sm:px-6">
+    <div class="text-center mb-10">
+      <span class="pill bg-white border border-ink-200 text-ink-600 shadow-sm">Confidence indicators</span>
+      <h2 class="mt-4 section-title text-2xl">We tell you how sure we are.</h2>
+      <p class="section-subtitle max-w-xl mx-auto">
+        Every listing carries a confidence pill so you instantly know whether the score
+        is grounded in verified, estimated or country-baseline data.
+      </p>
+    </div>
+
+    <div class="grid sm:grid-cols-3 gap-4">
+      {% for label, color, desc in confidence_levels %}
+        <div class="card p-5">
+          <span class="pill {{ color }}">{{ label }}</span>
+          <p class="mt-3 text-sm text-ink-600 leading-relaxed">{{ desc }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+
+{# ─── Data sources ──────────────────────────────────────────────── #}
+<section class="bg-white py-16">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6">
+    <div class="text-center mb-12">
+      <span class="pill bg-sky-50 text-sky-700 border border-sky-200">Data sources</span>
+      <h2 class="mt-4 section-title">Every number traces back to its source.</h2>
+      <p class="section-subtitle max-w-2xl mx-auto">
+        We rebuild the pricing, yield and risk benchmarks from a documented stack of public,
+        institutional and proprietary inputs. No black-box scraping.
+      </p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 stagger-children">
+      {% for s in data_sources %}
+        <div class="card p-5">
+          <div class="flex items-center gap-3">
+            <div class="text-2xl">{{ s.icon }}</div>
+            <h3 class="font-extrabold text-ink-900">{{ s.title }}</h3>
+          </div>
+          <ul class="mt-4 space-y-2 text-sm text-ink-600">
+            {% for item in s.items %}
+              <li class="flex gap-2">
+                <span class="mt-2 h-1 w-1 rounded-full bg-ink-300 shrink-0"></span>
+                <span>{{ item }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="mt-10 grid sm:grid-cols-3 gap-3">
+      <div class="trust-badge w-full">
+        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+        Source-verified pricing benchmarks
+      </div>
+      <div class="trust-badge w-full">
+        <span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
+        Country-aware tax & fee schedules
+      </div>
+      <div class="trust-badge w-full">
+        <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+        Quarterly methodology review
+      </div>
+    </div>
+  </div>
+</section>
+
+
+{# ─── Disclaimers + IR CTA ─────────────────────────────────────── #}
+<section class="bg-ink-50 py-16">
+  <div class="mx-auto max-w-5xl px-4 sm:px-6">
+    <div class="card p-6 sm:p-8">
+      <h2 class="font-extrabold text-ink-900 text-xl">Important disclosures</h2>
+      <ul class="mt-4 space-y-3 text-sm text-ink-700">
+        <li class="flex gap-2"><span class="mt-2 h-1 w-1 rounded-full bg-ink-400 shrink-0"></span>
+          Vivalty is a real-estate marketplace and information service. We are not a regulated investment advisor;
+          the score is a research tool, not a personalised recommendation.
+        </li>
+        <li class="flex gap-2"><span class="mt-2 h-1 w-1 rounded-full bg-ink-400 shrink-0"></span>
+          Past performance and modelled projections are not guarantees. Projections rely on country-level
+          appreciation and tax assumptions documented in the simulator.
+        </li>
+        <li class="flex gap-2"><span class="mt-2 h-1 w-1 rounded-full bg-ink-400 shrink-0"></span>
+          Listings sourced from third-party agencies may contain inaccuracies. Always verify the title deed,
+          tax position and rental contracts directly with the listing agency before purchasing.
+        </li>
+        <li class="flex gap-2"><span class="mt-2 h-1 w-1 rounded-full bg-ink-400 shrink-0"></span>
+          Currency, capital gains and exit-tax treatment depend on your jurisdiction. Consult a qualified
+          international tax advisor before committing capital.
+        </li>
+      </ul>
+    </div>
+
+    <div class="mt-8 grid lg:grid-cols-[1.2fr_1fr] gap-6 items-center">
+      <div>
+        <h3 class="section-title text-2xl">Want a methodology deep-dive?</h3>
+        <p class="section-subtitle">
+          Our investor-relations desk will walk you through the underlying datasets and weight calibration
+          process — useful for family offices and institutional partners.
+        </p>
+      </div>
+      <form method="post" action="{% url 'web:investor_inquiry' %}" class="card p-5 space-y-3">
+        {% csrf_token %}
+        <input type="hidden" name="source_page" value="methodology"/>
+        <input type="hidden" name="next" value="{% url 'web:methodology' %}"/>
+        <div class="grid sm:grid-cols-2 gap-3">
+          {{ investor_form.name }}
+          {{ investor_form.email }}
+        </div>
+        <div class="grid sm:grid-cols-2 gap-3">
+          {{ investor_form.profile }}
+          {{ investor_form.budget_max }}
+        </div>
+        {{ investor_form.markets_of_interest }}
+        <button type="submit" class="btn-primary w-full">Request a methodology call</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends "web/base.html" %}
+{% load static web_extras %}
+
+{% block title %}Investment Simulator · Vivalty{% endblock %}
+
+{% block content %}
+
+<section class="bg-ink-900 text-white">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 py-12">
+    <div class="flex items-center gap-2 text-xs text-white/50 mb-3">
+      <a href="{% url 'web:home' %}" class="hover:text-white transition-colors">Home</a>
+      <span>›</span>
+      <span class="text-white/80 font-medium">Investment simulator</span>
+      {% if prop %}
+        <span>›</span>
+        <a href="{% url 'web:property_detail' prop.id %}" class="text-brand-300 hover:text-brand-200 truncate max-w-xs">{{ prop.title }}</a>
+      {% endif %}
+    </div>
+
+    <div class="grid lg:grid-cols-[1.4fr_1fr] gap-8 items-end">
+      <div>
+        <span class="trust-badge-dark">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          Country-aware · Mortgage · Taxes · Cashflow · Appreciation
+        </span>
+        <h1 class="mt-5 font-display text-4xl sm:text-5xl font-black tracking-tight leading-[1.05]">
+          Underwrite the deal{% if prop %} on<br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-emerald-300">{{ prop.title }}</span>{% else %}<br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-emerald-300">like a real estate fund.</span>{% endif %}
+        </h1>
+        <p class="mt-4 max-w-xl text-white/65 leading-relaxed">
+          Tweak any input — down payment, mortgage rate, hold horizon — and the projection refreshes instantly.
+          Country-specific tax and fee schedules are baked in; the formula is documented on the methodology page.
+        </p>
+      </div>
+      <div class="grid grid-cols-3 gap-3">
+        <div class="stat-card-dark text-center">
+          <div class="stat-label !text-white/45">Cap rate</div>
+          <div class="font-display text-2xl font-black text-white">{{ sim.annual.cap_rate_pct|floatformat:1 }}%</div>
+        </div>
+        <div class="stat-card-dark text-center">
+          <div class="stat-label !text-white/45">Cashflow / mo</div>
+          <div class="font-display text-2xl font-black {% if sim.annual.monthly_cashflow >= 0 %}text-emerald-300{% else %}text-rose-300{% endif %}">
+            {{ sim.annual.monthly_cashflow|floatformat:0 }}
+          </div>
+        </div>
+        <div class="stat-card-dark text-center">
+          <div class="stat-label !text-white/45">10-yr return</div>
+          <div class="font-display text-2xl font-black {% if sim.summary.total_return_pct >= 0 %}text-emerald-300{% else %}text-rose-300{% endif %}">
+            {{ sim.summary.total_return_pct|floatformat:0 }}%
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<div class="mx-auto max-w-7xl px-4 sm:px-6 py-8 grid lg:grid-cols-[340px_1fr] gap-6 items-start">
+
+  {# ── Sticky inputs sidebar ─────────────────────────────────────── #}
+  <aside class="lg:sticky lg:top-20 self-start">
+    <form id="sim-form"
+          hx-post="{% url 'web:simulator_compute' %}"
+          hx-target="#sim-result"
+          hx-swap="innerHTML"
+          hx-trigger="change, input changed delay:400ms"
+          hx-indicator="#sim-loader"
+          class="card p-5 space-y-4">
+      {% csrf_token %}
+      {% if prop %}<input type="hidden" name="property_id" value="{{ prop.id }}"/>{% endif %}
+
+      <div class="flex items-center justify-between">
+        <h2 class="font-extrabold text-ink-900">Scenario inputs</h2>
+        <span id="sim-loader" class="hidden htmx-request:inline-flex items-center gap-1 text-[10px] uppercase tracking-widest text-brand-700">
+          <svg class="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+          Recomputing
+        </span>
+      </div>
+
+      <div>
+        <label class="label">Asking price</label>
+        <div class="flex gap-2">
+          <input class="input flex-1" type="number" name="price" step="1000" value="{{ inputs.price|floatformat:0 }}" />
+          <select class="input w-24" name="currency">
+            <option value="EUR" {% if inputs.currency == "EUR" %}selected{% endif %}>EUR</option>
+            <option value="GBP" {% if inputs.currency == "GBP" %}selected{% endif %}>GBP</option>
+            <option value="CHF" {% if inputs.currency == "CHF" %}selected{% endif %}>CHF</option>
+            <option value="AED" {% if inputs.currency == "AED" %}selected{% endif %}>AED</option>
+            <option value="USD" {% if inputs.currency == "USD" %}selected{% endif %}>USD</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="label">Country</label>
+        <select class="input" name="country">
+          {% for c in countries %}
+            <option value="{{ c.code }}" {% if inputs.country_code == c.code %}selected{% endif %}>
+              {{ c.flag_emoji }} {{ c.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="label">Rental yield (gross %)</label>
+        <input class="input" type="number" name="rental_yield_pct" step="0.1" min="0" max="20"
+               value="{{ inputs.rental_yield_pct }}" />
+      </div>
+      <div>
+        <label class="label">Down payment (%)</label>
+        <input class="input" type="number" name="down_payment_pct" step="1" min="0" max="100"
+               value="{{ inputs.down_payment_pct }}" />
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="label">Mortgage rate (%)</label>
+          <input class="input" type="number" name="mortgage_rate_pct" step="0.05" min="0"
+                 value="{{ inputs.mortgage_rate_pct|default_if_none:'' }}"
+                 placeholder="auto"/>
+        </div>
+        <div>
+          <label class="label">Term (years)</label>
+          <input class="input" type="number" name="mortgage_years" step="1" min="5" max="40"
+                 value="{{ inputs.mortgage_years }}" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="label">Appreciation (%)</label>
+          <input class="input" type="number" name="appreciation_pct" step="0.1"
+                 value="{{ inputs.appreciation_pct|default_if_none:'' }}"
+                 placeholder="auto"/>
+        </div>
+        <div>
+          <label class="label">Hold horizon (yrs)</label>
+          <input class="input" type="number" name="horizon_years" step="1" min="1" max="30"
+                 value="{{ inputs.horizon_years }}" />
+        </div>
+      </div>
+
+      <div class="pt-2 flex gap-2">
+        <button type="submit" class="btn-primary flex-1">Recompute</button>
+        {% if prop %}
+          <a href="{% url 'web:property_detail' prop.id %}" class="btn-secondary">Back to listing</a>
+        {% endif %}
+      </div>
+    </form>
+
+    <div class="mt-4 card p-4 text-xs text-ink-600 leading-relaxed">
+      <div class="font-bold text-ink-900 text-sm mb-1">Country defaults</div>
+      Acquisition fees, operating costs, income-tax rate, mortgage rate and capital appreciation
+      come from the country baseline table maintained by Vivalty's investor desk.
+      Override any field above to model your own assumptions.
+    </div>
+  </aside>
+
+  {# ── Result panel ──────────────────────────────────────────────── #}
+  <div id="sim-result">
+    {% include "web/components/simulator_result.html" with sim=sim inputs=inputs prop=prop %}
+  </div>
+</div>
+
+{% endblock %}

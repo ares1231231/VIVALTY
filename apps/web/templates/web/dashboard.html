@@ -6,12 +6,12 @@
 {% block content %}
 <div class="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-8">
 
-  {# ── Welcome hero ─────────────────────────────────────────────────────── #}
+  {# ── Welcome hero ─────────────────────────────────────────────── #}
   <header class="rounded-3xl border border-ink-200 bg-radial-brand p-6 shadow-card">
     <div class="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
       <div>
-        <div class="pill bg-white/70 text-brand-700">Your workspace</div>
-        <h1 class="mt-3 section-title">Welcome, {{ user.first_name|default:user.email }}</h1>
+        <div class="pill bg-white/70 text-brand-700">Your investor workspace</div>
+        <h1 class="mt-3 font-display section-title">Welcome, {{ user.first_name|default:user.email }}.</h1>
         <p class="section-subtitle">
           Role: <span class="font-semibold capitalize text-ink-900">{{ user.get_role_display }}</span>
           · Member since {{ user.date_joined|date:"M Y" }}
@@ -19,44 +19,52 @@
       </div>
       <div class="flex flex-wrap gap-2">
         <a href="{% url 'web:marketplace' %}" class="btn-secondary">Marketplace</a>
+        <a href="{% url 'web:simulator' %}" class="btn-secondary">Run a scenario</a>
         <a href="{% url 'web:chat' %}" class="btn-secondary">AI Advisor</a>
-        {% if user.role == 'owner' or user.role == 'admin' or user.is_staff %}
-          <a href="{% url 'web:owner_new' %}" class="btn-primary">+ New listing</a>
-        {% endif %}
+        <a href="{% url 'web:listing_start' %}" class="btn-primary">+ New listing</a>
       </div>
     </div>
 
-    {# Quick stats #}
+    {# Watchlist KPI strip — institutional summary of saved listings #}
     <div class="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
       <div class="metric-tile">
-        <div class="text-2xl font-black text-ink-900">{{ favorites|length }}</div>
-        <div class="text-[11px] uppercase tracking-wide text-ink-500">Saved</div>
-      </div>
-      {% if mine %}
-      <div class="metric-tile">
-        <div class="text-2xl font-black text-ink-900">{{ mine|length }}</div>
-        <div class="text-[11px] uppercase tracking-wide text-ink-500">My listings</div>
-      </div>
-      {% endif %}
-      <div class="metric-tile">
-        <div class="text-2xl font-black text-ink-900">7</div>
-        <div class="text-[11px] uppercase tracking-wide text-ink-500">Markets</div>
+        <div class="stat-label">Watchlist</div>
+        <div class="font-display text-2xl font-black text-ink-900 tabular-nums">{{ watchlist_kpis.count }}</div>
       </div>
       <div class="metric-tile">
-        <div class="text-2xl font-black text-ink-900">Live</div>
-        <div class="text-[11px] uppercase tracking-wide text-ink-500">AI advisor</div>
+        <div class="stat-label">Avg AI score</div>
+        <div class="font-display text-2xl font-black text-brand-700 tabular-nums">{{ watchlist_kpis.avg_score|default:'—' }}</div>
+      </div>
+      <div class="metric-tile">
+        <div class="stat-label">Avg yield</div>
+        <div class="font-display text-2xl font-black text-sky-700 tabular-nums">
+          {% if watchlist_kpis.avg_yield %}{{ watchlist_kpis.avg_yield|floatformat:1 }}%{% else %}—{% endif %}
+        </div>
+      </div>
+      <div class="metric-tile">
+        <div class="stat-label">Total list price</div>
+        <div class="font-display text-2xl font-black text-ink-900 tabular-nums">
+          {% if watchlist_kpis.total_value %}{{ watchlist_kpis.total_value|floatformat:0 }}{% else %}—{% endif %}
+        </div>
       </div>
     </div>
   </header>
 
-  {# ── Tabs (Flowbite) ─────────────────────────────────────────────────── #}
+  {# ── Tabs (Flowbite) ────────────────────────────────────────────── #}
   <div>
     <ul class="flex border-b border-ink-200 gap-1" id="dash-tabs" data-tabs-toggle="#dash-tab-content" role="tablist">
       <li role="presentation">
         <button class="rounded-t-xl px-5 py-2.5 text-sm font-medium text-ink-600 hover:text-brand-700 border-b-2 border-transparent aria-selected:border-brand-600 aria-selected:text-brand-700"
                 id="saved-tab" data-tabs-target="#tab-saved" type="button" role="tab" aria-controls="tab-saved" aria-selected="true">
-          Saved properties
+          Watchlist
           <span class="ml-1.5 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-700">{{ favorites|length }}</span>
+        </button>
+      </li>
+      <li role="presentation">
+        <button class="rounded-t-xl px-5 py-2.5 text-sm font-medium text-ink-600 hover:text-brand-700 border-b-2 border-transparent aria-selected:border-brand-600 aria-selected:text-brand-700"
+                id="analytics-tab" data-tabs-target="#tab-analytics" type="button" role="tab" aria-controls="tab-analytics" aria-selected="false">
+          Portfolio analytics
+          <span class="ml-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 uppercase tracking-wide">Premium</span>
         </button>
       </li>
       {% if user.role == 'owner' or user.role == 'admin' or user.is_staff %}
@@ -72,9 +80,14 @@
 
     <div id="dash-tab-content" class="pt-5">
 
-      {# Saved tab #}
+      {# Watchlist tab #}
       <div id="tab-saved" role="tabpanel" aria-labelledby="saved-tab">
         {% if favorites %}
+          <div class="flex flex-wrap items-center gap-2 mb-4">
+            <span class="text-xs text-ink-500">Build a side-by-side dossier from your watchlist:</span>
+            <a href="{% url 'web:compare' %}?ids={% for f in favorites|slice:':4' %}{{ f.property.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+               class="btn-secondary text-xs rounded-lg py-1 px-2.5">Compare top 4 →</a>
+          </div>
           <div class="saas-grid">
             {% for f in favorites %}
               {% include "web/components/property_card.html" with p=f.property %}
@@ -87,21 +100,142 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </div>
-            <div class="font-semibold text-ink-900">No saved properties yet</div>
-            <p class="mt-1 text-sm text-ink-500">Browse the marketplace and hit the heart icon to save listings here.</p>
+            <div class="font-semibold text-ink-900">Your watchlist is empty</div>
+            <p class="mt-1 text-sm text-ink-500">Browse the marketplace and tap the heart on any listing to track it.</p>
             <a href="{% url 'web:marketplace' %}" class="btn-primary mt-4 inline-flex">Explore marketplace</a>
           </div>
         {% endif %}
       </div>
 
-      {# Listings tab #}
+      {# Premium analytics tab — paywall scaffold #}
+      <div id="tab-analytics" role="tabpanel" aria-labelledby="analytics-tab" class="hidden">
+        <div class="relative">
+          {# Blurred mock dashboard behind the paywall #}
+          <div class="grid lg:grid-cols-3 gap-4 blur-sm select-none pointer-events-none">
+            <div class="card p-5">
+              <div class="stat-label">Portfolio IRR</div>
+              <div class="font-display text-3xl font-black text-emerald-700">11.4%</div>
+              <div class="text-[10px] text-ink-500 mt-1">Modelled across {{ watchlist_kpis.count }} watchlisted listings</div>
+            </div>
+            <div class="card p-5">
+              <div class="stat-label">Risk-adjusted score</div>
+              <div class="font-display text-3xl font-black text-ink-900">82 / 100</div>
+              <div class="text-[10px] text-ink-500 mt-1">Sharpe-style yield ÷ risk weighting</div>
+            </div>
+            <div class="card p-5">
+              <div class="stat-label">Diversification</div>
+              <div class="font-display text-3xl font-black text-sky-700">Balanced</div>
+              <div class="text-[10px] text-ink-500 mt-1">Across countries · property type · risk band</div>
+            </div>
+            <div class="card p-5 lg:col-span-3">
+              <div class="stat-label">Allocations &amp; cashflow waterfall</div>
+              <div class="mt-3 grid grid-cols-7 gap-2">
+                {% for i in "1234567" %}
+                  <div class="rounded-xl bg-gradient-to-t from-brand-100 to-brand-300 h-24"></div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <div class="premium-lock">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 ring-1 ring-amber-200 text-amber-700">
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 10-8 0v4h8z"/></svg>
+            </div>
+            <h3 class="font-display text-2xl font-black text-ink-900">Portfolio analytics — Premium</h3>
+            <p class="max-w-md text-sm text-ink-700 leading-relaxed">
+              Modelled portfolio IRR, risk-adjusted scoring, allocation breakdowns and a 10-year
+              consolidated cashflow waterfall across every property in your watchlist.
+            </p>
+            <div class="flex flex-wrap items-center justify-center gap-2">
+              <a href="{% url 'web:home' %}#investor-desk" class="btn-primary px-5">Talk to the investor desk</a>
+              <a href="{% url 'web:methodology' %}" class="btn-secondary px-5">See methodology</a>
+            </div>
+            <div class="mt-1 text-[10px] uppercase tracking-widest text-ink-500 font-bold">
+              Coming soon · subscribe for early access
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# Listings tab — owners + admins see their portfolio with inline actions #}
       {% if user.role == 'owner' or user.role == 'admin' or user.is_staff %}
       <div id="tab-listings" role="tabpanel" aria-labelledby="listings-tab" class="hidden">
         {% if mine %}
-          <div class="saas-grid">
+          <div class="space-y-3">
             {% for p in mine %}
-              {% include "web/components/property_card.html" with p=p %}
+              <div class="card p-4 sm:p-5 grid sm:grid-cols-[120px_1fr_auto] gap-4 items-center">
+                {# Thumb #}
+                <div class="relative h-20 sm:h-24 w-full overflow-hidden rounded-xl bg-ink-100">
+                  {% with primary=p.primary_image_url %}
+                    {% if primary %}
+                      <img src="{{ primary }}" alt="" class="h-full w-full object-cover">
+                    {% else %}
+                      <div class="h-full w-full flex items-center justify-center text-ink-300 text-xs">No photo</div>
+                    {% endif %}
+                  {% endwith %}
+                </div>
+
+                {# Body #}
+                <div class="min-w-0">
+                  <div class="flex flex-wrap items-center gap-2">
+                    {% if p.status == "active" %}
+                      <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[10px] font-bold tracking-wide">
+                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                        Live
+                      </span>
+                    {% elif p.status == "pending" %}
+                      <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 text-[10px] font-bold tracking-wide">
+                        <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                        In review
+                      </span>
+                    {% elif p.status == "draft" %}
+                      <span class="inline-flex items-center gap-1 rounded-full bg-ink-100 text-ink-700 px-2 py-0.5 text-[10px] font-bold tracking-wide">
+                        Draft
+                      </span>
+                    {% elif p.status == "sold" %}
+                      <span class="inline-flex items-center gap-1 rounded-full bg-rose-100 text-rose-800 px-2 py-0.5 text-[10px] font-bold tracking-wide">
+                        Sold
+                      </span>
+                    {% else %}
+                      <span class="inline-flex items-center gap-1 rounded-full bg-ink-100 text-ink-600 px-2 py-0.5 text-[10px] font-bold tracking-wide">
+                        {{ p.get_status_display }}
+                      </span>
+                    {% endif %}
+                    {% if p.metric %}
+                      <span class="pill {{ p.metric.investment_score|score_color }} text-[10px]">
+                        AI {{ p.metric.investment_score }} · {{ p.metric.investment_score|score_label }}
+                      </span>
+                    {% endif %}
+                    <span class="text-[10px] text-ink-400">
+                      {{ p.views_count }} view{{ p.views_count|pluralize }} · {{ p.leads_count }} lead{{ p.leads_count|pluralize }}
+                    </span>
+                  </div>
+                  <div class="mt-1 font-semibold text-ink-900 truncate">{{ p.title }}</div>
+                  <div class="text-xs text-ink-500 truncate">
+                    {{ p.city.name }}, {{ p.country.name }} ·
+                    <span class="font-semibold text-ink-700 tabular-nums">{{ p.price|money:p.currency }}</span>
+                  </div>
+                </div>
+
+                {# Actions #}
+                <div class="flex items-center gap-2 sm:flex-col sm:items-stretch">
+                  {% if p.status == "active" %}
+                    <a href="{% url 'web:property_detail' p.pk %}" class="btn-secondary rounded-lg text-xs px-3 py-1.5">View</a>
+                  {% endif %}
+                  <a href="{% url 'web:listing_edit' p.pk %}" class="btn-secondary rounded-lg text-xs px-3 py-1.5">Edit</a>
+                  <form method="post" action="{% url 'web:listing_delete' p.pk %}"
+                        onsubmit="return confirm('Permanently delete “{{ p.title|escapejs }}”?');">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full btn rounded-lg text-xs px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100">
+                      Delete
+                    </button>
+                  </form>
+                </div>
+              </div>
             {% endfor %}
+          </div>
+          <div class="mt-4 text-center">
+            <a href="{% url 'web:listing_start' %}" class="btn-primary inline-flex rounded-xl text-sm">+ List another property</a>
           </div>
         {% else %}
           <div class="card p-12 text-center">
@@ -111,8 +245,8 @@
               </svg>
             </div>
             <div class="font-semibold text-ink-900">No listings yet</div>
-            <p class="mt-1 text-sm text-ink-500">Create your first listing to attract investors.</p>
-            <a href="{% url 'web:owner_new' %}" class="btn-primary mt-4 inline-flex">+ New listing</a>
+            <p class="mt-1 text-sm text-ink-500">Create your first listing in five quick steps.</p>
+            <a href="{% url 'web:listing_start' %}" class="btn-primary mt-4 inline-flex rounded-xl">+ List a property</a>
           </div>
         {% endif %}
       </div>
@@ -120,7 +254,7 @@
     </div>
   </div>
 
-  {# ── Quick action cards ───────────────────────────────────────────────── #}
+  {# ── Quick action cards ────────────────────────────────────────── #}
   <section class="saas-grid">
     <a href="{% url 'web:marketplace' %}" class="card p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group">
       <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition-colors">
@@ -129,19 +263,26 @@
       <div class="mt-3 font-semibold text-ink-900">Browse marketplace</div>
       <div class="mt-1 text-sm text-ink-500">Discover and filter global investment listings.</div>
     </a>
+    <a href="{% url 'web:simulator' %}" class="card p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group">
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      </div>
+      <div class="mt-3 font-semibold text-ink-900">Investment simulator</div>
+      <div class="mt-1 text-sm text-ink-500">Mortgage, taxes, cashflow & 10-year projection.</div>
+    </a>
     <a href="{% url 'web:chat' %}" class="card p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group">
       <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600 group-hover:bg-sky-600 group-hover:text-white transition-colors">
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
       </div>
       <div class="mt-3 font-semibold text-ink-900">AI investment advisor</div>
-      <div class="mt-1 text-sm text-ink-500">Get ROI analysis, market comparisons, and recommendations.</div>
+      <div class="mt-1 text-sm text-ink-500">Comparable yields, market context, risk callouts.</div>
     </a>
-    <a href="{% url 'web:markets' %}" class="card p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group">
+    <a href="{% url 'web:methodology' %}" class="card p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group">
       <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors">
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 5.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
       </div>
-      <div class="mt-3 font-semibold text-ink-900">Market overview</div>
-      <div class="mt-1 text-sm text-ink-500">Country baselines and top-scored cities by market.</div>
+      <div class="mt-3 font-semibold text-ink-900">How AI score works</div>
+      <div class="mt-1 text-sm text-ink-500">Transparent factor weights and data sources.</div>
     </a>
   </section>
 </div>
