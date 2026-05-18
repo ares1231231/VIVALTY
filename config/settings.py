@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 import os
@@ -137,9 +138,25 @@ TEMPLATES = [
 ]
 
 # --- Database ---------------------------------------------------------------
-# Postgres in production / docker-compose; sqlite only as a graceful fallback
-# so that `manage.py check` works before infra is up.
-if os.getenv("POSTGRES_HOST"):
+# Priority order:
+#   1. DATABASE_URL  — set by Railway / Heroku / Render automatically
+#   2. POSTGRES_HOST — individual vars (docker-compose, manual config)
+#   3. SQLite        — local dev fallback (no DB server needed)
+_db_url = os.getenv("DATABASE_URL")
+if _db_url:
+    _u = urlparse(_db_url)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": _u.path.lstrip("/"),
+            "USER": _u.username,
+            "PASSWORD": _u.password,
+            "HOST": _u.hostname,
+            "PORT": str(_u.port or 5432),
+            "CONN_MAX_AGE": 60,
+        }
+    }
+elif os.getenv("POSTGRES_HOST"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",

@@ -49,10 +49,10 @@ def rewrite_description(raw: str, *, context: dict[str, Any] | None = None) -> s
     try:
         from openai import OpenAI
 
-        client = OpenAI(
-            api_key=settings.OPENAI_API_KEY,
-            base_url=settings.OPENAI_BASE_URL or None,
-        )
+        client_kwargs: dict = {"api_key": settings.OPENAI_API_KEY}
+        if settings.OPENAI_BASE_URL:
+            client_kwargs["base_url"] = settings.OPENAI_BASE_URL
+        client = OpenAI(**client_kwargs)
         ctx_block = _format_context(context or {})
         resp = client.chat.completions.create(
             model=settings.OPENAI_MODEL,

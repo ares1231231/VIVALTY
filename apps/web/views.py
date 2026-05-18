@@ -8,6 +8,7 @@ Thin handlers — every piece of business logic lives in the service layer
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import asdict
 from decimal import Decimal, InvalidOperation
 from typing import Iterator
@@ -32,6 +33,8 @@ from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from django.views.decorators.http import require_POST, require_http_methods
 from django_ratelimit.decorators import ratelimit
+
+logger = logging.getLogger("vivalty.web")
 
 from apps.ai_advisor.models import AIConversationSession, ChatMessage, Role as ChatRole
 from apps.ai_advisor.services.advisor import generate, stream as advisor_stream
@@ -1234,19 +1237,47 @@ def listing_ai_rewrite(request: HttpRequest) -> HttpResponse:
     textarea contents in-place.
     """
     raw = (request.POST.get("description") or "").strip()
+
+    if not raw:
+        return render(
+            request,
+            "web/listing/_description_textarea.html",
+            {"description": "", "polished": False, "ai_error": "Please write a description first, then click Polish with AI."},
+        )
+
+    if not settings.OPENAI_API_KEY:
+        return render(
+            request,
+            "web/listing/_description_textarea.html",
+            {
+                "description": raw,
+                "polished": False,
+                "ai_error": "AI rewrite is not configured — add OPENAI_API_KEY to your .env file.",
+            },
+        )
+
     draft = listing_wizard.get_draft(request)
-    polished = listing_ai.rewrite_description(
-        raw,
-        context={
-            "title": draft.get("title"),
-            "property_type": draft.get("property_type_display") or draft.get("property_type"),
-            "city_name": draft.get("city_name"),
-            "country_name": draft.get("country_name"),
-            "area_sqm": draft.get("area_sqm"),
-            "bedrooms": draft.get("bedrooms"),
-            "bathrooms": draft.get("bathrooms"),
-        },
-    )
+    try:
+        polished = listing_ai.rewrite_description(
+            raw,
+            context={
+                "title": draft.get("title"),
+                "property_type": draft.get("property_type_display") or draft.get("property_type"),
+                "city_name": draft.get("city_name"),
+                "country_name": draft.get("country_name"),
+                "area_sqm": draft.get("area_sqm"),
+                "bedrooms": draft.get("bedrooms"),
+                "bathrooms": draft.get("bathrooms"),
+            },
+        )
+    except Exception:
+        logger.exception("listing_ai_rewrite failed")
+        return render(
+            request,
+            "web/listing/_description_textarea.html",
+            {"description": raw, "polished": False, "ai_error": "AI rewrite failed — please try again in a moment."},
+        )
+
     listing_wizard.update_draft(request, {"description": polished})
     return render(
         request,
