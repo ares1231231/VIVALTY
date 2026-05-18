@@ -237,7 +237,11 @@ OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL") or None
 # --- Security ---------------------------------------------------------------
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", True)
+    # Railway / Cloudflare / most modern PaaS terminate TLS at the edge and
+    # already redirect HTTP to HTTPS at the proxy. Doing it again in Django
+    # breaks the internal healthcheck (which uses plain HTTP). Default off;
+    # set SECURE_SSL_REDIRECT=1 explicitly if your host does not redirect.
+    SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", False)
     SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True

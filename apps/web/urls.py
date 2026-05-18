@@ -15,6 +15,8 @@ _simulator_property_legacy_redirect = RedirectView.as_view(
 )
 
 urlpatterns = [
+    path("healthz/", views.healthz, name="healthz"),
+
     path("", views.home, name="home"),
     path("marketplace/", views.marketplace, name="marketplace"),
     path("properties/<int:pk>/", views.property_detail, name="property_detail"),

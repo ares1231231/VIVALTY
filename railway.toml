@@ -4,9 +4,10 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 # Migrations + collectstatic happen inside the Dockerfile CMD on container boot.
-# Gunicorn binds to $PORT which Railway sets automatically.
-healthcheckPath = "/"
-healthcheckTimeout = 30
+# Gunicorn binds to $PORT which Railway sets automatically. The /healthz/
+# endpoint is a dependency-free 200 OK probe (see apps/web/views.py::healthz).
+healthcheckPath = "/healthz/"
+healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 5
 numReplicas = 1

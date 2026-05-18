@@ -93,6 +93,18 @@ def _safe_float(raw: str | None, default: float) -> float:
         return default
 
 
+# ─── Infrastructure ─────────────────────────────────────────────────────────
+
+def healthz(request: HttpRequest) -> HttpResponse:
+    """Cheap, dependency-free health probe for Railway / load balancers.
+
+    Intentionally returns plain text 200 with no DB queries, no template
+    rendering, no SSL redirect — so the platform's internal HTTP probe can
+    succeed even when the app would otherwise force HTTPS on user traffic.
+    """
+    return HttpResponse("ok", content_type="text/plain")
+
+
 # ─── Public pages ───────────────────────────────────────────────────────────
 
 def home(request: HttpRequest) -> HttpResponse:
