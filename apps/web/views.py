@@ -12,9 +12,11 @@ from dataclasses import asdict
 from decimal import Decimal, InvalidOperation
 from typing import Iterator
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg, Count, F, Max, Min, Q
 from django.http import (
     HttpRequest,
@@ -25,7 +27,11 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 from django.views.decorators.http import require_POST, require_http_methods
+from django_ratelimit.decorators import ratelimit
 
 from apps.ai_advisor.models import AIConversationSession, ChatMessage, Role as ChatRole
 from apps.ai_advisor.services.advisor import generate, stream as advisor_stream
@@ -38,11 +44,17 @@ from apps.properties.services.simulator import (
     simulate,
     simulate_for_property,
 )
-from apps.users.models import Role
+from apps.users.models import Role, User
 from apps.web.services import geocoding, listing_ai, listing_wizard
+from apps.web.services.emails import (
+    send_password_reset_email,
+    send_verification_email,
+    send_welcome_email,
+)
 from .forms import (
     BecomeOwnerForm,
     EmailLoginForm,
+    ForgotPasswordForm,
     InvestorInquiryForm,
     LeadForm,
     ListingLocationForm,
@@ -52,6 +64,7 @@ from .forms import (
     PropertyEditForm,
     PropertyForm,
     RegisterForm,
+    SetNewPasswordForm,
 )
 
 
@@ -687,27 +700,182 @@ def investor_inquiry(request: HttpRequest) -> HttpResponse:
 
 # ─── Auth ───────────────────────────────────────────────────────────────────
 
+@ratelimit(key="ip", rate="10/m", block=False)
+@ratelimit(key="ip", rate="100/h", block=False)
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         return redirect("web:dashboard")
+    if getattr(request, "limited", False):
+        messages.error(request, "Too many attempts. Please try again in a minute.")
+        return render(request, "web/login.html", {"form": EmailLoginForm(request)})
+
     form = EmailLoginForm(request, data=request.POST or None)
     if request.method == "POST" and form.is_valid():
-        auth_login(request, form.get_user())
+        user = form.get_user()
+        auth_login(request, user)
         messages.success(request, "Welcome back.")
         return redirect(request.GET.get("next") or "web:dashboard")
+
+    # Surface a friendlier error when the credentials are correct but the
+    # account is still pending email verification.
+    if request.method == "POST" and not form.is_valid():
+        raw_email = (request.POST.get("username") or "").lower().strip()
+        if raw_email:
+            pending = User.objects.filter(email__iexact=raw_email, is_active=False, email_verified=False).first()
+            if pending:
+                messages.info(
+                    request,
+                    "Almost there — please confirm your email. We just resent the verification link.",
+                )
+                try:
+                    send_verification_email(pending)
+                except Exception:
+                    pass
+                return redirect("web:verify_sent")
+
     return render(request, "web/login.html", {"form": form})
 
 
+@ratelimit(key="ip", rate="5/m", block=False)
+@ratelimit(key="ip", rate="20/h", block=False)
 def register_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         return redirect("web:dashboard")
-    form = RegisterForm(request.POST or None)
+    if getattr(request, "limited", False):
+        messages.error(request, "Too many signup attempts. Please try again in a few minutes.")
+        return render(
+            request,
+            "web/register.html",
+            {
+                "form": RegisterForm(request=request),
+                "turnstile_site_key": settings.TURNSTILE_SITE_KEY,
+            },
+        )
+
+    form = RegisterForm(request.POST or None, request=request)
     if request.method == "POST" and form.is_valid():
         user = form.save()
+        try:
+            send_verification_email(user)
+        except Exception:
+            # Don't leak the user's existence/state if the email provider hiccups.
+            # The user can still trigger a resend from the verify-sent page.
+            messages.warning(
+                request,
+                "We couldn't send your verification email right now. You can request a new one below.",
+            )
+        return redirect("web:verify_sent")
+
+    return render(
+        request,
+        "web/register.html",
+        {"form": form, "turnstile_site_key": settings.TURNSTILE_SITE_KEY},
+    )
+
+
+def verify_sent_view(request: HttpRequest) -> HttpResponse:
+    """Friendly 'check your inbox' page. Also accepts a POST to resend."""
+    if request.method == "POST":
+        raw_email = (request.POST.get("email") or "").lower().strip()
+        if raw_email:
+            user = User.objects.filter(email__iexact=raw_email).first()
+            if user and not user.email_verified:
+                try:
+                    send_verification_email(user)
+                except Exception:
+                    pass
+        messages.success(request, "If an account exists for that email, we just sent a fresh verification link.")
+        return redirect("web:verify_sent")
+    return render(request, "web/auth/verify_sent.html")
+
+
+@ratelimit(key="ip", rate="30/m", block=False)
+def verify_email_view(request: HttpRequest, uidb64: str, token: str) -> HttpResponse:
+    """Confirm an email by uid+token, then activate and auto-login the user."""
+    if getattr(request, "limited", False):
+        messages.error(request, "Too many verification attempts. Please slow down.")
+        return redirect("web:verify_sent")
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is None or not default_token_generator.check_token(user, token):
+        return render(request, "web/auth/verify_failed.html", status=400)
+
+    if not user.email_verified:
+        user.email_verified = True
+        user.email_verified_at = timezone.now()
+        user.is_active = True
+        user.save(update_fields=["email_verified", "email_verified_at", "is_active"])
+        try:
+            send_welcome_email(user)
+        except Exception:
+            pass
+
+    auth_login(request, user)
+    messages.success(request, "Email confirmed. Welcome aboard!")
+    return redirect("web:dashboard")
+
+
+@ratelimit(key="ip", rate="3/m", block=False)
+@ratelimit(key="ip", rate="10/h", block=False)
+def forgot_password_view(request: HttpRequest) -> HttpResponse:
+    if getattr(request, "limited", False):
+        messages.error(request, "Too many requests. Please try again later.")
+        return redirect("web:forgot_password")
+    form = ForgotPasswordForm(request.POST or None, request=request)
+    if request.method == "POST" and form.is_valid():
+        email = form.cleaned_data["email"].lower().strip()
+        # Don't leak which addresses exist: always show the same "sent" page.
+        user = User.objects.filter(email__iexact=email).first()
+        if user:
+            try:
+                send_password_reset_email(user)
+            except Exception:
+                pass
+        return redirect("web:forgot_password_sent")
+    return render(
+        request,
+        "web/auth/forgot.html",
+        {"form": form, "turnstile_site_key": settings.TURNSTILE_SITE_KEY},
+    )
+
+
+def forgot_password_sent_view(request: HttpRequest) -> HttpResponse:
+    return render(request, "web/auth/forgot_sent.html")
+
+
+@ratelimit(key="ip", rate="10/m", block=False)
+def password_reset_confirm_view(request: HttpRequest, uidb64: str, token: str) -> HttpResponse:
+    if getattr(request, "limited", False):
+        messages.error(request, "Too many attempts. Please try again later.")
+        return redirect("web:forgot_password")
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    valid = user is not None and default_token_generator.check_token(user, token)
+    if not valid:
+        return render(request, "web/auth/reset_failed.html", status=400)
+
+    form = SetNewPasswordForm(request.POST or None, user=user)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        # A password reset implicitly verifies the email, since the user proved
+        # access to the inbox.
+        if not user.email_verified:
+            user.email_verified = True
+            user.email_verified_at = timezone.now()
+            user.is_active = True
+            user.save(update_fields=["email_verified", "email_verified_at", "is_active"])
         auth_login(request, user)
-        messages.success(request, "Account created.")
+        messages.success(request, "Password updated. You're signed in.")
         return redirect("web:dashboard")
-    return render(request, "web/register.html", {"form": form})
+    return render(request, "web/auth/reset.html", {"form": form})
 
 
 @require_POST

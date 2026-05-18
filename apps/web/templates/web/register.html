@@ -1,6 +1,12 @@
 {% extends "web/base.html" %}
 {% block title %}Create account · Vivalty{% endblock %}
 
+{% block head_extra %}
+  {% if turnstile_site_key %}
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  {% endif %}
+{% endblock %}
+
 {% block content %}
 <div class="flex min-h-[calc(100vh-65px)]">
 
@@ -90,10 +96,37 @@
           </div>
         </div>
 
+        <label class="flex items-start gap-2.5 text-sm text-ink-600 cursor-pointer select-none">
+          <input type="checkbox" name="accept_terms" required class="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-600 focus:ring-brand-500">
+          <span>I agree to the <a href="#" class="font-semibold text-brand-700 hover:text-brand-900 underline">Terms</a> and <a href="#" class="font-semibold text-brand-700 hover:text-brand-900 underline">Privacy Policy</a>.</span>
+        </label>
+        {% if form.accept_terms.errors %}<p class="-mt-2 text-xs text-rose-700">{{ form.accept_terms.errors|join:", " }}</p>{% endif %}
+
+        {% if turnstile_site_key %}
+          <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="light" data-callback="onTurnstile"></div>
+          <input type="hidden" name="cf_turnstile_response" id="cf_turnstile_response" value="">
+          <script>
+            function onTurnstile(token) {
+              document.getElementById('cf_turnstile_response').value = token;
+            }
+          </script>
+        {% endif %}
+
         {% if form.non_field_errors %}
           <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {{ form.non_field_errors|join:", " }}
           </div>
+        {% endif %}
+
+        {% if messages %}
+          {% for m in messages %}
+            <div class="rounded-xl border px-4 py-3 text-sm
+              {% if 'error' in m.tags %}border-rose-200 bg-rose-50 text-rose-700
+              {% elif 'warning' in m.tags %}border-amber-200 bg-amber-50 text-amber-800
+              {% else %}border-emerald-200 bg-emerald-50 text-emerald-800{% endif %}">
+              {{ m }}
+            </div>
+          {% endfor %}
         {% endif %}
 
         <button type="submit" class="btn-primary w-full justify-center py-3 text-base rounded-xl">
@@ -101,7 +134,7 @@
         </button>
 
         <p class="text-center text-xs text-ink-400">
-          By signing up you agree to our Terms and Privacy Policy.
+          We'll email you a confirmation link to activate your account.
         </p>
       </form>
 

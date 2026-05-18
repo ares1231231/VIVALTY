@@ -16,6 +16,7 @@ from apps.geo.models import City, Country
 from apps.properties.models import Lead, Property, PropertyImage, PropertyType
 from apps.users.models import Role, User
 from apps.web.models import InvestorInquiry, InvestorProfile
+from apps.web.services.security import turnstile_enabled, verify_turnstile_token
 
 
 class EmailLoginForm(AuthenticationForm):
@@ -33,20 +34,38 @@ class EmailLoginForm(AuthenticationForm):
 
 
 class RegisterForm(forms.ModelForm):
+    """Public signup form.
+
+    The user is created with ``is_active=False`` and ``email_verified=False``;
+    the view is responsible for sending the verification email. The auto-login
+    only happens after the user opens the verification link, so we never
+    establish a session for an unverified address.
+    """
+
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={"class": "input", "minlength": 8}),
+        widget=forms.PasswordInput(attrs={"class": "input", "minlength": 8, "autocomplete": "new-password"}),
         min_length=8,
     )
+    accept_terms = forms.BooleanField(
+        required=True,
+        error_messages={"required": "You must agree to the Terms and Privacy Policy."},
+    )
+    # Turnstile token is injected by the widget on the page. Optional in dev.
+    cf_turnstile_response = forms.CharField(required=False, widget=forms.HiddenInput())
+
+    def __init__(self, *args, request=None, **kwargs):
+        self._request = request
+        super().__init__(*args, **kwargs)
 
     class Meta:
         model = User
         fields = ("email", "first_name", "last_name", "role", "company_name")
         widgets = {
-            "email": forms.EmailInput(attrs={"class": "input"}),
-            "first_name": forms.TextInput(attrs={"class": "input"}),
-            "last_name": forms.TextInput(attrs={"class": "input"}),
+            "email": forms.EmailInput(attrs={"class": "input", "autocomplete": "email"}),
+            "first_name": forms.TextInput(attrs={"class": "input", "autocomplete": "given-name"}),
+            "last_name": forms.TextInput(attrs={"class": "input", "autocomplete": "family-name"}),
             "role": forms.Select(attrs={"class": "input"}),
-            "company_name": forms.TextInput(attrs={"class": "input"}),
+            "company_name": forms.TextInput(attrs={"class": "input", "autocomplete": "organization"}),
         }
 
     def clean_email(self) -> str:
@@ -60,13 +79,80 @@ class RegisterForm(forms.ModelForm):
         validate_password(pwd)
         return pwd
 
+    def clean(self):
+        cleaned = super().clean()
+        if turnstile_enabled():
+            ip = None
+            if self._request is not None:
+                from apps.web.services.security import client_ip
+                ip = client_ip(self._request)
+            ok = verify_turnstile_token(cleaned.get("cf_turnstile_response"), remote_ip=ip)
+            if not ok:
+                raise forms.ValidationError("Bot challenge failed. Please reload and try again.")
+        return cleaned
+
     def save(self, commit: bool = True) -> User:
         user = super().save(commit=False)
         user.username = self.cleaned_data["email"]
         user.set_password(self.cleaned_data["password"])
+        user.is_active = False
+        user.email_verified = False
         if commit:
             user.save()
         return user
+
+
+class ForgotPasswordForm(forms.Form):
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={"class": "input", "autocomplete": "email", "autofocus": True}),
+    )
+    cf_turnstile_response = forms.CharField(required=False, widget=forms.HiddenInput())
+
+    def __init__(self, *args, request=None, **kwargs):
+        self._request = request
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned = super().clean()
+        if turnstile_enabled():
+            from apps.web.services.security import client_ip
+            ip = client_ip(self._request) if self._request is not None else None
+            if not verify_turnstile_token(cleaned.get("cf_turnstile_response"), remote_ip=ip):
+                raise forms.ValidationError("Bot challenge failed. Please reload and try again.")
+        return cleaned
+
+
+class SetNewPasswordForm(forms.Form):
+    new_password1 = forms.CharField(
+        label="New password",
+        widget=forms.PasswordInput(attrs={"class": "input", "minlength": 8, "autocomplete": "new-password"}),
+        min_length=8,
+    )
+    new_password2 = forms.CharField(
+        label="Confirm new password",
+        widget=forms.PasswordInput(attrs={"class": "input", "minlength": 8, "autocomplete": "new-password"}),
+        min_length=8,
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned = super().clean()
+        p1 = cleaned.get("new_password1")
+        p2 = cleaned.get("new_password2")
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError("The two password fields didn't match.")
+        if p1 and self.user is not None:
+            validate_password(p1, user=self.user)
+        return cleaned
+
+    def save(self) -> User:
+        assert self.user is not None
+        self.user.set_password(self.cleaned_data["new_password1"])
+        self.user.save(update_fields=["password"])
+        return self.user
 
 
 class PropertyForm(forms.ModelForm):
@@ -452,6 +538,8 @@ class PropertyEditForm(forms.ModelForm):
 __all__ = [
     "EmailLoginForm",
     "RegisterForm",
+    "ForgotPasswordForm",
+    "SetNewPasswordForm",
     "PropertyForm",
     "PropertyEditForm",
     "LeadForm",

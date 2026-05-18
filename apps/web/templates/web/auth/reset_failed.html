@@ -1,0 +1,18 @@
+{% extends "web/base.html" %}
+{% block title %}Reset link invalid · Vivalty{% endblock %}
+
+{% block content %}
+<div class="flex min-h-[calc(100vh-65px)] items-center justify-center px-6 py-16 bg-ink-50">
+  <div class="w-full max-w-md">
+    <div class="rounded-2xl border border-rose-200 bg-white p-8 shadow-sm">
+      <h1 class="text-2xl font-extrabold text-ink-900">This reset link has expired</h1>
+      <p class="mt-2 text-sm text-ink-600">
+        For your safety, reset links are only valid for a few hours. Request a fresh one and we'll send a new email.
+      </p>
+      <a href="{% url 'web:forgot_password' %}" class="mt-6 btn-primary w-full justify-center py-2.5 rounded-xl inline-flex">
+        Request a new reset link
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

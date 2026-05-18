@@ -33,9 +33,18 @@ urlpatterns = [
 
     path("investor-inquiry/", views.investor_inquiry, name="investor_inquiry"),
 
-    path("auth/login/", views.login_view, name="login"),
+    path("auth/login/",    views.login_view,    name="login"),
     path("auth/register/", views.register_view, name="register"),
-    path("auth/logout/", views.logout_view, name="logout"),
+    path("auth/logout/",   views.logout_view,   name="logout"),
+
+    # Email verification
+    path("auth/verify/sent/", views.verify_sent_view, name="verify_sent"),
+    path("auth/verify/<str:uidb64>/<str:token>/", views.verify_email_view, name="verify_email"),
+
+    # Password reset
+    path("auth/forgot/",      views.forgot_password_view,      name="forgot_password"),
+    path("auth/forgot/sent/", views.forgot_password_sent_view, name="forgot_password_sent"),
+    path("auth/reset/<str:uidb64>/<str:token>/", views.password_reset_confirm_view, name="password_reset_confirm"),
 
     path("dashboard/", views.dashboard, name="dashboard"),
 

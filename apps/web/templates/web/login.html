@@ -78,12 +78,25 @@
           {% endif %}
         </div>
         <div>
-          <label class="label">Password</label>
+          <div class="flex items-baseline justify-between">
+            <label class="label">Password</label>
+            <a href="{% url 'web:forgot_password' %}" class="text-xs font-semibold text-brand-700 hover:text-brand-900">Forgot password?</a>
+          </div>
           {{ form.password }}
           {% if form.password.errors %}
             <p class="mt-1 text-xs text-rose-700">{{ form.password.errors|join:", " }}</p>
           {% endif %}
         </div>
+        {% if messages %}
+          {% for m in messages %}
+            <div class="rounded-xl border px-4 py-3 text-sm
+              {% if 'error' in m.tags %}border-rose-200 bg-rose-50 text-rose-700
+              {% elif 'warning' in m.tags %}border-amber-200 bg-amber-50 text-amber-800
+              {% else %}border-sky-200 bg-sky-50 text-sky-800{% endif %}">
+              {{ m }}
+            </div>
+          {% endfor %}
+        {% endif %}
         {% if form.non_field_errors %}
           <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {{ form.non_field_errors|join:", " }}

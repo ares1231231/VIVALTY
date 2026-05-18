@@ -1,0 +1,11 @@
+Welcome to Vivalty{% if user.first_name %}, {{ user.first_name }}{% endif %}!
+
+Your account is now active. Here are a few quick links to get started:
+
+- Your dashboard: {{ dashboard_url }}
+- Browse the marketplace: {{ marketplace_url }}
+
+Reply to this email if you ever get stuck — we read every message.
+
+— The Vivalty team
+{{ site_url }}

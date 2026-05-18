@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Confirm your email</title>
+</head>
+<body style="margin:0;padding:0;background:#f6f7f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0f172a;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f7f9;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+          <tr>
+            <td style="padding:32px 32px 8px 32px;">
+              <div style="display:inline-flex;align-items:center;gap:10px;">
+                <span style="display:inline-block;width:36px;height:36px;background:#059669;color:#fff;font-weight:900;border-radius:10px;text-align:center;line-height:36px;">V</span>
+                <span style="font-size:18px;font-weight:800;">Vivalty</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 32px 0 32px;">
+              <h1 style="margin:16px 0 8px 0;font-size:24px;line-height:1.2;color:#0f172a;">Confirm your email</h1>
+              <p style="margin:0 0 16px 0;color:#475569;font-size:15px;line-height:1.55;">
+                Hi{% if user.first_name %} {{ user.first_name }}{% endif %}, welcome to Vivalty.
+                Click the button below to confirm your email address and activate your account.
+              </p>
+              <p style="margin:24px 0;">
+                <a href="{{ verify_url }}" style="display:inline-block;background:#059669;color:#ffffff;padding:14px 22px;border-radius:10px;font-weight:700;text-decoration:none;font-size:15px;">
+                  Confirm my email
+                </a>
+              </p>
+              <p style="margin:0 0 8px 0;color:#64748b;font-size:13px;line-height:1.55;">
+                Or paste this link into your browser:
+              </p>
+              <p style="margin:0 0 16px 0;word-break:break-all;font-size:13px;color:#0f766e;">
+                <a href="{{ verify_url }}" style="color:#0f766e;text-decoration:underline;">{{ verify_url }}</a>
+              </p>
+              <p style="margin:24px 0 0 0;color:#64748b;font-size:13px;">
+                This link will expire in {{ expires_hours }} hours. If you didn't create an account, you can safely ignore this email.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 32px 32px 32px;border-top:1px solid #e5e7eb;margin-top:24px;">
+              <p style="margin:0;color:#94a3b8;font-size:12px;">© Vivalty — global real estate, AI-powered insight.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

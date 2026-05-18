@@ -44,6 +44,22 @@ ALLOWED_HOSTS = env_list(
     env_list("ALLOWED_HOSTS", ["*"] if DEBUG else []),
 )
 
+# Django 5 requires CSRF_TRUSTED_ORIGINS for HTTPS POSTs behind a proxy.
+# Accepts full origins with scheme, e.g. "https://vivalty.com,https://www.vivalty.com".
+CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", [])
+
+# Hard fail in production if the secret key was not rotated. This is cheaper than
+# discovering predictable sessions in the wild.
+if not DEBUG and SECRET_KEY == "dev-insecure-change-me":
+    raise RuntimeError(
+        "DJANGO_SECRET_KEY must be set to a strong random value in production "
+        "(it is currently the insecure default)."
+    )
+if not DEBUG and not ALLOWED_HOSTS:
+    raise RuntimeError(
+        "DJANGO_ALLOWED_HOSTS must be set (comma-separated) when DEBUG is off."
+    )
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -221,11 +237,39 @@ OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL") or None
 # --- Security ---------------------------------------------------------------
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", True)
     SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = "same-origin"
     SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
     CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = False  # JS needs to read it for HTMX/fetch POSTs
+    X_FRAME_OPTIONS = "DENY"
+
+# --- Email (Resend) ---------------------------------------------------------
+# In production set RESEND_API_KEY and DEFAULT_FROM_EMAIL. Locally we fall back
+# to Django's console backend so dev signups still print the verify link.
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Vivalty <onboarding@resend.dev>")
+SITE_URL = os.getenv("SITE_URL", "http://localhost:8000").rstrip("/")
+if RESEND_API_KEY:
+    EMAIL_BACKEND = "apps.web.services.emails.ResendEmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# --- Bot protection (Cloudflare Turnstile) ---------------------------------
+# Leave both blank in dev to disable the challenge.
+TURNSTILE_SITE_KEY = os.getenv("TURNSTILE_SITE_KEY", "")
+TURNSTILE_SECRET_KEY = os.getenv("TURNSTILE_SECRET_KEY", "")
+
+# --- Auth tokens ------------------------------------------------------------
+# Email verification links must be opened within this many hours.
+EMAIL_VERIFY_TIMEOUT_HOURS = int(os.getenv("EMAIL_VERIFY_TIMEOUT_HOURS", "48"))
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 2  # Django built-in: 2h reset link lifetime.
 
 LOGGING = {
     "version": 1,
