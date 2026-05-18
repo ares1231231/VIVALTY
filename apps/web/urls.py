@@ -14,6 +14,13 @@ _simulator_property_legacy_redirect = RedirectView.as_view(
     pattern_name="web:simulator_property", permanent=True, query_string=True
 )
 
+# 301 redirect: /listings/ → /marketplace/
+# Preserves any query string (?country=, ?type=, etc.) so old bookmarks
+# and external links land on a fully-filtered marketplace page.
+_listings_legacy_redirect = RedirectView.as_view(
+    pattern_name="web:marketplace", permanent=True, query_string=True
+)
+
 urlpatterns = [
     path("healthz/", views.healthz, name="healthz"),
 
@@ -32,6 +39,9 @@ urlpatterns = [
     # Legacy /simulator/* paths → 301 redirect to the canonical /ai-invest/*.
     path("simulator/", _simulator_legacy_redirect),
     path("simulator/<int:pk>/", _simulator_property_legacy_redirect),
+
+    # Legacy /listings/ → 301 redirect to the canonical /marketplace/.
+    path("listings/", _listings_legacy_redirect),
 
     path("investor-inquiry/", views.investor_inquiry, name="investor_inquiry"),
 

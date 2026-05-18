@@ -361,10 +361,10 @@ def property_detail(request: HttpRequest, pk: int) -> HttpResponse:
 def markets(request: HttpRequest) -> HttpResponse:
     countries = (
         Country.objects.annotate(
-            cities_count=Count("cities"),
+            cities_count=Count("cities", distinct=True),
             heat_avg_score=Avg("cities__investment_score"),
             heat_avg_yield=Avg("cities__avg_rental_yield"),
-            listings_count=Count("properties", filter=Q(properties__status="active")),
+            listings_count=Count("properties", filter=Q(properties__status="active"), distinct=True),
         )
         .order_by("name")
     )
