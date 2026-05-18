@@ -28,6 +28,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 COPY --from=css /tailwind.css /app/static/css/tailwind.css
 
+# Collect static assets at image build time (not on every container boot).
+ENV DJANGO_SECRET_KEY=build-collectstatic-only \
+    DJANGO_DEBUG=0 \
+    DJANGO_ALLOWED_HOSTS=localhost
+RUN python manage.py collectstatic --noinput
+
+RUN chmod +x /app/scripts/railway-start.sh
+
 EXPOSE 8000
 
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py seed && python manage.py collectstatic --noinput && gunicorn config.wsgi:application -b 0.0.0.0:${PORT:-8000} --workers 3 --timeout 120"]
+CMD ["/app/scripts/railway-start.sh"]

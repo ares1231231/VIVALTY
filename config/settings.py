@@ -60,6 +60,23 @@ if not DEBUG and not ALLOWED_HOSTS:
         "DJANGO_ALLOWED_HOSTS must be set (comma-separated) when DEBUG is off."
     )
 
+# Railway's internal healthcheck hits the container with Host: healthcheck.railway.app.
+# Without this, Django returns 400 DisallowedHost and the deploy is marked failed even
+# though gunicorn is running. See https://docs.railway.com/guides/healthchecks
+if not DEBUG:
+    for _railway_host in (
+        "healthcheck.railway.app",
+        "localhost",
+        "127.0.0.1",
+        ".railway.app",
+        ".railway.internal",
+    ):
+        if _railway_host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(_railway_host)
+    _railway_private = os.getenv("RAILWAY_PRIVATE_DOMAIN", "").strip()
+    if _railway_private and _railway_private not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_railway_private)
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
