@@ -3,8 +3,12 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.http import JsonResponse
 from django.urls import include, path
+
+from apps.web.sitemaps import PropertySitemap, StaticViewSitemap
+from apps.web.views import robots_txt
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -15,6 +19,11 @@ from rest_framework_simplejwt.views import (
 def health(_request):
     return JsonResponse({"status": "ok", "service": "vivalty-api"})
 
+
+sitemaps = {
+    "static": StaticViewSitemap,
+    "properties": PropertySitemap,
+}
 
 api_v1 = [
     path("auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
@@ -28,6 +37,13 @@ api_v1 = [
 ]
 
 urlpatterns = [
+    path("robots.txt", robots_txt, name="robots_txt"),
+    path(
+        "sitemap.xml",
+        sitemap,
+        {"sitemaps": sitemaps},
+        name="sitemap",
+    ),
     path("admin/", admin.site.urls),
     path("health/", health),
     path("api/v1/", include(api_v1)),

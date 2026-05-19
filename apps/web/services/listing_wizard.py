@@ -2,7 +2,7 @@
 
 A small state-machine + persistence layer that:
 - Keeps wizard answers in the user's session (single source of truth)
-- Stashes uploaded images on disk under a per-session UUID directory
+- Stashes uploaded images under a per-session UUID prefix (local disk or R2/S3)
 - Knows which step is next based on what has been filled
 - Renders a *live* score preview by calling the existing scoring service
   with the in-flight values (no Property row is created until publish)
@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any
 
 from django.conf import settings
-from django.core.files.storage import default_storage
+from django.core.files.storage import FileSystemStorage, default_storage
 from django.db import transaction
 from django.http import HttpRequest
 from django.utils.text import slugify
@@ -166,20 +166,34 @@ def _ensure_stash(request: HttpRequest) -> str:
     if not stash_id:
         stash_id = uuid.uuid4().hex
         update_draft(request, {"stash_id": stash_id})
-    Path(_stash_path(stash_id)).mkdir(parents=True, exist_ok=True)
+    if _uses_local_media():
+        Path(_stash_path(stash_id)).mkdir(parents=True, exist_ok=True)
     return stash_id
 
 
+def _uses_local_media() -> bool:
+    return isinstance(default_storage, FileSystemStorage)
+
+
 def _stash_path(stash_id: str) -> str:
+    """Filesystem path for local dev only (object storage uses default_storage)."""
     return os.path.join(settings.MEDIA_ROOT, "listing_drafts", stash_id)
 
 
 def _wipe_stash(stash_id: str | None) -> None:
     if not stash_id:
         return
-    path = _stash_path(stash_id)
-    if os.path.isdir(path):
-        shutil.rmtree(path, ignore_errors=True)
+    prefix = f"listing_drafts/{stash_id}"
+    try:
+        _, files = default_storage.listdir(prefix)
+        for name in files:
+            default_storage.delete(f"{prefix}/{name}")
+    except (FileNotFoundError, NotImplementedError, OSError):
+        pass
+    if _uses_local_media():
+        path = Path(_stash_path(stash_id))
+        if path.is_dir():
+            shutil.rmtree(path, ignore_errors=True)
 
 
 # ─── Step navigation ─────────────────────────────────────────────────────────

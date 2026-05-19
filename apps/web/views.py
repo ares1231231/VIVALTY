@@ -108,6 +108,25 @@ def healthz(request: HttpRequest) -> HttpResponse:
     return HttpResponse("ok", content_type="text/plain")
 
 
+def robots_txt(request: HttpRequest) -> HttpResponse:
+    """Crawler rules and sitemap pointer for search engines."""
+    site = settings.SITE_URL.rstrip("/")
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /dashboard/",
+        "Disallow: /auth/",
+        "Disallow: /htmx/",
+        "Disallow: /api/",
+        "Disallow: /list/",
+        "Disallow: /chat/",
+        "",
+        f"Sitemap: {site}/sitemap.xml",
+    ]
+    return HttpResponse("\n".join(lines) + "\n", content_type="text/plain")
+
+
 # ─── Public pages ───────────────────────────────────────────────────────────
 
 def home(request: HttpRequest) -> HttpResponse:

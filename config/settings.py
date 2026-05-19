@@ -19,6 +19,8 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 import os
 
+from config.storage import configure_media_storage, use_s3_media
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
@@ -85,6 +87,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sitemaps",
     # third-party
     "rest_framework",
     "rest_framework_simplejwt",
@@ -107,6 +110,7 @@ LOGOUT_REDIRECT_URL = "/"
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+    "apps.web.middleware.CanonicalHostMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -210,16 +214,30 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 # Source static files (the built Tailwind CSS lives in backend/static/css/).
 STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
-# WhiteNoise: compressed + manifest hashing in production. In DEBUG, fall back
-# to the plain backend so a missing manifest entry (e.g. tailwind.css before
-# the first build) doesn't crash the dev server.
-if DEBUG:
-    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-else:
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# User uploads: local disk in dev, S3-compatible (Cloudflare R2 / AWS) in production.
+# Static files: WhiteNoise in production (Django 5 uses STORAGES, not STATICFILES_STORAGE).
+_media_storage = configure_media_storage()
+_staticfiles_backend = (
+    "django.contrib.staticfiles.storage.StaticFilesStorage"
+    if DEBUG
+    else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+)
+STORAGES = {
+    "default": _media_storage["default"],
+    "staticfiles": {"BACKEND": _staticfiles_backend},
+}
+if _media_storage.get("media_url"):
+    MEDIA_URL = _media_storage["media_url"]
+
+if use_s3_media():
+    # Exposed for django-storages and ops tooling.
+    AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "")
+    AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL") or None
+    AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "auto")
+    AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN", "").strip() or None
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.User"

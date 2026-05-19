@@ -278,6 +278,8 @@ safelist for dynamically-built tag colors (`bg-{{ tag.color }}-50`, etc.).
 
 ### Production deploy checklist
 
+See **[docs/DEPLOY.md](docs/DEPLOY.md)** for Railway, `www` DNS, Cloudflare R2 media uploads, and SEO (`robots.txt` / `sitemap.xml`).
+
 ```bash
 pip install -r requirements.txt
 pushd assets && npm ci && npm run build && popd
