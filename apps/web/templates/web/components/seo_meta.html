@@ -1,0 +1,23 @@
+{# Reusable SEO head tags. Pass: title, description; optional: canonical, og_image, og_type, robots, json_ld #}
+<title>{{ title }}</title>
+<meta name="description" content="{{ description }}" />
+{% if robots %}<meta name="robots" content="{{ robots }}" />{% endif %}
+<link rel="canonical" href="{{ canonical|default:SEO_CANONICAL_URL }}" />
+
+<meta property="og:site_name" content="Vivalty" />
+<meta property="og:locale" content="en_GB" />
+<meta property="og:type" content="{{ og_type|default:'website' }}" />
+<meta property="og:title" content="{{ title }}" />
+<meta property="og:description" content="{{ description }}" />
+<meta property="og:url" content="{{ canonical|default:SEO_CANONICAL_URL }}" />
+<meta property="og:image" content="{{ og_image|default:SEO_OG_IMAGE }}" />
+<meta property="og:image:alt" content="Vivalty — international real estate investment platform" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="{{ title }}" />
+<meta name="twitter:description" content="{{ description }}" />
+<meta name="twitter:image" content="{{ og_image|default:SEO_OG_IMAGE }}" />
+
+{% if json_ld %}
+<script type="application/ld+json">{{ json_ld|safe }}</script>
+{% endif %}

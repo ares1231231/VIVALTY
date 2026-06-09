@@ -1,5 +1,7 @@
 {% extends "web/base.html" %}
-{% block title %}Create account · Vivalty{% endblock %}
+{% block seo_head %}
+{% include "web/components/seo_meta.html" with title=SEO_PAGE_TITLE description=SEO_PAGE_DESCRIPTION robots="noindex, follow" %}
+{% endblock %}
 
 {% block head_extra %}
   {% if turnstile_site_key %}

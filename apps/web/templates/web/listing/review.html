@@ -1,7 +1,9 @@
 {% extends "web/base.html" %}
 {% load web_extras %}
 
-{% block title %}Review · List your property · Vivalty{% endblock %}
+{% block seo_head %}
+{% include "web/components/seo_meta.html" with title="Review listing · Vivalty" description="Review your property listing before publishing on Vivalty." robots="noindex, follow" %}
+{% endblock %}
 
 {% block content %}
 <div class="bg-ink-50 min-h-[calc(100vh-84px)]">

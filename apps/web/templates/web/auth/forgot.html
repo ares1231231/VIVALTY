@@ -1,5 +1,7 @@
 {% extends "web/base.html" %}
-{% block title %}Reset your password · Vivalty{% endblock %}
+{% block seo_head %}
+{% include "web/components/seo_meta.html" with title="Reset your password · Vivalty" description="Request a password reset link for your Vivalty account." robots="noindex, follow" %}
+{% endblock %}
 
 {% block head_extra %}
   {% if turnstile_site_key %}

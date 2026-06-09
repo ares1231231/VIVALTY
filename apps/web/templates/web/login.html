@@ -1,5 +1,7 @@
 {% extends "web/base.html" %}
-{% block title %}Sign in · Vivalty{% endblock %}
+{% block seo_head %}
+{% include "web/components/seo_meta.html" with title=SEO_PAGE_TITLE description=SEO_PAGE_DESCRIPTION robots="noindex, follow" %}
+{% endblock %}
 
 {% block content %}
 <div class="flex min-h-[calc(100vh-65px)]">

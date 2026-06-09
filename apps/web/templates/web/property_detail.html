@@ -1,7 +1,9 @@
 {% extends "web/base.html" %}
 {% load static web_extras %}
 
-{% block title %}{{ p.title }} · {{ p.city.name }} · Vivalty{% endblock %}
+{% block seo_head %}
+{% include "web/components/seo_meta.html" with title=seo_title description=seo_description canonical=SEO_CANONICAL_URL og_image=seo_image og_type="product" json_ld=property_json_ld %}
+{% endblock %}
 
 {% block content %}
 <div class="mx-auto max-w-7xl px-4 sm:px-6 py-8 grid lg:grid-cols-[1fr_380px] gap-8">

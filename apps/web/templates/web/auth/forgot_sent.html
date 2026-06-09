@@ -1,5 +1,7 @@
 {% extends "web/base.html" %}
-{% block title %}Reset link sent · Vivalty{% endblock %}
+{% block seo_head %}
+{% include "web/components/seo_meta.html" with title="Reset link sent · Vivalty" description="Check your inbox for a Vivalty password reset link." robots="noindex, follow" %}
+{% endblock %}
 
 {% block content %}
 <div class="flex min-h-[calc(100vh-65px)] items-center justify-center px-6 py-16 bg-ink-50">

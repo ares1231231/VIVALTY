@@ -1,7 +1,9 @@
 {% extends "web/base.html" %}
 {% load static web_extras %}
 
-{% block title %}Vivalty — High-performing international real estate, with confidence{% endblock %}
+{% block seo_head %}
+{% include "web/components/seo_meta.html" with title=SEO_PAGE_TITLE description=SEO_PAGE_DESCRIPTION canonical=SEO_CANONICAL_URL og_image=SEO_OG_IMAGE json_ld=site_json_ld %}
+{% endblock %}
 
 {% block content %}
 

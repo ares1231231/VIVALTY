@@ -1,7 +1,9 @@
 {% extends "web/base.html" %}
 {% load web_extras %}
 
-{% block title %}Listing submitted · Vivalty{% endblock %}
+{% block seo_head %}
+{% include "web/components/seo_meta.html" with title="Listing submitted · Vivalty" description="Your property listing has been submitted on Vivalty." robots="noindex, follow" %}
+{% endblock %}
 
 {% block content %}
 <div class="bg-radial-brand min-h-[calc(100vh-84px)]">

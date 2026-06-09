@@ -120,6 +120,7 @@ def robots_txt(request: HttpRequest) -> HttpResponse:
         "Disallow: /htmx/",
         "Disallow: /api/",
         "Disallow: /list/",
+        "Allow: /list/become-owner/",
         "Disallow: /chat/",
         "",
         f"Sitemap: {site}/sitemap.xml",
@@ -226,6 +227,8 @@ def home(request: HttpRequest) -> HttpResponse:
             Favorite.objects.filter(user=request.user).values_list("property_id", flat=True)
         )
 
+    from apps.web.seo_helpers import site_json_ld
+
     return render(
         request,
         "web/home.html",
@@ -240,6 +243,7 @@ def home(request: HttpRequest) -> HttpResponse:
             "quick_sim": quick_sim,
             "quick_sim_country": "PT",
             "favorite_ids": favorite_ids,
+            "site_json_ld": site_json_ld(),
         },
     )
 
@@ -410,6 +414,12 @@ def property_detail(request: HttpRequest, pk: int) -> HttpResponse:
         "country_summary": prop.country.summary,
     }
 
+    from apps.web.seo_helpers import property_json_ld, property_meta_description
+
+    seo_title = f"{prop.title} · {prop.city.name} · Vivalty"
+    seo_description = property_meta_description(prop)
+    seo_image = prop.primary_image_url or f"{settings.SITE_URL.rstrip('/')}/static/img/hero-image-clean.webp"
+
     return render(
         request,
         "web/property_detail.html",
@@ -420,6 +430,10 @@ def property_detail(request: HttpRequest, pk: int) -> HttpResponse:
             "is_favorited": is_favorited,
             "simulation": sim,
             "city_insight": city_insight,
+            "seo_title": seo_title,
+            "seo_description": seo_description,
+            "seo_image": seo_image,
+            "property_json_ld": property_json_ld(prop),
         },
     )
 

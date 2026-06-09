@@ -1,5 +1,7 @@
 {% extends "web/base.html" %}
-{% block title %}Not found · Vivalty{% endblock %}
+{% block seo_head %}
+{% include "web/components/seo_meta.html" with title="Page not found · Vivalty" description="The page you requested could not be found on Vivalty." robots="noindex, follow" %}
+{% endblock %}
 
 {% block content %}
 <div class="flex min-h-[calc(100vh-65px)] flex-col items-center justify-center px-6 text-center">
