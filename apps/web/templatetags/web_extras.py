@@ -137,6 +137,19 @@ def get_item(mapping, key):
 
 
 @register.filter
+def in_set(value, collection) -> bool:
+    """True when `value` is contained in `collection` (set/list/tuple).
+
+    Used by home-page cards to render the correct favorite state without an
+    extra query per card.
+    """
+    try:
+        return value in collection
+    except TypeError:
+        return False
+
+
+@register.filter
 def absolute(value):
     try:
         return abs(float(value))

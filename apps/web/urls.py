@@ -80,6 +80,11 @@ urlpatterns = [
     path("htmx/simulator/", views.simulator_compute, name="simulator_compute"),
     path("htmx/smart-search/", views.smart_search, name="smart_search"),
 
+    # Home-page interactive widgets
+    path("htmx/home/quick-sim/", views.home_quick_sim, name="home_quick_sim"),
+    path("htmx/home/favorite/<int:pk>/", views.home_favorite_toggle, name="home_favorite_toggle"),
+    path("htmx/newsletter/", views.newsletter_subscribe, name="newsletter_subscribe"),
+
     # HTMX endpoints for the listing wizard
     path("htmx/list/score-preview/",   views.listing_score_preview,  name="listing_score_preview"),
     path("htmx/list/ai-rewrite/",      views.listing_ai_rewrite,     name="listing_ai_rewrite"),

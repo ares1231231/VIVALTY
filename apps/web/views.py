@@ -171,6 +171,15 @@ def home(request: HttpRequest) -> HttpResponse:
         .order_by("name")
     )
 
+    # Hero coverflow order — matches editorial mockup (UAE centered).
+    _hero_country_order = ("PT", "IT", "FR", "AE", "ES", "CH", "GB")
+    _by_code = {c.code: c for c in countries}
+    hero_countries = [_by_code[code] for code in _hero_country_order if code in _by_code]
+    if len(hero_countries) < 7:
+        seen = {c.code for c in hero_countries}
+        hero_countries.extend(c for c in countries if c.code not in seen)
+        hero_countries = hero_countries[:7]
+
     # Cities grouped by country code — JSON-serialised for the hero search bar
     # so clicking a country card can repopulate the city dropdown client-side.
     cities_by_country: dict[str, list[dict[str, str]]] = {}
@@ -194,6 +203,29 @@ def home(request: HttpRequest) -> HttpResponse:
     }
 
     investor_form = InvestorInquiryForm()
+
+    # Lite interactive simulator (home page) — seeded with a realistic Portugal
+    # scenario so the widget shows live numbers before any slider interaction.
+    quick_sim = simulate(
+        SimulatorInputs(
+            price=350_000.0,
+            currency="EUR",
+            country_code="PT",
+            rental_yield_pct=6.0,
+            down_payment_pct=30.0,
+            mortgage_years=25,
+            horizon_years=10,
+        )
+    )
+
+    # Favorited property ids for the current user, so home cards can show the
+    # correct heart state without an extra query per card.
+    favorite_ids: set[int] = set()
+    if request.user.is_authenticated:
+        favorite_ids = set(
+            Favorite.objects.filter(user=request.user).values_list("property_id", flat=True)
+        )
+
     return render(
         request,
         "web/home.html",
@@ -201,9 +233,13 @@ def home(request: HttpRequest) -> HttpResponse:
             "featured": featured,
             "hero_gallery": hero_gallery,
             "countries": countries,
+            "hero_countries": hero_countries,
             "cities_by_country": cities_by_country,
             "stats": stats,
             "investor_form": investor_form,
+            "quick_sim": quick_sim,
+            "quick_sim_country": "PT",
+            "favorite_ids": favorite_ids,
         },
     )
 
@@ -243,7 +279,18 @@ def marketplace(request: HttpRequest) -> HttpResponse:
     if (roi_min := p.get("roi_min")):
         try: qs = qs.filter(metric__estimated_roi_min__gte=float(roi_min))
         except ValueError: pass
-    if (mx := p.get("max_budget")):
+    purpose = (p.get("purpose") or "buy").strip().lower()
+    if purpose == "rent":
+        if (max_rent := p.get("max_rent")):
+            try:
+                qs = (
+                    qs.filter(metric__rental_yield__gt=0)
+                    .annotate(est_monthly_rent=F("price") * F("metric__rental_yield") / 1200)
+                    .filter(est_monthly_rent__lte=float(max_rent))
+                )
+            except ValueError:
+                pass
+    elif (mx := p.get("max_budget")):
         try:
             qs = qs.filter(price__lte=float(mx))
         except ValueError:
@@ -675,6 +722,68 @@ def simulator_compute(request: HttpRequest) -> HttpResponse:
         "web/components/simulator_result.html",
         {"sim": result, "inputs": inputs, "prop": prop},
     )
+
+
+@require_POST
+def home_quick_sim(request: HttpRequest) -> HttpResponse:
+    """Lite homepage simulator. Returns a compact result panel for live,
+    slider-driven underwriting without leaving the landing page.
+    """
+    p = request.POST
+    country = (p.get("country") or "PT").upper()
+    inputs = SimulatorInputs(
+        price=_safe_float(p.get("price"), 350_000.0),
+        currency=(p.get("currency") or "EUR"),
+        country_code=country,
+        rental_yield_pct=_safe_float(p.get("rental_yield_pct"), 6.0),
+        down_payment_pct=_safe_float(p.get("down_payment_pct"), 30.0),
+        mortgage_years=25,
+        horizon_years=10,
+    )
+    result = simulate(inputs)
+    return render(
+        request,
+        "web/components/quick_sim_result.html",
+        {"sim": result, "quick_sim_country": country},
+    )
+
+
+@login_required
+@require_POST
+def home_favorite_toggle(request: HttpRequest, pk: int) -> HttpResponse:
+    """Toggle a favorite from a home-page card and swap the small heart icon."""
+    prop = get_object_or_404(Property, pk=pk)
+    fav, created = Favorite.objects.get_or_create(user=request.user, property=prop)
+    if not created:
+        fav.delete()
+        favorited = False
+    else:
+        favorited = True
+    return render(
+        request,
+        "web/components/fav_heart.html",
+        {"p": prop, "is_favorited": favorited},
+    )
+
+
+@require_POST
+def newsletter_subscribe(request: HttpRequest) -> HttpResponse:
+    """Capture an email for the monthly market-intelligence roundup.
+
+    Persisted as an InvestorInquiry (source_page="newsletter_home") so the
+    growth desk sees signups alongside other leads — no separate model needed.
+    """
+    email = (request.POST.get("email") or "").strip()
+    if email:
+        from apps.web.models import InvestorInquiry
+
+        InvestorInquiry.objects.create(
+            name="Newsletter subscriber",
+            email=email[:254],
+            source_page="newsletter_home",
+            message="Monthly market-intelligence subscription.",
+        )
+    return render(request, "web/components/newsletter_success.html")
 
 
 def smart_search(request: HttpRequest) -> HttpResponse:

@@ -1,0 +1,38 @@
+{% load web_extras %}
+{# Compact result panel for the home-page lite simulator. Swapped via HTMX. #}
+<div id="quick-sim-result" class="grid grid-cols-2 gap-3 animate-fade-in">
+
+  {# Headline metric — monthly net cashflow #}
+  <div class="col-span-2 rounded-2xl border border-ink-200 bg-gradient-to-br from-ink-900 to-slate-800 p-4 text-white">
+    <div class="flex items-center justify-between">
+      <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Net monthly cashflow</span>
+      <span class="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white/70">
+        after mortgage &amp; tax
+      </span>
+    </div>
+    <div class="mt-1 font-display text-3xl font-black tabular-nums leading-none
+                {% if sim.annual.monthly_cashflow >= 0 %}text-emerald-300{% else %}text-rose-300{% endif %}">
+      {{ sim.annual.monthly_cashflow|money:sim.inputs.currency }}
+    </div>
+  </div>
+
+  <div class="rounded-xl border border-ink-200 bg-ink-50 px-3.5 py-3">
+    <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400">Cash needed</div>
+    <div class="mt-0.5 text-sm font-black text-ink-900 tabular-nums">{{ sim.acquisition.cash_in|money:sim.inputs.currency }}</div>
+  </div>
+
+  <div class="rounded-xl border border-ink-200 bg-ink-50 px-3.5 py-3">
+    <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400">Cap rate</div>
+    <div class="mt-0.5 text-sm font-black text-sky-700 tabular-nums">{{ sim.annual.cap_rate_pct|pct }}</div>
+  </div>
+
+  <div class="rounded-xl border border-ink-200 bg-ink-50 px-3.5 py-3">
+    <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400">Cash-on-cash</div>
+    <div class="mt-0.5 text-sm font-black text-emerald-700 tabular-nums">{{ sim.annual.cash_on_cash_pct|pct }}</div>
+  </div>
+
+  <div class="rounded-xl border border-ink-200 bg-ink-50 px-3.5 py-3">
+    <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400">10-yr total return</div>
+    <div class="mt-0.5 text-sm font-black text-brand-700 tabular-nums">{{ sim.summary.total_return_pct|pct }}</div>
+  </div>
+</div>

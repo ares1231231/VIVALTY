@@ -23,6 +23,13 @@
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
   <script src="{% static 'js/vivalty.js' %}" defer></script>
 
+  {# Attach the CSRF token to every HTMX request so hx-post controls work. #}
+  <script>
+    document.addEventListener("htmx:configRequest", function (evt) {
+      evt.detail.headers["X-CSRFToken"] = "{{ csrf_token }}";
+    });
+  </script>
+
   {% block head_extra %}{% endblock %}
 </head>
 <body class="min-h-full flex flex-col bg-ink-50 text-ink-900" hx-boost="true" hx-indicator="#htmx-loader">

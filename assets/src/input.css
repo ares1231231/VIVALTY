@@ -79,6 +79,40 @@
     @apply block text-[11px] font-bold uppercase tracking-widest text-ink-600 mb-1.5;
   }
 
+  /* ── Range slider (home lite simulator) ──────────────────────── */
+  .vv-range {
+    @apply h-2 w-full cursor-pointer appearance-none rounded-full bg-ink-200;
+    accent-color: #059669;
+  }
+  .vv-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 1.25rem;
+    width: 1.25rem;
+    border-radius: 9999px;
+    background: #ffffff;
+    border: 3px solid #059669;
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.35);
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+  .vv-range::-webkit-slider-thumb:hover {
+    transform: scale(1.12);
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.45);
+  }
+  .vv-range::-moz-range-thumb {
+    height: 1.25rem;
+    width: 1.25rem;
+    border-radius: 9999px;
+    background: #ffffff;
+    border: 3px solid #059669;
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.35);
+    cursor: pointer;
+  }
+  .vv-range:focus-visible {
+    outline: 2px solid rgba(5, 150, 105, 0.6);
+    outline-offset: 3px;
+  }
+
   /* ── Surfaces ────────────────────────────────────────────────── */
   .card {
     @apply rounded-2xl bg-white border border-ink-200/70 shadow-card
@@ -1502,15 +1536,20 @@
   .vv-hero {
     @apply relative isolate;
     background-color: #eef7fb;
-    min-height: clamp(520px, 56vw, 680px);
+    min-height: clamp(620px, 68vw, 820px);
     overflow: visible;
   }
   .vv-hero-bg {
-    @apply absolute inset-0;
+    @apply absolute inset-0 overflow-hidden;
   }
-  .vv-hero-bg-img {
+  .vv-hero-bg-img,
+  .vv-hero-bg-video {
     @apply h-full w-full object-cover;
     object-position: center center;
+  }
+  .vv-hero-bg-video {
+    display: block;
+    background-color: #0f172a;
   }
   .vv-hero-scrim {
     display: none;
@@ -1583,31 +1622,82 @@
     @apply text-white/35;
   }
 
-  /* Filter bar */
+  /* Filter stack — Buy/Rent tabs + white bar */
+  .vv-filter-stack {
+    @apply relative z-[80] mx-auto w-full max-w-[44.8rem];
+  }
+  .vv-filter-purpose {
+    @apply mb-3 flex items-center justify-center gap-2 sm:gap-2.5;
+  }
+  .vv-purpose-btn {
+    @apply relative inline-flex items-center gap-2 rounded-full px-4 py-2 sm:px-5 sm:py-2.5
+           text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[0.14em]
+           border border-white/30 text-white/80 backdrop-blur-xl
+           shadow-[0_8px_28px_-8px_rgba(0,0,0,0.45)]
+           transition-all duration-300 ease-out
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/80 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent;
+    background: rgba(255, 255, 255, 0.14);
+    transform: translateY(0) scale(1);
+  }
+  .vv-purpose-icon {
+    @apply h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 opacity-90;
+    transition: transform 0.3s ease;
+  }
+  .vv-purpose-btn.is-active {
+    @apply border-white bg-white text-ink-900;
+    box-shadow:
+      0 14px 36px -10px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(245, 212, 134, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    transform: translateY(-3px) scale(1.05);
+  }
+  .vv-purpose-btn.is-active .vv-purpose-icon {
+    @apply text-sky-700 opacity-100;
+    transform: scale(1.08);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .vv-purpose-btn:not(.is-active):hover {
+      @apply border-white/40 text-white;
+      background: rgba(255, 255, 255, 0.22);
+      transform: translateY(-4px) scale(1.04);
+      box-shadow:
+        0 16px 40px -10px rgba(0, 0, 0, 0.55),
+        0 0 24px -6px rgba(245, 212, 134, 0.2);
+    }
+    .vv-purpose-btn:not(.is-active):active {
+      transform: translateY(-1px) scale(1.02);
+    }
+    .vv-purpose-btn.is-active:hover {
+      transform: translateY(-4px) scale(1.06);
+    }
+  }
+
+  /* Filter bar — compact (~30% smaller than original) */
   .vv-filter {
-    @apply relative z-[80] mx-auto mt-8 sm:mt-10 w-full max-w-5xl rounded-xl bg-white p-2 sm:p-2 shadow-[0_18px_42px_-14px_rgba(15,23,42,0.55)];
+    @apply relative w-full rounded-lg bg-white shadow-[0_12px_30px_-10px_rgba(15,23,42,0.5)];
     border: 1px solid rgba(226, 232, 240, 0.9);
+    padding: 0.4rem;
   }
   .vv-filter-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 0.5rem;
+    gap: 0.35rem;
   }
   @media (min-width: 640px) {
     .vv-filter-grid {
-      /* 3 filters (Location / Property type / Price range) + Search CTA */
+      /* 3 filters (Country / Property type / Price range) + Search CTA */
       grid-template-columns: 1.2fr 1.05fr 1.05fr auto;
       gap: 0;
       align-items: stretch;
     }
   }
   .vv-filter-field {
-    @apply relative block px-3 py-2 cursor-pointer;
+    @apply relative block cursor-pointer px-2 py-1.5;
     transition: background-color 150ms ease;
   }
   @media (min-width: 640px) {
     .vv-filter-field {
-      @apply px-4;
+      @apply px-2.5;
       border-right: 1px solid rgb(226, 232, 240);
     }
     .vv-filter-field:last-of-type {
@@ -1620,25 +1710,25 @@
   /* Muted grey labels — gold is reserved for the italic "Global" word
      in the headline so the accent stays expensive and singular. */
   .vv-filter-label {
-    @apply block text-[10px] font-bold uppercase tracking-[0.18em] text-ink-500;
+    @apply block text-[8px] font-bold uppercase tracking-[0.14em] text-ink-500;
   }
   .vv-filter-control {
-    @apply mt-0.5 flex items-center gap-2;
+    @apply mt-0.5 flex items-center gap-1.5;
   }
   .vv-filter-icon {
-    @apply h-4 w-4 shrink-0 text-ink-500;
+    @apply h-3 w-3 shrink-0 text-ink-500;
   }
   .vv-filter-trigger {
-    @apply mt-0.5 flex w-full items-center gap-2 rounded-lg text-left
-           text-sm font-semibold text-ink-900 transition-colors duration-150
-           focus:outline-none focus:ring-4 focus:ring-sky-500/15;
-    min-height: 1.75rem;
+    @apply mt-0.5 flex w-full items-center gap-1.5 rounded-md text-left
+           text-[11px] font-semibold text-ink-900 transition-colors duration-150
+           focus:outline-none focus:ring-2 focus:ring-sky-500/15;
+    min-height: 1.25rem;
   }
   .vv-filter-value {
     @apply min-w-0 flex-1 truncate;
   }
   .vv-filter-caret {
-    @apply h-3.5 w-3.5 shrink-0 text-ink-500 transition-transform duration-150;
+    @apply h-2.5 w-2.5 shrink-0 text-ink-500 transition-transform duration-150;
   }
   .vv-filter-choice.is-open {
     @apply bg-sky-50/70;
@@ -1697,15 +1787,18 @@
     box-shadow: none;
   }
   .vv-filter-cta {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg
            bg-gradient-to-br from-sky-700 to-sky-900 hover:from-sky-800 hover:to-sky-950
-           px-5 py-3 text-[12px] font-extrabold tracking-[0.12em] uppercase text-white
+           px-3.5 py-2 text-[9px] font-extrabold tracking-[0.1em] uppercase text-white
            shadow-md shadow-sky-900/30 hover:shadow-lg
            transition-all duration-150;
   }
+  .vv-filter-cta svg {
+    @apply h-3 w-3;
+  }
   @media (min-width: 640px) {
     .vv-filter-cta {
-      @apply m-1;
+      @apply m-0.5;
     }
   }
 
@@ -1869,6 +1962,210 @@
            rounded-lg bg-white/95 backdrop-blur-sm px-2.5 py-1.5
            text-[12px] font-extrabold uppercase tracking-[0.06em] text-ink-900;
     line-height: 1.1;
+  }
+
+  /* ── Hero country coverflow (3D fan like reference mockup) ─ */
+  .vv-coverflow {
+    @apply relative mx-auto w-full max-w-6xl px-8 sm:px-14;
+  }
+  .vv-coverflow-stage {
+    position: relative;
+    height: clamp(9.5rem, 22vw, 13.5rem);
+    perspective: 1600px;
+    perspective-origin: 50% 42%;
+    overflow: visible;
+  }
+  .vv-coverflow-track {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+  }
+  .vv-coverflow-item {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: clamp(5.25rem, 11vw, 7.75rem);
+    height: clamp(6.75rem, 14vw, 9.75rem);
+    margin-left: calc(clamp(5.25rem, 11vw, 7.75rem) / -2);
+    margin-top: calc(clamp(6.75rem, 14vw, 9.75rem) / -2);
+    transform-style: preserve-3d;
+    transition:
+      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.45s ease,
+      filter 0.45s ease;
+    will-change: transform, opacity;
+    pointer-events: none;
+  }
+  .vv-coverflow-item[data-offset="hidden"] {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateX(0) translateZ(-120px) rotateY(0deg) scale(0.4) !important;
+  }
+
+  /* Cover-flow positions */
+  .vv-coverflow-item[data-offset="0"] {
+    transform: translateX(0) translateZ(100px) rotateY(0deg) scale(1.08);
+    z-index: 10;
+    pointer-events: auto;
+    filter: brightness(1);
+  }
+  .vv-coverflow-item[data-offset="-1"] {
+    transform: translateX(-5.75rem) translateZ(45px) rotateY(32deg) scale(0.9);
+    z-index: 9;
+    pointer-events: auto;
+    filter: brightness(0.92);
+  }
+  .vv-coverflow-item[data-offset="1"] {
+    transform: translateX(5.75rem) translateZ(45px) rotateY(-32deg) scale(0.9);
+    z-index: 9;
+    pointer-events: auto;
+    filter: brightness(0.92);
+  }
+  .vv-coverflow-item[data-offset="-2"] {
+    transform: translateX(-10.5rem) translateZ(10px) rotateY(48deg) scale(0.78);
+    z-index: 8;
+    pointer-events: auto;
+    filter: brightness(0.85);
+  }
+  .vv-coverflow-item[data-offset="2"] {
+    transform: translateX(10.5rem) translateZ(10px) rotateY(-48deg) scale(0.78);
+    z-index: 8;
+    pointer-events: auto;
+    filter: brightness(0.85);
+  }
+  .vv-coverflow-item[data-offset="-3"] {
+    transform: translateX(-14.5rem) translateZ(-30px) rotateY(58deg) scale(0.66);
+    z-index: 7;
+    pointer-events: auto;
+    filter: brightness(0.78);
+  }
+  .vv-coverflow-item[data-offset="3"] {
+    transform: translateX(14.5rem) translateZ(-30px) rotateY(-58deg) scale(0.66);
+    z-index: 7;
+    pointer-events: auto;
+    filter: brightness(0.78);
+  }
+
+  @media (min-width: 640px) {
+    .vv-coverflow-item[data-offset="-1"] { transform: translateX(-6.75rem) translateZ(45px) rotateY(32deg) scale(0.9); }
+    .vv-coverflow-item[data-offset="1"]  { transform: translateX(6.75rem) translateZ(45px) rotateY(-32deg) scale(0.9); }
+    .vv-coverflow-item[data-offset="-2"] { transform: translateX(-12.25rem) translateZ(10px) rotateY(48deg) scale(0.78); }
+    .vv-coverflow-item[data-offset="2"]  { transform: translateX(12.25rem) translateZ(10px) rotateY(-48deg) scale(0.78); }
+    .vv-coverflow-item[data-offset="-3"] { transform: translateX(-17rem) translateZ(-30px) rotateY(58deg) scale(0.66); }
+    .vv-coverflow-item[data-offset="3"]  { transform: translateX(17rem) translateZ(-30px) rotateY(-58deg) scale(0.66); }
+  }
+
+  /* Peek toward center on hover */
+  @media (prefers-reduced-motion: no-preference) {
+    .vv-coverflow-item.is-peek[data-offset="-1"] {
+      transform: translateX(-4.25rem) translateZ(70px) rotateY(16deg) scale(0.96);
+      filter: brightness(1);
+    }
+    .vv-coverflow-item.is-peek[data-offset="1"] {
+      transform: translateX(4.25rem) translateZ(70px) rotateY(-16deg) scale(0.96);
+      filter: brightness(1);
+    }
+    .vv-coverflow-item.is-peek[data-offset="-2"] {
+      transform: translateX(-8.5rem) translateZ(35px) rotateY(30deg) scale(0.84);
+      filter: brightness(0.95);
+    }
+    .vv-coverflow-item.is-peek[data-offset="2"] {
+      transform: translateX(8.5rem) translateZ(35px) rotateY(-30deg) scale(0.84);
+      filter: brightness(0.95);
+    }
+    .vv-coverflow-item.is-peek[data-offset="-3"] {
+      transform: translateX(-12rem) translateZ(0px) rotateY(42deg) scale(0.74);
+      filter: brightness(0.9);
+    }
+    .vv-coverflow-item.is-peek[data-offset="3"] {
+      transform: translateX(12rem) translateZ(0px) rotateY(-42deg) scale(0.74);
+      filter: brightness(0.9);
+    }
+    .vv-coverflow-item.is-peek .vv-coverflow-card {
+      box-shadow:
+        0 28px 55px -14px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.15);
+    }
+    .vv-coverflow-item[data-offset="0"] .vv-coverflow-card:hover {
+      transform: translateZ(12px) scale(1.02);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .vv-coverflow-item { transition: opacity 0.2s ease; }
+  }
+
+  .vv-coverflow-card {
+    @apply relative block h-full w-full overflow-hidden rounded-2xl ring-1 ring-white/20;
+    transform-style: preserve-3d;
+    box-shadow: 0 22px 50px -18px rgba(0, 0, 0, 0.65);
+    transition:
+      box-shadow 0.4s ease,
+      transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .vv-coverflow-card .vv-dest-bg {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .vv-coverflow-card:hover .vv-dest-bg.is-loaded {
+    transform: scale(1.06);
+  }
+
+  .vv-coverflow-chip {
+    @apply absolute left-1/2 bottom-2.5 z-10 flex -translate-x-1/2 items-center gap-1
+           rounded-full bg-white px-2.5 py-1 shadow-md;
+    max-width: calc(100% - 0.75rem);
+  }
+  .vv-coverflow-flag {
+    @apply text-[11px] leading-none shrink-0;
+  }
+  .vv-coverflow-code {
+    @apply text-[9px] font-extrabold uppercase tracking-wide text-ink-500 shrink-0;
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  }
+  .vv-coverflow-name {
+    @apply truncate text-[9px] font-extrabold uppercase tracking-wide text-ink-900;
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    max-width: 4.5rem;
+  }
+  @media (min-width: 640px) {
+    .vv-coverflow-chip { @apply bottom-3 px-3 py-1.5 gap-1.5; }
+    .vv-coverflow-flag { @apply text-xs; }
+    .vv-coverflow-code,
+    .vv-coverflow-name { @apply text-[10px]; }
+    .vv-coverflow-name { max-width: 5.5rem; }
+  }
+
+  .vv-coverflow-nav {
+    @apply absolute top-1/2 z-20 -translate-y-1/2 flex items-center justify-center
+           border-0 bg-transparent p-2 text-white/90
+           transition-all duration-200
+           hover:text-white hover:scale-110
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent;
+  }
+  .vv-coverflow-nav svg {
+    width: clamp(1.75rem, 4vw, 2.5rem);
+    height: clamp(1.75rem, 4vw, 2.5rem);
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.45));
+  }
+  .vv-coverflow-nav--prev { left: 0; }
+  .vv-coverflow-nav--next { right: 0; }
+
+  /* Tighter fan on small phones — show center + 1 each side */
+  @media (max-width: 479px) {
+    .vv-coverflow { @apply px-6; }
+    .vv-coverflow-item[data-offset="-2"],
+    .vv-coverflow-item[data-offset="2"],
+    .vv-coverflow-item[data-offset="-3"],
+    .vv-coverflow-item[data-offset="3"] {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    .vv-coverflow-item[data-offset="-1"] {
+      transform: translateX(-4.5rem) translateZ(35px) rotateY(34deg) scale(0.82);
+    }
+    .vv-coverflow-item[data-offset="1"] {
+      transform: translateX(4.5rem) translateZ(35px) rotateY(-34deg) scale(0.82);
+    }
   }
 }
 

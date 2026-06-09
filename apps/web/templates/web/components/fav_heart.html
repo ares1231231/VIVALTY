@@ -1,0 +1,21 @@
+{# Small heart toggle used on home-page cards. Swaps itself via HTMX. #}
+<button type="button"
+        id="fav-heart-{{ p.id }}"
+        hx-post="{% url 'web:home_favorite_toggle' p.id %}"
+        hx-target="#fav-heart-{{ p.id }}"
+        hx-swap="outerHTML"
+        aria-pressed="{% if is_favorited %}true{% else %}false{% endif %}"
+        aria-label="{% if is_favorited %}Remove from favorites{% else %}Save to favorites{% endif %}"
+        onclick="event.stopPropagation();"
+        class="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full
+               bg-white/90 shadow-lg ring-1 ring-black/5 backdrop-blur-sm
+               transition-all duration-200 hover:scale-110 hover:bg-white
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400
+               {% if is_favorited %}text-rose-500{% else %}text-ink-400 hover:text-rose-500{% endif %}">
+  <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24"
+       fill="{% if is_favorited %}currentColor{% else %}none{% endif %}"
+       stroke="currentColor" stroke-width="2">
+    <path stroke-linecap="round" stroke-linejoin="round"
+          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+  </svg>
+</button>

@@ -29,12 +29,27 @@
       {% endif %}
     </div>
 
+    {# Hover reveal CTA over the photo #}
+    <div class="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center bg-ink-900/25 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+      <span class="inline-flex translate-y-2 items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-bold text-ink-900 shadow-lg transition-transform duration-300 group-hover:translate-y-0">
+        View deal
+        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </span>
+    </div>
+
     {# Score — top right, stacks above scrim #}
     {% if p.metric %}
     <div class="absolute right-2.5 top-2.5 z-10 flex flex-col items-end gap-1 sm:right-3 sm:top-3">
-      <div class="flex h-12 w-12 flex-col items-center justify-center rounded-full border-2 border-white bg-white/98 shadow-xl ring-2 ring-white/40 backdrop-blur-sm sm:h-[3.25rem] sm:w-[3.25rem]">
-        <span class="text-sm font-black leading-none text-ink-900 sm:text-[15px]">{{ p.metric.investment_score|default:'—' }}</span>
-        <span class="mt-0.5 text-[7px] font-bold uppercase tracking-[0.15em] text-ink-500">AI</span>
+      <div class="relative flex h-12 w-12 flex-col items-center justify-center rounded-full border-2 border-white bg-white/98 shadow-xl ring-2 ring-white/40 backdrop-blur-sm sm:h-[3.25rem] sm:w-[3.25rem]">
+        {% if p.metric.investment_score %}
+        <svg class="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 44 44" aria-hidden="true">
+          <circle cx="22" cy="22" r="20" fill="none" stroke="#e2e8f0" stroke-width="3"/>
+          <circle cx="22" cy="22" r="20" fill="none" stroke="#059669" stroke-width="3" stroke-linecap="round"
+                  stroke-dasharray="{% widthratio p.metric.investment_score 100 126 %} 126"/>
+        </svg>
+        {% endif %}
+        <span class="relative text-sm font-black leading-none text-ink-900 sm:text-[15px]">{{ p.metric.investment_score|default:'—' }}</span>
+        <span class="relative mt-0.5 text-[7px] font-bold uppercase tracking-[0.15em] text-ink-500">AI</span>
       </div>
       <span class="max-w-full truncate rounded-full px-2 py-0.5 text-[9px] font-bold shadow-md ring-1 ring-black/5 {{ p.metric.investment_score|score_color }}">
         {{ p.metric.investment_score|score_label }}
