@@ -173,13 +173,16 @@ const FILTER_PRICE_OPTIONS = {
   ],
   rent: [
     { value: "", label: "Any rent" },
-    { value: "800", label: "Up to €800 / mo" },
-    { value: "1200", label: "Up to €1,200 / mo" },
-    { value: "1800", label: "Up to €1,800 / mo" },
-    { value: "2500", label: "Up to €2,500 / mo" },
-    { value: "4000", label: "Up to €4,000 / mo" },
-    { value: "6000", label: "Up to €6,000 / mo" },
-    { value: "10000", label: "Up to €10,000 / mo" },
+    { value: "800", label: "Under €800 / month" },
+    { value: "1200", label: "Under €1,200 / month" },
+    { value: "1600", label: "Under €1,600 / month" },
+    { value: "2000", label: "Under €2,000 / month" },
+    { value: "2500", label: "Under €2,500 / month" },
+    { value: "3000", label: "Under €3,000 / month" },
+    { value: "4000", label: "Under €4,000 / month" },
+    { value: "5000", label: "Under €5,000 / month" },
+    { value: "7000", label: "Under €7,000 / month" },
+    { value: "10000", label: "Under €10,000 / month" },
   ],
 };
 
