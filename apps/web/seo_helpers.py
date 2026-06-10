@@ -36,7 +36,7 @@ def property_meta_description(prop: Property) -> str:
 def property_json_ld(prop: Property) -> str:
     site = settings.SITE_URL.rstrip("/")
     url = f"{site}{reverse('web:property_detail', kwargs={'pk': prop.pk})}"
-    image = prop.primary_image_url or f"{site}/static/img/hero-image-clean.webp"
+    image = prop.primary_image_url or f"{site}/static/img/og-image.png"
     payload = {
         "@context": "https://schema.org",
         "@type": "RealEstateListing",
@@ -77,7 +77,7 @@ def site_json_ld() -> str:
                 "@type": "Organization",
                 "name": "Vivalty",
                 "url": site,
-                "logo": f"{site}/static/img/hero-image-clean.webp",
+                "logo": f"{site}/static/img/og-image.png",
                 "description": (
                     "AI-powered international real estate platform for investors "
                     "across Europe and the UAE."

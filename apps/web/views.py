@@ -418,7 +418,7 @@ def property_detail(request: HttpRequest, pk: int) -> HttpResponse:
 
     seo_title = f"{prop.title} · {prop.city.name} · Vivalty"
     seo_description = property_meta_description(prop)
-    seo_image = prop.primary_image_url or f"{settings.SITE_URL.rstrip('/')}/static/img/hero-image-clean.webp"
+    seo_image = prop.primary_image_url or f"{settings.SITE_URL.rstrip('/')}/static/img/og-image.png"
 
     return render(
         request,

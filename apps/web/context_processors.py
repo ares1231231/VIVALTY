@@ -86,7 +86,7 @@ def seo(request):
 
     # Canonical = path only (no query string) to reduce duplicate-index risk from filters.
     canonical_url = f"{site_url}{request.path}"
-    og_image = f"{site_url}/static/img/hero-image-clean.webp"
+    og_image = f"{site_url}/static/img/og-image.png"
 
     return {
         "SITE_URL": site_url,
