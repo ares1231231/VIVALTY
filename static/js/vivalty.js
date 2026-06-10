@@ -339,6 +339,28 @@ function initHeroCountryCoverflow() {
   });
 }
 
+// ── Cookie consent (GDPR / ad-platform compliance) ───────────────────────────
+function initCookieConsent() {
+  const banner = document.getElementById("cookie-consent");
+  if (!banner) return;
+
+  const storageKey = "vivalty_cookie_consent";
+  if (localStorage.getItem(storageKey)) return;
+
+  banner.classList.remove("hidden");
+
+  const persist = (value) => {
+    localStorage.setItem(storageKey, value);
+    banner.classList.add("hidden");
+    document.dispatchEvent(
+      new CustomEvent("vivalty:cookie-consent", { detail: { value } })
+    );
+  };
+
+  document.getElementById("cookie-accept")?.addEventListener("click", () => persist("all"));
+  document.getElementById("cookie-decline")?.addEventListener("click", () => persist("essential"));
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initCounters();
   initRotatingWords();
@@ -347,6 +369,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initQuickSim();
   initHeroVideo();
   initHeroCountryCoverflow();
+  initCookieConsent();
 });
 
 // Re-init counters after HTMX swaps (e.g. boosted navigation back to home).

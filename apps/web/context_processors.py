@@ -67,6 +67,27 @@ _PAGE_SEO: dict[str, tuple[str, str]] = {
         "AI investment advisor · Vivalty",
         "Chat with the Vivalty AI advisor — grounded in live listing and market data.",
     ),
+    "privacy": (
+        "Privacy Policy · Vivalty",
+        "How Vivalty collects, uses and protects your personal data when you browse listings, "
+        "create an account or contact our investor desk.",
+    ),
+    "terms": (
+        "Terms of Service · Vivalty",
+        "Terms governing use of the Vivalty property marketplace, research tools and AI advisor.",
+    ),
+    "cookies": (
+        "Cookie Policy · Vivalty",
+        "How Vivalty uses cookies and similar technologies on vivalty.com.",
+    ),
+    "legal_notice": (
+        "Legal Notice · Vivalty",
+        "Publisher information, business identity and regulatory disclosures for Vivalty.",
+    ),
+    "contact": (
+        "Contact · Vivalty",
+        "Contact the Vivalty team for investor enquiries, listing support and general questions.",
+    ),
 }
 
 _DEFAULT_TITLE = "Vivalty — AI-powered global real estate investing"
@@ -95,4 +116,15 @@ def seo(request):
         "SEO_CANONICAL_URL": canonical_url,
         "SEO_OG_IMAGE": og_image,
         "SEO_DEFAULT_DESCRIPTION": _DEFAULT_DESCRIPTION,
+    }
+
+
+def company(request):
+    """Business identity shown on legal pages and the site footer."""
+    return {
+        "COMPANY_LEGAL_NAME": settings.COMPANY_LEGAL_NAME,
+        "COMPANY_REGISTERED_ADDRESS": settings.COMPANY_REGISTERED_ADDRESS,
+        "COMPANY_SUPPORT_EMAIL": settings.COMPANY_SUPPORT_EMAIL,
+        "COMPANY_INVESTOR_EMAIL": settings.COMPANY_INVESTOR_EMAIL,
+        "COMPANY_VAT_NUMBER": settings.COMPANY_VAT_NUMBER,
     }

@@ -651,6 +651,77 @@ def compare(request: HttpRequest) -> HttpResponse:
     )
 
 
+# ─── Legal & compliance pages (ad-platform landing-page requirements) ───────
+
+def _legal_page(
+    request: HttpRequest,
+    template: str,
+    *,
+    page_title: str,
+    page_subtitle: str = "",
+    breadcrumb_label: str = "",
+) -> HttpResponse:
+    return render(
+        request,
+        template,
+        {
+            "page_title": page_title,
+            "page_subtitle": page_subtitle,
+            "breadcrumb_label": breadcrumb_label or page_title,
+        },
+    )
+
+
+def privacy_policy(request: HttpRequest) -> HttpResponse:
+    return _legal_page(
+        request,
+        "web/legal/privacy.html",
+        page_title="Privacy Policy",
+        page_subtitle="How we collect, use and protect your personal information.",
+        breadcrumb_label="Privacy Policy",
+    )
+
+
+def terms_of_service(request: HttpRequest) -> HttpResponse:
+    return _legal_page(
+        request,
+        "web/legal/terms.html",
+        page_title="Terms of Service",
+        page_subtitle="Rules for using the Vivalty marketplace and research tools.",
+        breadcrumb_label="Terms of Service",
+    )
+
+
+def cookie_policy(request: HttpRequest) -> HttpResponse:
+    return _legal_page(
+        request,
+        "web/legal/cookies.html",
+        page_title="Cookie Policy",
+        page_subtitle="How we use cookies and similar technologies.",
+        breadcrumb_label="Cookies",
+    )
+
+
+def legal_notice(request: HttpRequest) -> HttpResponse:
+    return _legal_page(
+        request,
+        "web/legal/legal_notice.html",
+        page_title="Legal Notice",
+        page_subtitle="Publisher information and regulatory disclosures.",
+        breadcrumb_label="Legal notice",
+    )
+
+
+def contact(request: HttpRequest) -> HttpResponse:
+    return _legal_page(
+        request,
+        "web/legal/contact.html",
+        page_title="Contact",
+        page_subtitle="Get in touch with the Vivalty team.",
+        breadcrumb_label="Contact",
+    )
+
+
 def simulator(request: HttpRequest, pk: int | None = None) -> HttpResponse:
     """Standalone investment simulator. When `pk` is given we pre-fill with
     the property's current asking price + yield so investors can iterate on

@@ -137,6 +137,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.web.context_processors.seo",
+                "apps.web.context_processors.company",
             ],
         },
     },
@@ -313,6 +314,16 @@ if not DEBUG:
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Vivalty <onboarding@resend.dev>")
 SITE_URL = os.getenv("SITE_URL", "http://localhost:8000").rstrip("/")
+
+# --- Company / legal (required for ad-platform landing-page policy) ----------
+COMPANY_LEGAL_NAME = os.getenv("COMPANY_LEGAL_NAME", "Vivalty")
+COMPANY_REGISTERED_ADDRESS = os.getenv(
+    "COMPANY_REGISTERED_ADDRESS",
+    "London, United Kingdom",
+)
+COMPANY_SUPPORT_EMAIL = os.getenv("COMPANY_SUPPORT_EMAIL", "hello@vivalty.com")
+COMPANY_INVESTOR_EMAIL = os.getenv("COMPANY_INVESTOR_EMAIL", "investors@vivalty.com")
+COMPANY_VAT_NUMBER = os.getenv("COMPANY_VAT_NUMBER", "")
 if RESEND_API_KEY:
     EMAIL_BACKEND = "apps.web.services.emails.ResendEmailBackend"
 else:

@@ -1,0 +1,56 @@
+{% extends "web/legal/_base_legal.html" %}
+
+{% block legal_body %}
+<h2 class="text-xl font-extrabold text-ink-900">Publisher</h2>
+<dl class="grid gap-3 sm:grid-cols-[10rem_1fr]">
+  <dt class="font-semibold text-ink-900">Legal name</dt>
+  <dd>{{ COMPANY_LEGAL_NAME }}</dd>
+  <dt class="font-semibold text-ink-900">Website</dt>
+  <dd><a href="{{ SITE_URL }}">{{ SITE_URL }}</a></dd>
+  <dt class="font-semibold text-ink-900">Registered address</dt>
+  <dd>{{ COMPANY_REGISTERED_ADDRESS }}</dd>
+  {% if COMPANY_VAT_NUMBER %}
+  <dt class="font-semibold text-ink-900">VAT number</dt>
+  <dd>{{ COMPANY_VAT_NUMBER }}</dd>
+  {% endif %}
+  <dt class="font-semibold text-ink-900">General enquiries</dt>
+  <dd><a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}">{{ COMPANY_SUPPORT_EMAIL }}</a></dd>
+  <dt class="font-semibold text-ink-900">Investor desk</dt>
+  <dd><a href="mailto:{{ COMPANY_INVESTOR_EMAIL }}">{{ COMPANY_INVESTOR_EMAIL }}</a></dd>
+</dl>
+
+<h2 class="text-xl font-extrabold text-ink-900">Nature of the service</h2>
+<p>
+  Vivalty publishes international property listings, market data, investment research scores,
+  financial simulators and an AI assistant. We connect prospective buyers and renters with
+  listing agencies and property owners.
+</p>
+<p>
+  <strong>Regulatory status:</strong> Vivalty is not authorised or regulated by the Financial
+  Conduct Authority (FCA) or any other financial regulator. We do not provide regulated
+  investment advice, portfolio management, payment services or escrow for property transactions.
+</p>
+
+<h2 class="text-xl font-extrabold text-ink-900">Investment &amp; advertising disclosures</h2>
+<ul class="list-disc pl-5 space-y-2">
+  <li>All yield, ROI, score and projection figures are illustrative research outputs, not guarantees.</li>
+  <li>Property values and rental income can go down as well as up.</li>
+  <li>Tax, currency and legal treatment depends on your personal circumstances and jurisdiction.</li>
+  <li>Independent legal, tax and financial advice is recommended before any transaction.</li>
+</ul>
+
+<h2 class="text-xl font-extrabold text-ink-900">Hosting &amp; technical contact</h2>
+<p>
+  For technical issues or to report illegal content, email
+  <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}">{{ COMPANY_SUPPORT_EMAIL }}</a>.
+  We aim to respond within five business days.
+</p>
+
+<h2 class="text-xl font-extrabold text-ink-900">Related policies</h2>
+<ul class="list-disc pl-5 space-y-2">
+  <li><a href="{% url 'web:privacy' %}">Privacy Policy</a></li>
+  <li><a href="{% url 'web:terms' %}">Terms of Service</a></li>
+  <li><a href="{% url 'web:cookies' %}">Cookie Policy</a></li>
+  <li><a href="{% url 'web:methodology' %}">Methodology &amp; data sources</a></li>
+</ul>
+{% endblock %}

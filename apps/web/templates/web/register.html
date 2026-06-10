@@ -100,7 +100,7 @@
 
         <label class="flex items-start gap-2.5 text-sm text-ink-600 cursor-pointer select-none">
           <input type="checkbox" name="accept_terms" required class="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-600 focus:ring-brand-500">
-          <span>I agree to the <a href="#" class="font-semibold text-brand-700 hover:text-brand-900 underline">Terms</a> and <a href="#" class="font-semibold text-brand-700 hover:text-brand-900 underline">Privacy Policy</a>.</span>
+          <span>I agree to the <a href="{% url 'web:terms' %}" target="_blank" rel="noopener" class="font-semibold text-brand-700 hover:text-brand-900 underline">Terms of Service</a> and <a href="{% url 'web:privacy' %}" target="_blank" rel="noopener" class="font-semibold text-brand-700 hover:text-brand-900 underline">Privacy Policy</a>.</span>
         </label>
         {% if form.accept_terms.errors %}<p class="-mt-2 text-xs text-rose-700">{{ form.accept_terms.errors|join:", " }}</p>{% endif %}
 

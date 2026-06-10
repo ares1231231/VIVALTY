@@ -1,0 +1,35 @@
+{% extends "web/base.html" %}
+{% load static %}
+
+{% block content %}
+<section class="border-b border-ink-200 bg-gradient-to-b from-ink-50 to-white">
+  <div class="mx-auto max-w-3xl px-4 sm:px-6 py-12 sm:py-16">
+    <div class="flex items-center gap-2 text-xs text-ink-500 mb-4">
+      <a href="{% url 'web:home' %}" class="hover:text-brand-600 transition-colors">Home</a>
+      <span aria-hidden="true">›</span>
+      <span class="text-ink-700 font-medium">{{ breadcrumb_label|default:"Legal" }}</span>
+    </div>
+    <h1 class="font-display text-3xl sm:text-4xl font-black tracking-tight text-ink-900">{{ page_title }}</h1>
+    {% if page_subtitle %}
+      <p class="mt-3 text-ink-600 leading-relaxed">{{ page_subtitle }}</p>
+    {% endif %}
+    <p class="mt-4 text-xs text-ink-500">Last updated: {% now "j F Y" %}</p>
+  </div>
+</section>
+
+<section class="py-12 sm:py-16">
+  <div class="mx-auto max-w-3xl px-4 sm:px-6">
+    <article class="legal-prose space-y-6 text-sm sm:text-base text-ink-700 leading-relaxed">
+      {% block legal_body %}{% endblock %}
+    </article>
+
+    <div class="mt-12 rounded-2xl border border-ink-200 bg-ink-50 p-6 text-sm text-ink-600">
+      <p class="font-semibold text-ink-900">Questions about this page?</p>
+      <p class="mt-2">
+        Contact <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}" class="font-semibold text-brand-700 hover:text-brand-900 underline">{{ COMPANY_SUPPORT_EMAIL }}</a>
+        or visit our <a href="{% url 'web:contact' %}" class="font-semibold text-brand-700 hover:text-brand-900 underline">contact page</a>.
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

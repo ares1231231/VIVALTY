@@ -2210,6 +2210,26 @@
   @apply border-l-2 border-brand-500 pl-3 text-ink-700 italic my-2;
 }
 
+/* ── Legal / policy pages ──────────────────────────────────────────────────── */
+.legal-prose h2 {
+  @apply mt-10 first:mt-0 text-xl font-extrabold text-ink-900;
+}
+.legal-prose h3 {
+  @apply mt-6 text-lg font-bold text-ink-900;
+}
+.legal-prose p {
+  @apply leading-relaxed;
+}
+.legal-prose ul {
+  @apply list-disc pl-5 space-y-2;
+}
+.legal-prose a {
+  @apply font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-900;
+}
+.legal-prose dl dd {
+  @apply text-ink-700;
+}
+
 /* ── Page & HTMX transition animations ─────────────────────────────────────── */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(16px); }

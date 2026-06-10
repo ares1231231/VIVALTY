@@ -62,7 +62,9 @@
     {% block content %}{% endblock %}
   </main>
 
+  {% include "web/components/compliance_bar.html" %}
   {% include "web/components/footer.html" %}
+  {% include "web/components/cookie_consent.html" %}
 
   {% with url_name=request.resolver_match.url_name %}
     {% if user.is_authenticated and url_name != 'chat' and url_name != 'chat_session' %}

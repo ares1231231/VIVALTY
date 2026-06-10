@@ -39,6 +39,11 @@ class StaticViewSitemap(_SiteUrlSitemap):
             "web:simulator",
             "web:compare",
             "web:become_owner",
+            "web:privacy",
+            "web:terms",
+            "web:cookies",
+            "web:legal_notice",
+            "web:contact",
         ]
 
     def location(self, item):

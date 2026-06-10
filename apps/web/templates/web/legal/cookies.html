@@ -1,0 +1,46 @@
+{% extends "web/legal/_base_legal.html" %}
+
+{% block legal_body %}
+<h2 class="text-xl font-extrabold text-ink-900">1. What are cookies?</h2>
+<p>
+  Cookies are small text files stored on your device when you visit a website. We also use
+  similar technologies such as local storage for preferences (e.g. cookie consent).
+</p>
+
+<h2 class="text-xl font-extrabold text-ink-900">2. How we use cookies</h2>
+
+<h3 class="text-lg font-bold text-ink-900">Strictly necessary</h3>
+<p>Required for the Platform to function. Cannot be disabled.</p>
+<ul class="list-disc pl-5 space-y-2">
+  <li><strong>Session &amp; authentication</strong> — keep you signed in securely.</li>
+  <li><strong>CSRF protection</strong> — prevent cross-site request forgery on forms.</li>
+  <li><strong>Cookie consent</strong> — remember your cookie preference.</li>
+</ul>
+
+<h3 class="text-lg font-bold text-ink-900">Functional</h3>
+<p>Improve experience; optional where consent is required.</p>
+<ul class="list-disc pl-5 space-y-2">
+  <li>Saved filters, favourites and dashboard preferences.</li>
+  <li>Anonymous AI chat session continuity.</li>
+</ul>
+
+<h3 class="text-lg font-bold text-ink-900">Analytics &amp; advertising (if enabled)</h3>
+<p>
+  We may use analytics or advertising pixels (e.g. Google Ads, TikTok Pixel) to measure
+  campaigns and site usage. These are only activated where you have consented via our
+  cookie banner, or where permitted without consent under applicable law.
+</p>
+
+<h2 class="text-xl font-extrabold text-ink-900">3. Third-party cookies</h2>
+<p>Some pages load resources from trusted providers (fonts, bot protection, embedded maps). Those providers may set their own cookies subject to their policies.</p>
+
+<h2 class="text-xl font-extrabold text-ink-900">4. Managing cookies</h2>
+<p>
+  On your first visit we show a cookie banner where you can accept or decline non-essential cookies.
+  You can also clear cookies via your browser settings. Blocking strictly necessary cookies may
+  prevent login and forms from working.
+</p>
+
+<h2 class="text-xl font-extrabold text-ink-900">5. More information</h2>
+<p>See our <a href="{% url 'web:privacy' %}">Privacy Policy</a> or email <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}">{{ COMPANY_SUPPORT_EMAIL }}</a>.</p>
+{% endblock %}

@@ -17,6 +17,11 @@ $paths = @(
     @{ Path = "/static/css/tailwind.css"; Expect = 200; Label = "Tailwind CSS" }
     @{ Path = "/robots.txt"; Expect = 200; Label = "robots.txt" }
     @{ Path = "/sitemap.xml"; Expect = 200; Label = "sitemap.xml" }
+    @{ Path = "/privacy/"; Expect = 200; Label = "Privacy policy" }
+    @{ Path = "/terms/"; Expect = 200; Label = "Terms of service" }
+    @{ Path = "/cookies/"; Expect = 200; Label = "Cookie policy" }
+    @{ Path = "/legal/"; Expect = 200; Label = "Legal notice" }
+    @{ Path = "/contact/"; Expect = 200; Label = "Contact page" }
 )
 
 Write-Host "Vivalty production verify - $BaseUrl`n" -ForegroundColor Cyan

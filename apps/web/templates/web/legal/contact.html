@@ -1,0 +1,39 @@
+{% extends "web/legal/_base_legal.html" %}
+
+{% block legal_body %}
+<p class="text-base">
+  We respond to investor, listing and press enquiries during UK business hours (Monday–Friday).
+</p>
+
+<div class="grid gap-4 sm:grid-cols-2 not-prose">
+  <div class="card p-5">
+    <h2 class="font-extrabold text-ink-900">General support</h2>
+    <p class="mt-2 text-sm text-ink-600">Account help, technical issues, privacy requests.</p>
+    <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}" class="mt-4 inline-flex text-sm font-semibold text-brand-700 hover:text-brand-900 underline">
+      {{ COMPANY_SUPPORT_EMAIL }}
+    </a>
+  </div>
+  <div class="card p-5">
+    <h2 class="font-extrabold text-ink-900">Investor desk</h2>
+    <p class="mt-2 text-sm text-ink-600">Portfolio strategy, market shortlists, institutional enquiries.</p>
+    <a href="mailto:{{ COMPANY_INVESTOR_EMAIL }}" class="mt-4 inline-flex text-sm font-semibold text-brand-700 hover:text-brand-900 underline">
+      {{ COMPANY_INVESTOR_EMAIL }}
+    </a>
+  </div>
+</div>
+
+<h2 class="text-xl font-extrabold text-ink-900">Postal address</h2>
+<p>{{ COMPANY_LEGAL_NAME }}<br>{{ COMPANY_REGISTERED_ADDRESS }}</p>
+
+<h2 class="text-xl font-extrabold text-ink-900">Speak to the investor desk online</h2>
+<p>
+  Use the form on our <a href="{% url 'web:home' %}#investor-desk">homepage investor desk</a>
+  to request a curated shortlist. This is an information service only — not regulated investment advice.
+</p>
+
+<h2 class="text-xl font-extrabold text-ink-900">List a property</h2>
+<p>
+  Property owners and agencies can start at
+  <a href="{% url 'web:become_owner' %}">List your property on Vivalty</a>.
+</p>
+{% endblock %}

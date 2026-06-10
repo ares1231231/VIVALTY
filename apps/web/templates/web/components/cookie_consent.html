@@ -1,0 +1,24 @@
+{# GDPR / ad-platform cookie consent — hidden after choice is stored in localStorage. #}
+<div id="cookie-consent"
+     class="fixed bottom-0 inset-x-0 z-50 hidden border-t border-ink-200 bg-white/95 backdrop-blur-md shadow-[0_-8px_30px_rgba(0,0,0,0.08)]"
+     role="dialog"
+     aria-label="Cookie consent"
+     aria-live="polite">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center gap-4">
+    <p class="flex-1 text-sm text-ink-700 leading-relaxed">
+      We use strictly necessary cookies to run Vivalty and, with your consent, analytics cookies to improve the site.
+      See our <a href="{% url 'web:cookies' %}" class="font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-900">Cookie Policy</a>
+      and <a href="{% url 'web:privacy' %}" class="font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-900">Privacy Policy</a>.
+    </p>
+    <div class="flex flex-wrap items-center gap-2 shrink-0">
+      <button type="button" id="cookie-decline"
+              class="rounded-xl border border-ink-200 bg-white px-4 py-2 text-sm font-semibold text-ink-700 hover:bg-ink-50 transition-colors">
+        Decline optional
+      </button>
+      <button type="button" id="cookie-accept"
+              class="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 shadow-sm transition-colors">
+        Accept all
+      </button>
+    </div>
+  </div>
+</div>

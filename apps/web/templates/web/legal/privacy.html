@@ -1,0 +1,63 @@
+{% extends "web/legal/_base_legal.html" %}
+
+{% block legal_body %}
+<h2 class="text-xl font-extrabold text-ink-900">1. Who we are</h2>
+<p>
+  {{ COMPANY_LEGAL_NAME }} (“Vivalty”, “we”, “us”) operates the website
+  <a href="{{ SITE_URL }}">{{ SITE_URL }}</a>, a property marketplace and research platform
+  for international real estate. Our registered address is {{ COMPANY_REGISTERED_ADDRESS }}.
+</p>
+<p>
+  For privacy enquiries contact
+  <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}">{{ COMPANY_SUPPORT_EMAIL }}</a>.
+</p>
+
+<h2 class="text-xl font-extrabold text-ink-900">2. What data we collect</h2>
+<ul class="list-disc pl-5 space-y-2">
+  <li><strong>Account data:</strong> name, email address, password (hashed), optional company name and investor profile.</li>
+  <li><strong>Usage data:</strong> pages viewed, searches, saved favourites, simulator inputs and chat messages with our AI advisor.</li>
+  <li><strong>Enquiry data:</strong> information you submit via lead forms, the investor desk, newsletter sign-up or listing wizard.</li>
+  <li><strong>Technical data:</strong> IP address, browser type, device information, cookies and similar identifiers.</li>
+  <li><strong>Listing data:</strong> if you publish a property, photos, descriptions, location and pricing you provide.</li>
+</ul>
+
+<h2 class="text-xl font-extrabold text-ink-900">3. How we use your data</h2>
+<p>We process personal data to:</p>
+<ul class="list-disc pl-5 space-y-2">
+  <li>Provide and secure the Vivalty platform (accounts, listings, favourites, dashboard).</li>
+  <li>Respond to enquiries and connect buyers with listing partners.</li>
+  <li>Send service emails (verification, password reset, transactional notices).</li>
+  <li>Improve our scoring methodology, simulator and AI advisor.</li>
+  <li>Comply with legal obligations and prevent fraud or abuse.</li>
+  <li>Send market intelligence emails where you have opted in (you may unsubscribe at any time).</li>
+</ul>
+
+<h2 class="text-xl font-extrabold text-ink-900">4. Legal bases (EEA &amp; UK users)</h2>
+<p>Where GDPR applies, we rely on: contract (providing the service), legitimate interests (security, analytics, product improvement), consent (marketing emails, non-essential cookies) and legal obligation.</p>
+
+<h2 class="text-xl font-extrabold text-ink-900">5. Sharing your data</h2>
+<p>We do not sell your personal data. We may share data with:</p>
+<ul class="list-disc pl-5 space-y-2">
+  <li><strong>Listing agencies</strong> when you enquire about a property.</li>
+  <li><strong>Service providers</strong> that host our infrastructure, send email, store media or power AI features — under data-processing agreements.</li>
+  <li><strong>Authorities</strong> when required by law.</li>
+</ul>
+
+<h2 class="text-xl font-extrabold text-ink-900">6. International transfers</h2>
+<p>Data may be processed in the United Kingdom, European Economic Area or other countries where our providers operate. We use appropriate safeguards where required.</p>
+
+<h2 class="text-xl font-extrabold text-ink-900">7. Retention</h2>
+<p>We keep account and enquiry data while your account is active and for a reasonable period afterwards. Technical logs are retained for security for a limited time. You may request deletion subject to legal retention requirements.</p>
+
+<h2 class="text-xl font-extrabold text-ink-900">8. Your rights</h2>
+<p>Depending on your location you may have rights to access, rectify, erase, restrict, object to processing and data portability. Contact <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}">{{ COMPANY_SUPPORT_EMAIL }}</a>. You may lodge a complaint with your local data-protection authority.</p>
+
+<h2 class="text-xl font-extrabold text-ink-900">9. Cookies</h2>
+<p>See our <a href="{% url 'web:cookies' %}">Cookie Policy</a> for details on cookies and how to manage preferences.</p>
+
+<h2 class="text-xl font-extrabold text-ink-900">10. Children</h2>
+<p>Vivalty is not directed at anyone under 18. We do not knowingly collect data from minors.</p>
+
+<h2 class="text-xl font-extrabold text-ink-900">11. Changes</h2>
+<p>We may update this policy. Material changes will be posted on this page with an updated date.</p>
+{% endblock %}

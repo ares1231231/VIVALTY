@@ -31,6 +31,13 @@ urlpatterns = [
     path("methodology/", views.methodology, name="methodology"),
     path("compare/", views.compare, name="compare"),
 
+    # Legal & compliance (required for Google Ads / TikTok Ads landing-page review)
+    path("privacy/", views.privacy_policy, name="privacy"),
+    path("terms/", views.terms_of_service, name="terms"),
+    path("cookies/", views.cookie_policy, name="cookies"),
+    path("legal/", views.legal_notice, name="legal_notice"),
+    path("contact/", views.contact, name="contact"),
+
     # AI Invest — new canonical paths. The URL `name` stays "simulator" so
     # every existing {% url 'web:simulator' %} call continues to work.
     path("ai-invest/", views.simulator, name="simulator"),
