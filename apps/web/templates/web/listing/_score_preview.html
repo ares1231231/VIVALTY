@@ -5,7 +5,7 @@
   Swap target wrapper has a stable id so HTMX `hx-swap-oob` updates work.
 {% endcomment %}
 <div id="score-preview-inline" class="rounded-2xl border border-ink-200 bg-gradient-to-br from-brand-50/40 to-white p-4">
-  {% if score %}
+  {% if SHOW_INVESTMENT_FEATURES and score %}
     <div class="flex items-center gap-4">
       <div class="vv-score-gauge is-large" data-score="{{ score.score }}">
         <span>{{ score.score }}</span>
@@ -50,7 +50,11 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
       </span>
-      Add a price to see your AI score update in real time.
+      {% if SHOW_INVESTMENT_FEATURES %}
+        Add a price to see your AI score update in real time.
+      {% else %}
+        A clear, realistic asking price helps your listing stand out.
+      {% endif %}
     </div>
   {% endif %}
 </div>

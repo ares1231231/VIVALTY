@@ -12,7 +12,7 @@
     Live preview
   </div>
 
-  {% if score %}
+  {% if SHOW_INVESTMENT_FEATURES and score %}
     <div class="flex items-center gap-3">
       <div class="vv-score-gauge" data-score="{{ score.score }}">
         <span>{{ score.score }}</span>
@@ -35,9 +35,13 @@
         <div class="text-sm font-extrabold text-sky-700 tabular-nums">{{ score.yield_pct|pct }}</div>
       </div>
     </div>
-  {% else %}
+  {% elif SHOW_INVESTMENT_FEATURES %}
     <p class="text-xs text-ink-500 leading-relaxed">
       Fill in location, area and asking price — we'll show the AI score the moment we have enough signal.
+    </p>
+  {% else %}
+    <p class="text-xs text-ink-500 leading-relaxed">
+      Fill in location, area and asking price — your listing preview builds as you go.
     </p>
   {% endif %}
 
@@ -79,5 +83,5 @@
 
 <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-[12px] text-amber-900 leading-relaxed">
   <div class="font-bold text-amber-900 mb-1">Review before publish</div>
-  Owner-submitted listings are reviewed by Vivalty's editorial desk before going live to investors — usually within 24h.
+  Owner-submitted listings are reviewed by Vivalty's editorial desk before going live to buyers — usually within 24h.
 </div>

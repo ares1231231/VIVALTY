@@ -3,11 +3,15 @@
   <div class="border-t border-white/10 px-5 py-4 bg-ink-900/40 backdrop-blur-md">
     <div class="flex items-center justify-between text-xs text-white/60">
       <span class="font-semibold uppercase tracking-wide">
-        {{ items|length }} top opportunit{{ items|length|pluralize:"y,ies" }} under
+        {{ items|length }} home{{ items|length|pluralize }} under
         <span class="text-white">{{ budget|floatformat:0 }} {{ items.0.p.currency|default:"EUR" }}</span>
         {% if country %}· filtered to {{ country }}{% endif %}
       </span>
-      <span class="text-white/40">Ranked by AI score · {{ horizon }}-yr projection</span>
+      {% if SHOW_INVESTMENT_FEATURES %}
+        <span class="text-white/40">Ranked by AI score · {{ horizon }}-yr projection</span>
+      {% else %}
+        <span class="text-white/40">Curated picks for your budget</span>
+      {% endif %}
     </div>
     <div class="mt-3 space-y-2 max-h-[28rem] overflow-y-auto pr-1">
       {% for it in items %}
@@ -35,19 +39,27 @@
             </div>
             <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/55">
               <span><span class="text-white/30">Price</span> <strong class="tabular-nums text-white/90">{{ it.p.price|money:it.p.currency }}</strong></span>
-              {% if it.p.metric %}
-                <span><span class="text-white/30">Yield</span> <strong class="tabular-nums text-emerald-300">{{ it.p.metric.rental_yield|pct }}</strong></span>
+              {% if SHOW_INVESTMENT_FEATURES %}
+                {% if it.p.metric %}
+                  <span><span class="text-white/30">Yield</span> <strong class="tabular-nums text-emerald-300">{{ it.p.metric.rental_yield|pct }}</strong></span>
+                {% endif %}
+                <span><span class="text-white/30">Net cashflow / mo</span> <strong class="tabular-nums {% if it.sim.annual.monthly_cashflow >= 0 %}text-emerald-300{% else %}text-rose-300{% endif %}">{{ it.sim.annual.monthly_cashflow|floatformat:0 }} {{ it.p.currency }}</strong></span>
+                <span><span class="text-white/30">Cap rate</span> <strong class="tabular-nums text-white/90">{{ it.sim.annual.cap_rate_pct|floatformat:1 }}%</strong></span>
+              {% else %}
+                {% if it.p.bedrooms %}<span><span class="text-white/30">Beds</span> <strong class="tabular-nums text-white/90">{{ it.p.bedrooms }}</strong></span>{% endif %}
+                {% if it.p.area_sqm %}<span><span class="text-white/30">Area</span> <strong class="tabular-nums text-white/90">{{ it.p.area_sqm|floatformat:0 }} m²</strong></span>{% endif %}
+                <span><span class="text-white/30">Country</span> <strong class="text-white/90">{{ it.p.country.name }}</strong></span>
               {% endif %}
-              <span><span class="text-white/30">Net cashflow / mo</span> <strong class="tabular-nums {% if it.sim.annual.monthly_cashflow >= 0 %}text-emerald-300{% else %}text-rose-300{% endif %}">{{ it.sim.annual.monthly_cashflow|floatformat:0 }} {{ it.p.currency }}</strong></span>
-              <span><span class="text-white/30">Cap rate</span> <strong class="tabular-nums text-white/90">{{ it.sim.annual.cap_rate_pct|floatformat:1 }}%</strong></span>
             </div>
           </div>
+          {% if SHOW_INVESTMENT_FEATURES %}
           <div class="shrink-0 text-center">
             <div class="font-display text-2xl font-black text-white tabular-nums">
               {{ it.p.metric.investment_score|default:'—' }}
             </div>
             <div class="text-[9px] uppercase tracking-widest text-white/40">AI score</div>
           </div>
+          {% endif %}
         </a>
       {% endfor %}
     </div>

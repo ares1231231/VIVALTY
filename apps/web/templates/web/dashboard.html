@@ -37,8 +37,8 @@
 
         {# Sub-headline #}
         <p class="mt-5 text-base sm:text-lg text-white/75 max-w-lg leading-relaxed">
-          Reach <strong class="font-semibold text-white">12,000+ vetted global investors</strong>.
-          AI-scored, AI-priced — live in under 5&nbsp;minutes.
+          Reach <strong class="font-semibold text-white">12,000+ buyers worldwide</strong>.
+          AI-assisted listing — live in under 5&nbsp;minutes.
         </p>
 
         {# Benefit chips #}
@@ -104,8 +104,8 @@
         <div class="flex items-start gap-4 rounded-2xl px-4 py-4 transition-all duration-150 hover:bg-white/10">
           <div class="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-amber-400/15 text-lg font-black text-amber-300 ring-1 ring-amber-300/25">2</div>
           <div class="min-w-0">
-            <div class="font-semibold text-white text-sm">Photos &amp; AI pricing</div>
-            <div class="mt-0.5 text-xs leading-relaxed text-white/50">Upload images · get AI price &amp; investment score</div>
+            <div class="font-semibold text-white text-sm">Photos &amp; pricing</div>
+            <div class="mt-0.5 text-xs leading-relaxed text-white/50">Upload images · set your asking price</div>
           </div>
         </div>
 
@@ -116,7 +116,7 @@
           <div class="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-300/15 text-lg font-black text-emerald-300 ring-1 ring-emerald-300/25">3</div>
           <div class="min-w-0">
             <div class="font-semibold text-white text-sm">Go live · sell faster</div>
-            <div class="mt-0.5 text-xs leading-relaxed text-white/50">Published to 12k+ qualified investors worldwide</div>
+            <div class="mt-0.5 text-xs leading-relaxed text-white/50">Published to 12k+ qualified buyers worldwide</div>
           </div>
         </div>
 
@@ -142,17 +142,19 @@
   <header class="rounded-3xl border border-ink-200 bg-radial-brand p-6 shadow-card">
     <div class="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
       <div>
-        <div class="pill bg-white/70 text-brand-700">Your investor workspace</div>
+        <div class="pill bg-white/70 text-brand-700">Your workspace</div>
         <h2 class="mt-3 font-display section-title">Welcome, {{ user.first_name|default:user.email }}.</h2>
         <p class="section-subtitle">
-          Role: <span class="font-semibold capitalize text-ink-900">{{ user.get_role_display }}</span>
+          Role: <span class="font-semibold capitalize text-ink-900">{% if user.role == 'investor' %}Buyer{% else %}{{ user.get_role_display }}{% endif %}</span>
           · Member since {{ user.date_joined|date:"M Y" }}
         </p>
       </div>
       <div class="flex flex-wrap gap-2">
         <a href="{% url 'web:marketplace' %}" class="btn-secondary">Marketplace</a>
+        {% if SHOW_INVESTMENT_FEATURES %}
         <a href="{% url 'web:simulator' %}" class="btn-secondary">Run a scenario</a>
-        <a href="{% url 'web:chat' %}" class="btn-secondary">AI Advisor</a>
+        {% endif %}
+        <a href="{% url 'web:chat' %}" class="btn-secondary">AI Assistant</a>
         <a href="{% url 'web:listing_start' %}" class="btn-primary">+ New listing</a>
       </div>
     </div>
@@ -163,6 +165,7 @@
         <div class="stat-label">Watchlist</div>
         <div class="font-display text-2xl font-black text-ink-900 tabular-nums">{{ watchlist_kpis.count }}</div>
       </div>
+      {% if SHOW_INVESTMENT_FEATURES %}
       <div class="metric-tile">
         <div class="stat-label">Avg AI score</div>
         <div class="font-display text-2xl font-black text-brand-700 tabular-nums">{{ watchlist_kpis.avg_score|default:'—' }}</div>
@@ -173,6 +176,16 @@
           {% if watchlist_kpis.avg_yield %}{{ watchlist_kpis.avg_yield|floatformat:1 }}%{% else %}—{% endif %}
         </div>
       </div>
+      {% else %}
+      <div class="metric-tile">
+        <div class="stat-label">Countries</div>
+        <div class="font-display text-2xl font-black text-brand-700 tabular-nums">{{ watchlist_kpis.countries|default:'—' }}</div>
+      </div>
+      <div class="metric-tile">
+        <div class="stat-label">Saved this month</div>
+        <div class="font-display text-2xl font-black text-sky-700 tabular-nums">{{ watchlist_kpis.count }}</div>
+      </div>
+      {% endif %}
       <div class="metric-tile">
         <div class="stat-label">Total list price</div>
         <div class="font-display text-2xl font-black text-ink-900 tabular-nums">
@@ -192,6 +205,7 @@
           <span class="ml-1.5 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-700">{{ favorites|length }}</span>
         </button>
       </li>
+      {% if SHOW_INVESTMENT_FEATURES %}
       <li role="presentation">
         <button class="rounded-t-xl px-5 py-2.5 text-sm font-medium text-ink-600 hover:text-brand-700 border-b-2 border-transparent aria-selected:border-brand-600 aria-selected:text-brand-700"
                 id="analytics-tab" data-tabs-target="#tab-analytics" type="button" role="tab" aria-controls="tab-analytics" aria-selected="false">
@@ -199,6 +213,7 @@
           <span class="ml-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 uppercase tracking-wide">Premium</span>
         </button>
       </li>
+      {% endif %}
       {% if user.role == 'owner' or user.role == 'admin' or user.is_staff %}
       <li role="presentation">
         <button class="rounded-t-xl px-5 py-2.5 text-sm font-medium text-ink-600 hover:text-brand-700 border-b-2 border-transparent aria-selected:border-brand-600 aria-selected:text-brand-700"
@@ -215,11 +230,13 @@
       {# Watchlist tab #}
       <div id="tab-saved" role="tabpanel" aria-labelledby="saved-tab">
         {% if favorites %}
+          {% if SHOW_INVESTMENT_FEATURES %}
           <div class="flex flex-wrap items-center gap-2 mb-4">
             <span class="text-xs text-ink-500">Build a side-by-side dossier from your watchlist:</span>
             <a href="{% url 'web:compare' %}?ids={% for f in favorites|slice:':4' %}{{ f.property.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
                class="btn-secondary text-xs rounded-lg py-1 px-2.5">Compare top 4 →</a>
           </div>
+          {% endif %}
           <div class="saas-grid">
             {% for f in favorites %}
               {% include "web/components/property_card.html" with p=f.property %}
@@ -239,7 +256,8 @@
         {% endif %}
       </div>
 
-      {# Premium analytics tab — paywall scaffold #}
+      {# Premium analytics tab — paywall scaffold (ads-safe gated) #}
+      {% if SHOW_INVESTMENT_FEATURES %}
       <div id="tab-analytics" role="tabpanel" aria-labelledby="analytics-tab" class="hidden">
         <div class="relative">
           {# Blurred mock dashboard behind the paywall #}
@@ -279,7 +297,7 @@
               consolidated cashflow waterfall across every property in your watchlist.
             </p>
             <div class="flex flex-wrap items-center justify-center gap-2">
-              <a href="{% url 'web:home' %}#investor-desk" class="btn-primary px-5">Talk to the investor desk</a>
+              <a href="{% url 'web:home' %}#advisory-desk" class="btn-primary px-5">Talk to the advisory desk</a>
               <a href="{% url 'web:methodology' %}" class="btn-secondary px-5">See methodology</a>
             </div>
             <div class="mt-1 text-[10px] uppercase tracking-widest text-ink-500 font-bold">
@@ -288,8 +306,9 @@
           </div>
         </div>
       </div>
+      {% endif %}
 
-      {# Listings tab — owners + admins see their portfolio with inline actions #}
+      {# Listings tab — owners + admins see their listings with inline actions #}
       {% if user.role == 'owner' or user.role == 'admin' or user.is_staff %}
       <div id="tab-listings" role="tabpanel" aria-labelledby="listings-tab" class="hidden">
         {% if mine %}
@@ -333,7 +352,7 @@
                         {{ p.get_status_display }}
                       </span>
                     {% endif %}
-                    {% if p.metric %}
+                    {% if SHOW_INVESTMENT_FEATURES and p.metric %}
                       <span class="pill {{ p.metric.investment_score|score_color }} text-[10px]">
                         AI {{ p.metric.investment_score }} · {{ p.metric.investment_score|score_label }}
                       </span>
@@ -393,8 +412,9 @@
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
       </div>
       <div class="mt-3 font-semibold text-ink-900">Browse marketplace</div>
-      <div class="mt-1 text-sm text-ink-500">Discover and filter global investment listings.</div>
+      <div class="mt-1 text-sm text-ink-500">Discover and filter listings across 7 countries.</div>
     </a>
+    {% if SHOW_INVESTMENT_FEATURES %}
     <a href="{% url 'web:simulator' %}" class="card p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group">
       <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
@@ -402,13 +422,23 @@
       <div class="mt-3 font-semibold text-ink-900">Investment simulator</div>
       <div class="mt-1 text-sm text-ink-500">Mortgage, taxes, cashflow & 10-year projection.</div>
     </a>
+    {% else %}
+    <a href="{% url 'web:listing_start' %}" class="card p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group">
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1V10"/></svg>
+      </div>
+      <div class="mt-3 font-semibold text-ink-900">List your property</div>
+      <div class="mt-1 text-sm text-ink-500">Publish a home in five quick steps — free.</div>
+    </a>
+    {% endif %}
     <a href="{% url 'web:chat' %}" class="card p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group">
       <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600 group-hover:bg-sky-600 group-hover:text-white transition-colors">
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
       </div>
-      <div class="mt-3 font-semibold text-ink-900">AI investment advisor</div>
-      <div class="mt-1 text-sm text-ink-500">Comparable yields, market context, risk callouts.</div>
+      <div class="mt-3 font-semibold text-ink-900">AI property assistant</div>
+      <div class="mt-1 text-sm text-ink-500">Destinations, neighbourhoods and listing questions.</div>
     </a>
+    {% if SHOW_INVESTMENT_FEATURES %}
     <a href="{% url 'web:methodology' %}" class="card p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group">
       <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors">
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 5.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
@@ -416,6 +446,15 @@
       <div class="mt-3 font-semibold text-ink-900">How AI score works</div>
       <div class="mt-1 text-sm text-ink-500">Transparent factor weights and data sources.</div>
     </a>
+    {% else %}
+    <a href="{% url 'web:contact' %}" class="card p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group">
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      </div>
+      <div class="mt-3 font-semibold text-ink-900">Talk to our team</div>
+      <div class="mt-1 text-sm text-ink-500">Buyer enquiries, listing support and partnerships.</div>
+    </a>
+    {% endif %}
   </section>
 </div>
 {% endblock %}

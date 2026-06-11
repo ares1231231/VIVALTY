@@ -324,6 +324,13 @@ COMPANY_REGISTERED_ADDRESS = os.getenv(
 COMPANY_SUPPORT_EMAIL = os.getenv("COMPANY_SUPPORT_EMAIL", "hello@vivalty.com")
 COMPANY_INVESTOR_EMAIL = os.getenv("COMPANY_INVESTOR_EMAIL", "investors@vivalty.com")
 COMPANY_VAT_NUMBER = os.getenv("COMPANY_VAT_NUMBER", "")
+
+# --- Feature flags -----------------------------------------------------------
+# Investment analytics (simulator, methodology, compare, market intelligence)
+# are disabled by default so the public site reads as a plain international
+# real-estate marketplace for ad-platform review. Set SHOW_INVESTMENT_FEATURES=1
+# to restore those pages.
+SHOW_INVESTMENT_FEATURES = os.getenv("SHOW_INVESTMENT_FEATURES", "0") == "1"
 if RESEND_API_KEY:
     EMAIL_BACKEND = "apps.web.services.emails.ResendEmailBackend"
 else:

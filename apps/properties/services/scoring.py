@@ -194,7 +194,7 @@ def compute_score(
         label="Verification",
         points=verification_pts,
         max_points=FACTOR_WEIGHTS["verification"],
-        detail="Listing reviewed by Vivalty's investor desk." if is_featured
+        detail="Listing reviewed by Vivalty's editorial desk." if is_featured
         else "Standard listing — no editorial verification yet.",
     )
 
@@ -247,7 +247,7 @@ def compute_score(
             "Some inputs use country-level baselines; refine with verified city data when available."
         )
     if is_featured:
-        strengths.append("Editorially verified by Vivalty's investor desk.")
+        strengths.append("Editorially verified by Vivalty's editorial desk.")
 
     notes_parts: list[str] = []
     if value_detail and value_pts != 0:

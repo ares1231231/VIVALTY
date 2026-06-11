@@ -122,9 +122,15 @@ def robots_txt(request: HttpRequest) -> HttpResponse:
         "Disallow: /list/",
         "Allow: /list/become-owner/",
         "Disallow: /chat/",
-        "",
-        f"Sitemap: {site}/sitemap.xml",
     ]
+    if not settings.SHOW_INVESTMENT_FEATURES:
+        lines += [
+            "Disallow: /ai-invest/",
+            "Disallow: /methodology/",
+            "Disallow: /compare/",
+            "Disallow: /markets/",
+        ]
+    lines += ["", f"Sitemap: {site}/sitemap.xml"]
     return HttpResponse("\n".join(lines) + "\n", content_type="text/plain")
 
 
@@ -207,17 +213,19 @@ def home(request: HttpRequest) -> HttpResponse:
 
     # Lite interactive simulator (home page) — seeded with a realistic Portugal
     # scenario so the widget shows live numbers before any slider interaction.
-    quick_sim = simulate(
-        SimulatorInputs(
-            price=350_000.0,
-            currency="EUR",
-            country_code="PT",
-            rental_yield_pct=6.0,
-            down_payment_pct=30.0,
-            mortgage_years=25,
-            horizon_years=10,
+    quick_sim = None
+    if settings.SHOW_INVESTMENT_FEATURES:
+        quick_sim = simulate(
+            SimulatorInputs(
+                price=350_000.0,
+                currency="EUR",
+                country_code="PT",
+                rental_yield_pct=6.0,
+                down_payment_pct=30.0,
+                mortgage_years=25,
+                horizon_years=10,
+            )
         )
-    )
 
     # Favorited property ids for the current user, so home cards can show the
     # correct heart state without an extra query per card.
@@ -399,7 +407,7 @@ def property_detail(request: HttpRequest, pk: int) -> HttpResponse:
     )
 
     # Default simulator output for the right-rail / share card.
-    sim = simulate_for_property(prop)
+    sim = simulate_for_property(prop) if settings.SHOW_INVESTMENT_FEATURES else None
 
     # Local market insight from the city + country baselines.
     city_insight = {
@@ -439,6 +447,8 @@ def property_detail(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 def markets(request: HttpRequest) -> HttpResponse:
+    if not settings.SHOW_INVESTMENT_FEATURES:
+        return redirect("web:marketplace")
     countries = (
         Country.objects.annotate(
             cities_count=Count("cities", distinct=True),
@@ -482,6 +492,8 @@ def markets(request: HttpRequest) -> HttpResponse:
 
 def methodology(request: HttpRequest) -> HttpResponse:
     """How Our AI Score Works — transparent factor breakdown + data sources."""
+    if not settings.SHOW_INVESTMENT_FEATURES:
+        return redirect("web:marketplace")
 
     factors = [
         {
@@ -534,7 +546,7 @@ def methodology(request: HttpRequest) -> HttpResponse:
             "label": "Verification",
             "max": FACTOR_WEIGHTS["verification"],
             "icon": "🛡️",
-            "desc": "Editorial review by Vivalty's investor desk. +5 when the listing has been verified.",
+            "desc": "Editorial review by Vivalty's editorial desk. +5 when the listing has been verified.",
             "sources": ["Vivalty editorial review", "Agency credentials"],
         },
         {
@@ -583,7 +595,7 @@ def methodology(request: HttpRequest) -> HttpResponse:
             "title": "Vivalty proprietary signals",
             "icon": "🧠",
             "items": [
-                "Editorial verification by the Vivalty investor desk",
+                "Editorial verification by the Vivalty editorial desk",
                 "Agency credential checks",
                 "User-engagement signal aggregation (saved, viewed, contacted)",
             ],
@@ -614,6 +626,8 @@ def methodology(request: HttpRequest) -> HttpResponse:
 
 
 def compare(request: HttpRequest) -> HttpResponse:
+    if not settings.SHOW_INVESTMENT_FEATURES:
+        return redirect("web:marketplace")
     raw_ids = (request.GET.get("ids") or "").replace(" ", "")
     pk_list: list[int] = []
     for part in raw_ids.split(","):
@@ -727,6 +741,8 @@ def simulator(request: HttpRequest, pk: int | None = None) -> HttpResponse:
     the property's current asking price + yield so investors can iterate on
     a real listing.
     """
+    if not settings.SHOW_INVESTMENT_FEATURES:
+        return redirect("web:marketplace")
     prop = None
     if pk:
         prop = get_object_or_404(
@@ -777,6 +793,8 @@ def simulator(request: HttpRequest, pk: int | None = None) -> HttpResponse:
 @require_POST
 def simulator_compute(request: HttpRequest) -> HttpResponse:
     """HTMX endpoint that re-runs the simulator and swaps the result panel."""
+    if not settings.SHOW_INVESTMENT_FEATURES:
+        return HttpResponse(status=404)
     p = request.POST
     pk = _safe_int(p.get("property_id"), 0)
     prop = None
@@ -814,6 +832,8 @@ def home_quick_sim(request: HttpRequest) -> HttpResponse:
     """Lite homepage simulator. Returns a compact result panel for live,
     slider-driven underwriting without leaving the landing page.
     """
+    if not settings.SHOW_INVESTMENT_FEATURES:
+        return HttpResponse(status=404)
     p = request.POST
     country = (p.get("country") or "PT").upper()
     inputs = SimulatorInputs(
@@ -889,12 +909,15 @@ def smart_search(request: HttpRequest) -> HttpResponse:
     )
     if country:
         qs = qs.filter(country__code=country)
-    qs = qs.order_by("-metric__investment_score", "-metric__rental_yield")
+    if settings.SHOW_INVESTMENT_FEATURES:
+        qs = qs.order_by("-metric__investment_score", "-metric__rental_yield")
+    else:
+        qs = qs.order_by("-is_featured", "-created_at")
 
     items = list(qs[:6])
     enriched = []
     for prop in items:
-        sim = simulate_for_property(prop, horizon_years=horizon)
+        sim = simulate_for_property(prop, horizon_years=horizon) if settings.SHOW_INVESTMENT_FEATURES else None
         enriched.append({"p": prop, "sim": sim})
 
     return render(
@@ -919,7 +942,7 @@ def investor_inquiry(request: HttpRequest) -> HttpResponse:
         obj.save()
         messages.success(
             request,
-            "Thank you. Our investor relations desk typically responds within one business day.",
+            "Thank you. Our advisory desk typically responds within one business day.",
         )
     else:
         messages.error(request, "Please check the form fields and try again.")
@@ -1162,6 +1185,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
                 "avg_score": avg_score,
                 "avg_yield": avg_yield,
                 "total_value": total_value,
+                "countries": len({p.country_id for p in fav_props}),
             },
         },
     )

@@ -16,7 +16,7 @@
     {% if p.status == "active" %}
       <div class="inline-flex items-center gap-2 rounded-full bg-emerald-100 text-emerald-800 px-4 py-1.5 text-xs font-bold tracking-wide ring-1 ring-emerald-200">
         <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-        Live to investors
+        Live on Vivalty
       </div>
     {% else %}
       <div class="inline-flex items-center gap-2 rounded-full bg-amber-100 text-amber-800 px-4 py-1.5 text-xs font-bold tracking-wide ring-1 ring-amber-200">
@@ -34,7 +34,7 @@
     </h1>
     <p class="mt-4 text-base sm:text-lg text-ink-600 max-w-prose mx-auto leading-relaxed">
       {% if p.status == "active" %}
-        “{{ p.title }}” is now searchable by investors across the platform and the AI advisor.
+        “{{ p.title }}” is now searchable by buyers across the platform and the AI assistant.
       {% else %}
         “{{ p.title }}” is queued for editorial review. Most listings are approved within 24 hours; we'll email you the moment it goes live.
       {% endif %}
@@ -55,7 +55,7 @@
             </div>
             <div class="mt-1 font-display text-xl font-bold text-ink-900 line-clamp-2">{{ p.title }}</div>
           </div>
-          {% if p.metric %}
+          {% if SHOW_INVESTMENT_FEATURES and p.metric %}
             <div class="flex items-center gap-4">
               <div class="vv-score-gauge" data-score="{{ p.metric.investment_score }}">
                 <span>{{ p.metric.investment_score }}</span>
@@ -94,6 +94,7 @@
 
     {# Editorial cross-sell #}
     <div class="mt-12 grid sm:grid-cols-3 gap-3 text-left">
+      {% if SHOW_INVESTMENT_FEATURES %}
       <a href="{% url 'web:methodology' %}" class="card p-4 hover:shadow-lg transition-shadow">
         <div class="text-2xl">🧠</div>
         <div class="mt-1 text-sm font-bold text-ink-900">How the AI score works</div>
@@ -104,10 +105,22 @@
         <div class="mt-1 text-sm font-bold text-ink-900">Investment simulator</div>
         <div class="text-[11px] text-ink-500 mt-0.5">Model returns from your asking price.</div>
       </a>
+      {% else %}
+      <a href="{% url 'web:marketplace' %}" class="card p-4 hover:shadow-lg transition-shadow">
+        <div class="text-2xl">🏠</div>
+        <div class="mt-1 text-sm font-bold text-ink-900">Browse the marketplace</div>
+        <div class="text-[11px] text-ink-500 mt-0.5">See how listings appear to buyers.</div>
+      </a>
+      <a href="{% url 'web:contact' %}" class="card p-4 hover:shadow-lg transition-shadow">
+        <div class="text-2xl">📞</div>
+        <div class="mt-1 text-sm font-bold text-ink-900">Talk to our team</div>
+        <div class="text-[11px] text-ink-500 mt-0.5">Listing support and partnerships.</div>
+      </a>
+      {% endif %}
       <a href="{% url 'web:chat' %}" class="card p-4 hover:shadow-lg transition-shadow">
         <div class="text-2xl">💬</div>
-        <div class="mt-1 text-sm font-bold text-ink-900">Ask the AI advisor</div>
-        <div class="text-[11px] text-ink-500 mt-0.5">Comparable markets, yield benchmarks.</div>
+        <div class="mt-1 text-sm font-bold text-ink-900">Ask the AI assistant</div>
+        <div class="text-[11px] text-ink-500 mt-0.5">Destinations, cities and listing questions.</div>
       </a>
     </div>
   </div>

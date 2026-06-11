@@ -43,10 +43,12 @@ so the primary search + key links stay one tap away on every section.
       </button>
     </form>
 
+    {% if SHOW_INVESTMENT_FEATURES %}
     <a href="{% url 'web:simulator' %}"
        class="hidden shrink-0 rounded-full px-3 py-1.5 text-sm font-bold text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-900 lg:inline-block">
       Simulator
     </a>
+    {% endif %}
   </div>
 </div>
 
@@ -85,9 +87,9 @@ The navbar overlays this section (see vv-nav--overlay variant).
         Home
       </h1>
 
-      {# ── AI/underwriting value prop kept above the fold ──────── #}
+      {# ── Value prop kept above the fold ───────────────────────── #}
       <p class="vv-hero-lede">
-        <strong>AI-scored</strong> property across <strong>7 markets</strong> — underwrite any deal in <strong>60&nbsp;seconds</strong>.
+        Apartments, villas and houses across <strong>7 international destinations</strong> — buy or rent with <strong>verified listings</strong>.
       </p>
 
         {# ── Buy / Rent + white filter bar ─────────────────────── #}
@@ -266,7 +268,7 @@ count + partner agencies) so credibility lands before the deal browsing.
             {% for i in "12345" %}<svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.36 4.18a1 1 0 00.95.69h4.4c.97 0 1.37 1.24.59 1.81l-3.56 2.59a1 1 0 00-.36 1.12l1.36 4.18c.3.92-.75 1.69-1.54 1.12l-3.56-2.59a1 1 0 00-1.18 0l-3.56 2.59c-.79.57-1.84-.2-1.54-1.12l1.36-4.18a1 1 0 00-.36-1.12L1.4 9.6c-.78-.57-.38-1.81.59-1.81h4.4a1 1 0 00.95-.69L9.05 2.93z"/></svg>{% endfor %}
           </div>
           <div class="mt-0.5 text-xs font-semibold text-ink-600">
-            <strong class="text-ink-900">1,200+</strong> investors building global portfolios
+            <strong class="text-ink-900">1,200+</strong> buyers and renters finding homes worldwide
           </div>
         </div>
       </div>
@@ -293,13 +295,13 @@ TOP DESTINATIONS - full-width section directly under the hero.
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
     <div class="flex flex-col items-center text-center mb-10 sm:mb-12">
-      <span class="vv-destinations-eyebrow">Curated for investors</span>
+      <span class="vv-destinations-eyebrow">Curated destinations</span>
       <h2 class="vv-destinations-title">
-        Top <em class="vv-hero-title-em">Investments</em>
+        Top <em class="vv-hero-title-em">Destinations</em>
       </h2>
       <p class="vv-destinations-subtitle">
-        Hand-picked markets across Europe and the Gulf, each with a strong
-        rental yield profile and trusted legal framework.
+        Hand-picked destinations across Europe and the Gulf, each with a trusted
+        legal framework and a beautiful quality of life.
       </p>
     </div>
 
@@ -319,11 +321,11 @@ TOP DESTINATIONS - full-width section directly under the hero.
       {% endfor %}
 
       {# Editorial CTA tile — fills the trailing slot and converts empty grid space into a clear navigation cue. #}
-      <a href="{% url 'web:markets' %}" class="vv-dest vv-dest--cta group" aria-label="Explore all markets">
+      <a href="{% url 'web:marketplace' %}" class="vv-dest vv-dest--cta group" aria-label="Explore all destinations">
         <div class="vv-dest-cta-inner">
           <span class="vv-dest-cta-eyebrow">Curated</span>
           <span class="vv-dest-cta-title">
-            Explore<br/>all markets
+            Explore<br/>all destinations
           </span>
           <span class="vv-dest-cta-arrow" aria-hidden="true">
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.25">
@@ -351,15 +353,15 @@ hands off straight into a tangible, click-through deal preview.
     <div class="rounded-[2rem] border border-ink-200 bg-white p-5 sm:p-7 shadow-card">
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-7">
       <div>
-        <span class="pill bg-amber-50 text-amber-700 border border-amber-200">Featured deals</span>
+        <span class="pill bg-amber-50 text-amber-700 border border-amber-200">Featured homes</span>
         <h2 class="mt-3 font-display text-3xl sm:text-4xl font-black tracking-tight text-ink-900">
-          Handpicked opportunities worth a closer look.
+          Handpicked homes worth a closer look.
         </h2>
         <p class="section-subtitle">
-          Editorially highlighted listings with strong investment signals and clearer underwriting data.
+          Editorially highlighted listings with complete details and verified photography.
         </p>
       </div>
-      <a href="{% url 'web:marketplace' %}?ordering=-metric__investment_score"
+      <a href="{% url 'web:marketplace' %}"
          class="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-900 transition-colors">
         View all listings
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
@@ -380,8 +382,10 @@ hands off straight into a tangible, click-through deal preview.
 ═══════════════════════════════════════════════════════════════════
 LITE SIMULATOR — interactive underwriting widget, wired to the real
 simulator service over HTMX. Drag sliders → numbers update live.
+Hidden when investment features are disabled (ads-safe mode).
 ═══════════════════════════════════════════════════════════════════
 {% endcomment %}
+{% if SHOW_INVESTMENT_FEATURES %}
 <section class="bg-white py-16 sm:py-20">
   <div class="mx-auto max-w-6xl px-4 sm:px-6">
     <div class="overflow-hidden rounded-[2rem] border border-ink-200 bg-gradient-to-br from-ink-50 to-white shadow-card reveal">
@@ -467,6 +471,7 @@ simulator service over HTMX. Drag sliders → numbers update live.
     </div>
   </div>
 </section>
+{% endif %}
 
 
 {% if hero_gallery %}
@@ -477,21 +482,17 @@ simulator service over HTMX. Drag sliders → numbers update live.
       <div>
         <div class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-emerald-700">
           <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          AI-ranked brief
+          Editor's picks
         </div>
         <h2 class="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-ink-900">
-          A shortlist you can act on.
+          A shortlist worth your weekend.
         </h2>
         <p class="mt-1.5 text-sm text-ink-500 max-w-lg">
-          Every recommendation brings the investment score, income range, risk level and market context.
+          One standout home from each destination — complete details, verified photos and local context.
         </p>
       </div>
       <div class="flex shrink-0 items-center gap-4">
-        <div class="rounded-2xl border border-ink-200 bg-ink-50 px-5 py-3 text-right">
-          <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400">Avg score</div>
-          <div class="text-3xl font-black text-ink-900 tabular-nums leading-none mt-1">{{ stats.avg_score }}</div>
-        </div>
-        <a href="{% url 'web:marketplace' %}?ordering=-metric__investment_score"
+        <a href="{% url 'web:marketplace' %}"
            class="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-brand-600 hover:bg-brand-500 text-white px-5 py-2.5 text-sm font-bold shadow-md shadow-brand-500/30 transition-all hover:-translate-y-0.5">
           View all
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
@@ -526,8 +527,8 @@ simulator service over HTMX. Drag sliders → numbers update live.
                  class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"/>
             <div class="absolute inset-0 bg-gradient-to-t from-ink-900/80 via-ink-900/10 to-transparent"></div>
 
-            {# AI Score badge with progress ring #}
-            {% if h.metric %}
+            {% if SHOW_INVESTMENT_FEATURES and h.metric %}
+              {# AI Score badge with progress ring #}
               <div class="absolute left-4 top-4 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-white shadow-xl ring-1 ring-black/5">
                 <svg class="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 44 44" aria-hidden="true">
                   <circle cx="22" cy="22" r="20" fill="none" stroke="#e2e8f0" stroke-width="3"/>
@@ -544,7 +545,7 @@ simulator service over HTMX. Drag sliders → numbers update live.
             {# Hover reveal — quick CTA over the photo #}
             <div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-ink-900/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
               <span class="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-4 py-2 text-xs font-bold text-ink-900 shadow-lg translate-y-2 transition-transform duration-300 group-hover:translate-y-0">
-                View investment
+                View property
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
               </span>
             </div>
@@ -567,13 +568,13 @@ simulator service over HTMX. Drag sliders → numbers update live.
               <div class="mt-0.5 text-sm font-black text-ink-900 tabular-nums">{{ h.price|money:h.currency }}</div>
             </div>
             <div class="px-4 py-3.5">
-              <div class="text-[9px] font-bold uppercase tracking-widest text-ink-400">Yield</div>
-              <div class="mt-0.5 text-sm font-black text-emerald-600 tabular-nums">
-                {% if h.metric %}{{ h.metric.rental_yield|pct }}{% else %}—{% endif %}
+              <div class="text-[9px] font-bold uppercase tracking-widest text-ink-400">{% if SHOW_INVESTMENT_FEATURES %}Yield{% else %}Beds{% endif %}</div>
+              <div class="mt-0.5 text-sm font-black {% if SHOW_INVESTMENT_FEATURES %}text-emerald-600{% else %}text-ink-900{% endif %} tabular-nums">
+                {% if SHOW_INVESTMENT_FEATURES %}{% if h.metric %}{{ h.metric.rental_yield|pct }}{% else %}—{% endif %}{% else %}{{ h.bedrooms|default:'—' }}{% endif %}
               </div>
             </div>
             <div class="px-4 py-3.5">
-              <div class="text-[9px] font-bold uppercase tracking-widest text-ink-400">Market</div>
+              <div class="text-[9px] font-bold uppercase tracking-widest text-ink-400">Country</div>
               <div class="mt-0.5 text-sm font-black text-ink-900">{{ h.country.code }}</div>
             </div>
           </div>
@@ -582,7 +583,7 @@ simulator service over HTMX. Drag sliders → numbers update live.
     </div>
 
     <div class="mt-8 flex justify-center sm:hidden">
-      <a href="{% url 'web:marketplace' %}?ordering=-metric__investment_score"
+      <a href="{% url 'web:marketplace' %}"
          class="inline-flex items-center gap-1.5 rounded-full bg-brand-600 hover:bg-brand-500 text-white px-6 py-2.5 text-sm font-bold shadow-md shadow-brand-500/30 transition-all">
         View all listings
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
@@ -609,13 +610,13 @@ START HERE — quick user paths
         </h2>
       </div>
       <p class="text-base text-ink-600 leading-relaxed max-w-2xl lg:ml-auto">
-        Vivalty works like a guided dashboard: start with listings, validate the numbers,
-        compare candidates, or ask the investor desk to prepare a shortlist.
+        Vivalty works like a guided dashboard: start with listings, explore destinations,
+        save your favourites, or ask our team to prepare a shortlist.
       </p>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
-      <a href="{% url 'web:marketplace' %}?ordering=-metric__investment_score"
+      <a href="{% url 'web:marketplace' %}"
          class="landing-path-card group">
         <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-brand-200/45 blur-2xl transition-transform group-hover:scale-125"></div>
         <div class="absolute left-6 top-6 text-[11px] font-black uppercase tracking-[0.18em] text-brand-600/70">01</div>
@@ -625,9 +626,9 @@ START HERE — quick user paths
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
           </div>
-          <h3 class="mt-7 text-lg font-extrabold text-ink-900">Browse best deals</h3>
+          <h3 class="mt-7 text-lg font-extrabold text-ink-900">Browse homes</h3>
           <p class="mt-2 text-sm text-ink-600 leading-relaxed">
-            Start with the highest AI-scored listings across every market.
+            Start with the newest listings across every destination we cover.
           </p>
           <div class="mt-4 inline-flex rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-bold text-brand-700">Best for discovery</div>
           <div class="mt-5 inline-flex items-center gap-1 text-sm font-bold text-brand-700">
@@ -637,51 +638,51 @@ START HERE — quick user paths
         </div>
       </a>
 
-      <a href="{% url 'web:simulator' %}"
+      <a href="{% url 'web:marketplace' %}?type=apartment"
          class="landing-path-card group">
         <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-sky-200/50 blur-2xl transition-transform group-hover:scale-125"></div>
         <div class="absolute left-6 top-6 text-[11px] font-black uppercase tracking-[0.18em] text-sky-600/70">02</div>
         <div class="relative">
           <div class="ml-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-lg shadow-sky-600/20">
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M9 17V9m4 8V5m4 12v-6"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
           </div>
-          <h3 class="mt-7 text-lg font-extrabold text-ink-900">Run the numbers</h3>
+          <h3 class="mt-7 text-lg font-extrabold text-ink-900">Find a rental</h3>
           <p class="mt-2 text-sm text-ink-600 leading-relaxed">
-            Model mortgage, fees, cashflow and appreciation before you enquire.
+            City apartments, seasonal villas and family homes for long lets.
           </p>
-          <div class="mt-4 inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-bold text-sky-700">Best for underwriting</div>
+          <div class="mt-4 inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-bold text-sky-700">Best for renters</div>
           <div class="mt-5 inline-flex items-center gap-1 text-sm font-bold text-sky-700">
-            Open simulator
+            Browse rentals
             <svg class="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
           </div>
         </div>
       </a>
 
-      <a href="{% url 'web:compare' %}"
+      <a href="{% url 'web:become_owner' %}"
          class="landing-path-card group">
         <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-amber-200/50 blur-2xl transition-transform group-hover:scale-125"></div>
         <div class="absolute left-6 top-6 text-[11px] font-black uppercase tracking-[0.18em] text-amber-600/70">03</div>
         <div class="relative">
           <div class="ml-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-500/20">
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7v10m0 0l4-4m-4 4l-4-4m12-6v10m0 0l4-4m-4 4l-4-4"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1V10"/>
             </svg>
           </div>
-          <h3 class="mt-7 text-lg font-extrabold text-ink-900">Compare options</h3>
+          <h3 class="mt-7 text-lg font-extrabold text-ink-900">Sell your property</h3>
           <p class="mt-2 text-sm text-ink-600 leading-relaxed">
-            Place properties side-by-side with score, yield and cashflow.
+            List your home with professional presentation and reach international buyers.
           </p>
-          <div class="mt-4 inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">Best for decisions</div>
+          <div class="mt-4 inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">Best for owners</div>
           <div class="mt-5 inline-flex items-center gap-1 text-sm font-bold text-amber-700">
-            Compare listings
+            Start listing
             <svg class="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
           </div>
         </div>
       </a>
 
-      <a href="#investor-desk"
+      <a href="#advisory-desk"
          class="group relative overflow-hidden rounded-3xl border border-ink-800 bg-gradient-to-br from-ink-900 via-slate-800 to-brand-900 p-6 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
         <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-emerald-400/20 blur-2xl transition-transform group-hover:scale-125"></div>
         <div class="absolute left-6 top-6 text-[11px] font-black uppercase tracking-[0.18em] text-emerald-300/70">04</div>
@@ -693,7 +694,7 @@ START HERE — quick user paths
           </div>
           <h3 class="mt-7 text-lg font-extrabold text-white">Talk to an expert</h3>
           <p class="mt-2 text-sm text-white/65 leading-relaxed">
-            Get a curated shortlist from the Vivalty investor desk.
+            Get a curated shortlist from the Vivalty advisory team.
           </p>
           <div class="mt-4 inline-flex rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-emerald-200 ring-1 ring-white/10">Best for assisted search</div>
           <div class="mt-5 inline-flex items-center gap-1 text-sm font-bold text-emerald-300">
@@ -715,12 +716,12 @@ WHY VIVALTY — three clearer benefits
 <section class="bg-ink-50 py-16 sm:py-20">
   <div class="mx-auto max-w-7xl px-4 sm:px-6">
     <div class="text-center mb-12 reveal">
-      <span class="pill bg-white border border-ink-200 text-ink-600 shadow-sm">Why investors use Vivalty</span>
+      <span class="pill bg-white border border-ink-200 text-ink-600 shadow-sm">Why Vivalty</span>
       <h2 class="mt-4 font-display text-3xl sm:text-4xl font-black tracking-tight text-ink-900">
-        A calmer way to evaluate international property.
+        A calmer way to find international property.
       </h2>
       <p class="section-subtitle max-w-2xl mx-auto">
-        Beautiful listings are only useful when the numbers are clear. Vivalty adds the investment layer on top.
+        Beautiful listings, complete information and real human support — wherever you're searching.
       </p>
     </div>
 
@@ -728,16 +729,16 @@ WHY VIVALTY — three clearer benefits
       <div class="card p-7 group hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
         <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-700 ring-1 ring-brand-200/60">
           <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 5.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
           </svg>
         </div>
-        <h3 class="mt-5 text-lg font-extrabold text-ink-900">Explainable AI score, not a black box.</h3>
+        <h3 class="mt-5 text-lg font-extrabold text-ink-900">Verified, complete listings.</h3>
         <p class="mt-2 text-sm text-ink-600 leading-relaxed">
-          Every 0–100 score breaks down into six factors — yield, demand, trend, value-for-money, verification and risk —
-          with the exact weights and source data shown alongside each listing.
+          Every listing carries full specifications, professional photography, the listing agency
+          and a reference number — so you always know exactly what you're looking at.
         </p>
-        <a href="{% url 'web:methodology' %}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:text-brand-900">
-          Read the methodology
+        <a href="{% url 'web:marketplace' %}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:text-brand-900">
+          Browse listings
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </a>
       </div>
@@ -745,16 +746,17 @@ WHY VIVALTY — three clearer benefits
       <div class="card p-7 group hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
         <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-700 ring-1 ring-sky-200/60">
           <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M9 17V9m4 8V5m4 12v-6"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
         </div>
-        <h3 class="mt-5 text-lg font-extrabold text-ink-900">Underwrite each deal in 60 seconds.</h3>
+        <h3 class="mt-5 text-lg font-extrabold text-ink-900">Local context for every home.</h3>
         <p class="mt-2 text-sm text-ink-600 leading-relaxed">
-          The investment simulator models mortgage scenarios, country-specific taxes and fees,
-          monthly cash-flow, cap rate, cash-on-cash return and a 10-year appreciation projection.
+          City and neighbourhood guides accompany each listing, so you understand the area,
+          amenities and lifestyle before you enquire.
         </p>
-        <a href="{% url 'web:simulator' %}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-sky-700 hover:text-sky-900">
-          Run a scenario
+        <a href="#advisory-desk" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-sky-700 hover:text-sky-900">
+          Ask our team
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </a>
       </div>
@@ -766,13 +768,13 @@ WHY VIVALTY — three clearer benefits
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/>
           </svg>
         </div>
-        <h3 class="mt-5 text-lg font-extrabold text-ink-900">Diversify across 7 vetted markets.</h3>
+        <h3 class="mt-5 text-lg font-extrabold text-ink-900">7 destinations, one place.</h3>
         <p class="mt-2 text-sm text-ink-600 leading-relaxed">
           We cover France, the UK, Spain, Switzerland, Italy, the UAE and Portugal —
-          curated for liquidity, transparency and an established investor protection regime.
+          curated for transparency, established legal frameworks and quality of life.
         </p>
-        <a href="{% url 'web:markets' %}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-amber-700 hover:text-amber-900">
-          See market intelligence
+        <a href="{% url 'web:marketplace' %}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-amber-700 hover:text-amber-900">
+          Explore destinations
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </a>
       </div>
@@ -791,14 +793,14 @@ MARKETS — approachable exploration grid
 
     <div class="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end mb-10 reveal">
       <div>
-        <span class="pill bg-ink-50 border border-ink-200 text-ink-600 shadow-sm">Explore markets</span>
+        <span class="pill bg-ink-50 border border-ink-200 text-ink-600 shadow-sm">Explore destinations</span>
         <h2 class="mt-4 font-display text-3xl sm:text-4xl font-black tracking-tight text-ink-900">
-          Start with the market that matches your strategy.
+          Start with the destination that feels like home.
         </h2>
       </div>
       <p class="section-subtitle max-w-xl mx-auto">
-        From income-focused Portugal and UAE opportunities to lower-risk Swiss capital preservation,
-        browse markets through the lens of returns, risk and rental demand.
+        From sunny Lisbon apartments and Dubai skyline residences to Swiss alpine chalets,
+        browse each country's homes, cities and neighbourhoods.
       </p>
     </div>
 
@@ -808,28 +810,16 @@ MARKETS — approachable exploration grid
          class="country-card group !rounded-3xl !p-5">
         <div class="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-brand-500/10 via-white to-sky-500/10"></div>
         <div class="relative z-10">
-          <div class="flex items-center justify-between">
-            <div class="text-5xl mb-4 transition-transform duration-200 group-hover:scale-110 origin-left">{{ c.flag_emoji }}</div>
-            {% if c.avg_score %}
-              <div class="text-right">
-                <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400">Avg score</div>
-                <div class="font-display text-lg font-black text-ink-900 tabular-nums">{{ c.avg_score|floatformat:0 }}</div>
-              </div>
-            {% endif %}
-          </div>
+          <div class="text-5xl mb-4 transition-transform duration-200 group-hover:scale-110 origin-left">{{ c.flag_emoji }}</div>
           <div class="font-bold text-base text-ink-900 group-hover:text-brand-700 transition-colors">{{ c.name }}</div>
           <div class="text-xs text-ink-400 mt-0.5">{{ c.currency }} · {{ c.cities_count }} {{ c.cities_count|pluralize:"city,cities" }}</div>
           <div class="mt-4 flex items-end justify-between">
-            <div>
-              <div class="text-[10px] font-semibold uppercase tracking-widest text-ink-400">ROI range</div>
-              <div class="text-sm font-extrabold text-brand-600 mt-0.5">{{ c.base_roi_min }}–{{ c.base_roi_max }}%</div>
+            <div class="text-[11px] font-bold uppercase tracking-widest text-ink-400 group-hover:text-brand-600 transition-colors">
+              View listings
             </div>
             <div class="flex h-7 w-7 items-center justify-center rounded-full bg-ink-100 group-hover:bg-brand-100 group-hover:text-brand-600 text-ink-400 transition-all">
               <svg class="h-3.5 w-3.5 -translate-x-px group-hover:translate-x-0 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
             </div>
-          </div>
-          <div class="mt-4 text-[11px] font-bold uppercase tracking-widest text-ink-400 group-hover:text-brand-600 transition-colors">
-            View opportunities
           </div>
         </div>
       </a>
@@ -837,8 +827,8 @@ MARKETS — approachable exploration grid
     </div>
 
     <div class="mt-10 text-center reveal">
-      <a href="{% url 'web:markets' %}" class="btn-secondary px-6 py-2.5">
-        View full market intelligence →
+      <a href="{% url 'web:marketplace' %}" class="btn-secondary px-6 py-2.5">
+        Browse all listings →
       </a>
     </div>
   </div>
@@ -858,13 +848,13 @@ NEWSLETTER — inline market-intelligence capture (HTMX, real persistence)
         <div>
           <span class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-300">
             <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            Market intelligence
+            The Vivalty digest
           </span>
           <h2 class="mt-4 font-display text-2xl sm:text-3xl font-black tracking-tight text-white">
-            Yields, hot cities &amp; AI-scored deals — monthly.
+            New homes &amp; destination guides — monthly.
           </h2>
           <p class="mt-2 text-sm text-white/55 max-w-md">
-            Join 1,200+ investors getting our analyst-grade roundup. No spam, unsubscribe anytime.
+            Join 1,200+ subscribers getting our monthly roundup. No spam, unsubscribe anytime.
           </p>
         </div>
 
@@ -891,17 +881,17 @@ NEWSLETTER — inline market-intelligence capture (HTMX, real persistence)
 
 {% comment %}
 ═══════════════════════════════════════════════════════════════════
-INVESTOR RELATIONS — institutional capture form
+ADVISORY DESK — assisted-search capture form
 ═══════════════════════════════════════════════════════════════════
 {% endcomment %}
-<section id="investor-desk" class="bg-ink-50 py-20">
+<section id="advisory-desk" class="bg-ink-50 py-20">
   <div class="mx-auto max-w-6xl px-4 sm:px-6 grid lg:grid-cols-[1.2fr_1fr] gap-10 items-start">
     <div>
-      <span class="pill bg-white border border-ink-200 text-ink-600 shadow-sm">Investor relations</span>
-      <h2 class="mt-4 section-title">Speak to the Vivalty investor desk.</h2>
+      <span class="pill bg-white border border-ink-200 text-ink-600 shadow-sm">Advisory desk</span>
+      <h2 class="mt-4 section-title">Speak to the Vivalty advisory team.</h2>
       <p class="section-subtitle max-w-xl">
-        Whether you're allocating €250k or €25m, our desk will map the right markets, vehicles and tax wrappers
-        to your strategy — and prepare a side-by-side shortlist before any call.
+        Tell us what you're looking for — a city apartment, a coastal villa or a family home —
+        and our team will prepare a curated shortlist of listings before any call.
       </p>
 
       <div class="mt-6 grid sm:grid-cols-2 gap-3">
@@ -911,11 +901,11 @@ INVESTOR RELATIONS — institutional capture form
         </div>
         <div class="trust-badge w-full">
           <svg class="h-3.5 w-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 5.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          Editorially-vetted opportunities
+          Editorially-vetted listings
         </div>
         <div class="trust-badge w-full">
           <svg class="h-3.5 w-3.5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/></svg>
-          Family-office &amp; institutional desk
+          Dedicated multilingual team
         </div>
         <div class="trust-badge w-full">
           <svg class="h-3.5 w-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -946,7 +936,7 @@ INVESTOR RELATIONS — institutional capture form
           {{ investor_form.phone }}
         </div>
         <div>
-          <label class="label">Investor profile</label>
+          <label class="label">I am a…</label>
           {{ investor_form.profile }}
         </div>
       </div>
@@ -961,19 +951,19 @@ INVESTOR RELATIONS — institutional capture form
         </div>
       </div>
       <div>
-        <label class="label">Markets you're interested in</label>
+        <label class="label">Destinations you're interested in</label>
         {{ investor_form.markets_of_interest }}
       </div>
       <div>
-        <label class="label">Goals &amp; constraints (optional)</label>
+        <label class="label">What you're looking for (optional)</label>
         {{ investor_form.message }}
       </div>
       <button type="submit" class="btn-primary w-full">
-        Speak to the investor desk
+        Send to our team
       </button>
       <p class="text-[11px] text-ink-500 text-center">
-        We never share data with third parties. Vivalty is a marketplace and information service —
-        we are not a regulated investment advisor.
+        We never share data with third parties. Vivalty is a property listing and
+        information platform — we are not an estate agent or financial advisor.
       </p>
     </form>
   </div>
@@ -989,29 +979,29 @@ HOW IT WORKS — 3 institutional steps
   <div class="mx-auto max-w-7xl px-4 sm:px-6">
     <div class="text-center mb-12 reveal">
       <span class="pill bg-ink-50 border border-ink-200 text-ink-600 shadow-sm">How it works</span>
-      <h2 class="mt-4 section-title">From shortlist to underwriting in three steps.</h2>
-      <p class="section-subtitle max-w-lg mx-auto">No spreadsheets. No guesswork. Every figure traces back to a documented input.</p>
+      <h2 class="mt-4 section-title">From search to keys in three steps.</h2>
+      <p class="section-subtitle max-w-lg mx-auto">Clear listings, helpful guides and direct contact with sellers and agencies.</p>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 stagger-children">
       <div class="card p-7 relative overflow-hidden">
         <div class="step-number">1</div>
         <div class="relative z-10">
-          <div class="step-icon">🎯</div>
-          <div class="font-bold text-ink-900 text-lg mt-4">Shortlist by score</div>
+          <div class="step-icon">🔍</div>
+          <div class="font-bold text-ink-900 text-lg mt-4">Search &amp; filter</div>
           <p class="mt-2 text-sm text-ink-600 leading-relaxed">
-            Filter listings by AI score, ROI, yield, country and price. Each card discloses its confidence level so you know
-            which numbers are verified and which are estimates.
+            Filter listings by country, city, property type and price. Every card shows
+            complete specifications, photos and the listing agency.
           </p>
         </div>
       </div>
       <div class="card p-7 relative overflow-hidden">
         <div class="step-number">2</div>
         <div class="relative z-10">
-          <div class="step-icon">📊</div>
-          <div class="font-bold text-ink-900 text-lg mt-4">Underwrite with the simulator</div>
+          <div class="step-icon">❤️</div>
+          <div class="font-bold text-ink-900 text-lg mt-4">Save your favourites</div>
           <p class="mt-2 text-sm text-ink-600 leading-relaxed">
-            Model the deal in 60 seconds: down payment, mortgage terms, country-specific taxes &amp; fees,
-            monthly cash-flow and a 10-year projection of equity build-up.
+            Build a shortlist of the homes you love and revisit them anytime from your
+            dashboard — on any device.
           </p>
         </div>
       </div>
@@ -1019,10 +1009,10 @@ HOW IT WORKS — 3 institutional steps
         <div class="step-number">3</div>
         <div class="relative z-10">
           <div class="step-icon">🤝</div>
-          <div class="font-bold text-ink-900 text-lg mt-4">Compare and contact</div>
+          <div class="font-bold text-ink-900 text-lg mt-4">Contact &amp; visit</div>
           <p class="mt-2 text-sm text-ink-600 leading-relaxed">
-            Place 2–4 listings side-by-side. Export a one-page investment summary or contact the listing agency
-            directly through Vivalty's protected channel.
+            Contact the listing agency directly through Vivalty's protected channel
+            to arrange viewings and ask questions.
           </p>
         </div>
       </div>
@@ -1043,16 +1033,16 @@ AI ADVISOR CTA
   <div class="relative z-10 mx-auto max-w-3xl px-4 sm:px-6 text-center">
     <div class="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-4 py-1.5 text-sm text-brand-300 mb-6">
       <span class="h-1.5 w-1.5 rounded-full bg-brand-400 animate-pulse"></span>
-      Conversational investor assistant · grounded in our database
+      Conversational property assistant · grounded in our listings
     </div>
     <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.1]">
-      Not sure which market fits your strategy?<br/>
+      Not sure which destination fits you?<br/>
       <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-emerald-300">
-        Ask the Vivalty AI advisor.
+        Ask the Vivalty assistant.
       </span>
     </h2>
     <p class="mt-5 text-lg text-white/55 max-w-xl mx-auto">
-      Compare yields, model rental scenarios, screen by risk profile — never with hallucinated numbers,
+      Ask about neighbourhoods, prices and lifestyle in any of our 7 destinations —
       always with the source listings cited inline.
     </p>
     <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
@@ -1060,9 +1050,9 @@ AI ADVISOR CTA
          class="btn bg-brand-600 text-white hover:bg-brand-500 focus:ring-brand-500 px-8 py-3.5 text-base font-semibold rounded-xl shadow-lg shadow-brand-500/25">
         Start a conversation →
       </a>
-      <a href="{% url 'web:methodology' %}"
+      <a href="{% url 'web:marketplace' %}"
          class="btn border border-white/20 bg-white/5 text-white hover:bg-white/10 px-8 py-3.5 text-base rounded-xl">
-        See methodology
+        Browse listings
       </a>
     </div>
   </div>

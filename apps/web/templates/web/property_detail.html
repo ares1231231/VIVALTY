@@ -86,7 +86,7 @@
           {% for t in p.tags.all %}
             <span class="pill bg-{{ t.color }}-50 text-{{ t.color }}-700">{{ t.name }}</span>
           {% endfor %}
-          {% if p.metric %}{% confidence_pill p.metric %}{% endif %}
+          {% if SHOW_INVESTMENT_FEATURES and p.metric %}{% confidence_pill p.metric %}{% endif %}
         </div>
       </div>
       <div class="text-right shrink-0">
@@ -101,8 +101,8 @@
       </div>
     </header>
 
-    {# ── Investment score ring + AI explanation panel ─────────────── #}
-    {% if p.metric %}
+    {# ── Investment score ring + AI explanation panel (ads-safe gated) ── #}
+    {% if SHOW_INVESTMENT_FEATURES and p.metric %}
     <section class="rounded-3xl border border-ink-200 bg-radial-brand p-6 shadow-card">
       <div class="grid lg:grid-cols-[auto_1fr] gap-6 items-center">
         <div class="flex flex-col items-center gap-2">
@@ -210,8 +210,8 @@
     </section>
     {% endif %}
 
-    {# ── Investment simulator inline widget ─────────────────────── #}
-    {% if simulation %}
+    {# ── Investment simulator inline widget (ads-safe gated) ────── #}
+    {% if SHOW_INVESTMENT_FEATURES and simulation %}
     <section class="card p-5">
       <div class="flex items-center justify-between gap-3 mb-3">
         <h2 class="font-extrabold text-ink-900 flex items-center gap-2">
@@ -271,9 +271,10 @@
     <section class="card p-6">
       <h2 class="font-extrabold text-ink-900 mb-4 flex items-center gap-2">
         <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-50 text-sky-700">📍</span>
-        Local market — {{ p.city.name }}, {{ p.country.name }}
+        About the area — {{ p.city.name }}, {{ p.country.name }}
       </h2>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {% if SHOW_INVESTMENT_FEATURES %}
         <div class="metric-tile">
           <div class="stat-label">City score</div>
           <div class="font-display text-xl font-black text-ink-900 tabular-nums">{{ city_insight.investment_score|default:'—' }}</div>
@@ -282,6 +283,7 @@
           <div class="stat-label">Avg yield</div>
           <div class="font-display text-xl font-black text-sky-700 tabular-nums">{% if city_insight.avg_rental_yield %}{{ city_insight.avg_rental_yield|floatformat:1 }}%{% else %}—{% endif %}</div>
         </div>
+        {% endif %}
         <div class="metric-tile">
           <div class="stat-label">€/m² benchmark</div>
           <div class="font-display text-xl font-black text-ink-900 tabular-nums">{% if city_insight.avg_price_sqm %}{{ city_insight.avg_price_sqm|floatformat:0 }}{% else %}—{% endif %}</div>
@@ -291,11 +293,13 @@
           <div class="font-display text-xl font-black text-ink-900 tabular-nums">{% if city_insight.population %}{{ city_insight.population|floatformat:0 }}{% else %}—{% endif %}</div>
         </div>
       </div>
+      {% if SHOW_INVESTMENT_FEATURES %}
       <div class="mt-4 grid sm:grid-cols-3 gap-2">
         <span class="pill capitalize {{ city_insight.demand|risk_color }}">Demand: {{ city_insight.demand|default:'—' }}</span>
         <span class="pill capitalize {{ city_insight.trend|trend_color }}">Trend: {{ city_insight.trend|default:'—' }}</span>
         <span class="pill capitalize {{ city_insight.risk|risk_color }}">Risk: {{ city_insight.risk|default:'—' }}</span>
       </div>
+      {% endif %}
       {% if city_insight.summary %}
         <p class="mt-4 text-sm text-ink-700 leading-relaxed">{{ city_insight.summary }}</p>
       {% endif %}
@@ -369,11 +373,17 @@
             <div class="flex-1 min-w-0">
               <div class="text-sm font-semibold text-ink-900 truncate">{{ s.title }}</div>
               <div class="text-xs text-ink-500 truncate">{{ s.city.name }} · {{ s.price|money:s.currency }}</div>
+              {% if SHOW_INVESTMENT_FEATURES %}
               <div class="mt-1 flex items-center gap-1.5">
                 <div class="text-xs font-bold text-brand-700">Score {{ s.metric.investment_score|default:'—' }}</div>
                 <span class="h-1 w-1 rounded-full bg-ink-300"></span>
                 <span class="text-[10px] {{ s.metric.investment_score|score_color }} px-1.5 py-0.5 rounded-full">{{ s.metric.investment_score|score_label }}</span>
               </div>
+              {% else %}
+              <div class="mt-1 text-xs text-ink-500">
+                {% if s.bedrooms %}{{ s.bedrooms }} bed{% endif %}{% if s.area_sqm %} · {{ s.area_sqm|floatformat:0 }} m²{% endif %}
+              </div>
+              {% endif %}
             </div>
           </a>
         {% endfor %}
@@ -391,10 +401,11 @@
     {% else %}
       <a href="{% url 'web:login' %}?next={% url 'web:property_detail' p.id %}"
          class="btn-secondary w-full justify-center">
-        Sign in to add to watchlist
+        Sign in to save this home
       </a>
     {% endif %}
 
+    {% if SHOW_INVESTMENT_FEATURES %}
     {# Quick actions #}
     <div class="grid grid-cols-2 gap-2">
       <a href="{% url 'web:simulator_property' p.id %}"
@@ -408,6 +419,7 @@
         Add to compare
       </a>
     </div>
+    {% endif %}
 
     {# Listing agency / contact card #}
     <div class="card p-5">
@@ -439,7 +451,7 @@
         <div class="flex items-center gap-2">
           <div class="flex h-7 w-7 items-center justify-center rounded-full bg-white text-brand-700 text-xs font-black">AI</div>
           <div>
-            <div class="text-sm font-semibold text-white">Investment AI</div>
+            <div class="text-sm font-semibold text-white">Property assistant</div>
             <div class="text-[10px] text-brand-100">Ask anything about this listing</div>
           </div>
           <span class="ml-auto flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>

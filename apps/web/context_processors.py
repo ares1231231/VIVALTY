@@ -7,74 +7,69 @@ from django.conf import settings
 # Fallback copy when a page does not override `seo_head`.
 _PAGE_SEO: dict[str, tuple[str, str]] = {
     "home": (
-        "Vivalty — High-performing international real estate, with confidence",
-        "Discover AI-scored property across France, Portugal, Spain, Italy, Switzerland, UAE and the UK. "
-        "Buy or rent with transparent investment scores, yield data and an embedded AI advisor.",
+        "Vivalty — International real estate, beautifully curated",
+        "Discover apartments, villas and houses across France, Portugal, Spain, Italy, Switzerland, "
+        "the UAE and the UK. Buy or rent with verified listings and local destination guides.",
     ),
     "marketplace": (
         "Property marketplace · Vivalty",
-        "Browse AI-scored international property listings. Filter by country, type and budget across "
-        "7 vetted markets with investment scores, rental yields and market intelligence.",
+        "Browse international property listings. Filter by country, type and budget across "
+        "7 destinations with verified details, photos and direct agency contact.",
     ),
     "markets": (
-        "Global real estate markets · Vivalty",
-        "Compare country baselines, rental-yield benchmarks and top-scored cities across Vivalty's "
-        "7 international property markets.",
+        "Destinations · Vivalty",
+        "Explore Vivalty's 7 international property destinations — from Lisbon and Paris to "
+        "Dubai and London.",
     ),
     "methodology": (
-        "How our AI investment score works · Vivalty",
-        "Transparent methodology behind Vivalty's 0–100 property score: yield, demand, risk, "
-        "location and data sources explained.",
+        "About our listings · Vivalty",
+        "How Vivalty curates, verifies and presents international property listings.",
     ),
     "simulator": (
-        "Investment simulator · Vivalty",
-        "Underwrite any international property in seconds. Model gross yield, ROI, cash flow and "
-        "multi-year projections with country-specific assumptions.",
+        "Property tools · Vivalty",
+        "Vivalty property tools and resources for international buyers.",
     ),
     "simulator_property": (
-        "Property investment simulator · Vivalty",
-        "Run a full investment simulation on a Vivalty listing with editable price, yield and "
-        "holding assumptions.",
+        "Property tools · Vivalty",
+        "Vivalty property tools and resources for international buyers.",
     ),
     "compare": (
-        "Compare property investments · Vivalty",
-        "Side-by-side comparison of international listings — price, AI score, yield, ROI and "
-        "key metrics in one view.",
+        "Compare properties · Vivalty",
+        "Side-by-side comparison of international property listings.",
     ),
     "become_owner": (
         "List your property on Vivalty · Vivalty",
-        "Reach qualified international investors. List residential or commercial property with "
-        "AI scoring, professional presentation and lead capture.",
+        "Reach international buyers and renters. List residential or commercial property with "
+        "professional presentation and enquiry capture.",
     ),
     "property_detail": (
         "Property listing · Vivalty",
-        "International property listing on Vivalty with AI investment score, yield analysis and "
-        "market context.",
+        "International property listing on Vivalty with full details, photos and location guides.",
     ),
     "login": (
         "Sign in · Vivalty",
-        "Sign in to your Vivalty investor account.",
+        "Sign in to your Vivalty account.",
     ),
     "register": (
         "Create account · Vivalty",
-        "Create a free Vivalty account to save favorites, run simulations and contact sellers.",
+        "Create a free Vivalty account to save favorites and contact sellers.",
     ),
     "dashboard": (
-        "Investor dashboard · Vivalty",
-        "Your Vivalty dashboard — saved properties, leads and listing tools.",
+        "Your dashboard · Vivalty",
+        "Your Vivalty dashboard — saved properties and listing tools.",
     ),
     "chat": (
-        "AI investment advisor · Vivalty",
-        "Chat with the Vivalty AI advisor — grounded in live listing and market data.",
+        "AI property assistant · Vivalty",
+        "Chat with the Vivalty assistant about destinations and listings.",
     ),
     "privacy": (
         "Privacy Policy · Vivalty",
         "How Vivalty collects, uses and protects your personal data when you browse listings, "
-        "create an account or contact our investor desk.",
+        "create an account or contact our team.",
     ),
     "terms": (
         "Terms of Service · Vivalty",
-        "Terms governing use of the Vivalty property marketplace, research tools and AI advisor.",
+        "Terms governing use of the Vivalty property marketplace and services.",
     ),
     "cookies": (
         "Cookie Policy · Vivalty",
@@ -86,14 +81,14 @@ _PAGE_SEO: dict[str, tuple[str, str]] = {
     ),
     "contact": (
         "Contact · Vivalty",
-        "Contact the Vivalty team for investor enquiries, listing support and general questions.",
+        "Contact the Vivalty team for buyer enquiries, listing support and general questions.",
     ),
 }
 
-_DEFAULT_TITLE = "Vivalty — AI-powered global real estate investing"
+_DEFAULT_TITLE = "Vivalty — International real estate marketplace"
 _DEFAULT_DESCRIPTION = (
-    "Discover, analyse and invest in international real estate across France, UK, Spain, "
-    "Switzerland, Italy, UAE and Portugal — guided by an embedded AI investment advisor."
+    "Discover apartments, villas and homes for sale or rent across France, the UK, Spain, "
+    "Switzerland, Italy, the UAE and Portugal."
 )
 
 
@@ -111,6 +106,7 @@ def seo(request):
 
     return {
         "SITE_URL": site_url,
+        "SHOW_INVESTMENT_FEATURES": settings.SHOW_INVESTMENT_FEATURES,
         "SEO_PAGE_TITLE": page_title,
         "SEO_PAGE_DESCRIPTION": page_description,
         "SEO_CANONICAL_URL": canonical_url,

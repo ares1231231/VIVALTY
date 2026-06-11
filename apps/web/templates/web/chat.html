@@ -14,7 +14,7 @@
     <div class="flex items-center gap-3 px-4 py-4 border-b border-white/10">
       <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-600 text-xs font-black">AI</div>
       <div>
-        <div class="text-sm font-semibold">Investment Brain</div>
+        <div class="text-sm font-semibold">Property assistant</div>
         <div class="flex items-center gap-1.5 text-[10px] text-ink-400">
           <span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           Grounded in platform data
@@ -66,9 +66,9 @@
       <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white text-xs font-black shadow">AI</div>
       <div>
         <div class="text-sm font-semibold text-ink-900">
-          {% if active %}{{ active.title|default:"Investment conversation" }}{% else %}Vivalty Investment Brain{% endif %}
+          {% if active %}{{ active.title|default:"New conversation" }}{% else %}Vivalty property assistant{% endif %}
         </div>
-        <div class="text-[11px] text-ink-500">AI-powered real estate analysis across 7 markets</div>
+        <div class="text-[11px] text-ink-500">AI-powered property search across 7 destinations</div>
       </div>
       {% if active %}
       <div class="ml-auto flex items-center gap-2">

@@ -25,11 +25,15 @@ def property_meta_description(prop: Property) -> str:
     if prop.description:
         return _strip_text(prop.description, 160)
     score = ""
-    if getattr(prop, "metric", None) and prop.metric.investment_score:
+    if (
+        settings.SHOW_INVESTMENT_FEATURES
+        and getattr(prop, "metric", None)
+        and prop.metric.investment_score
+    ):
         score = f" AI investment score {prop.metric.investment_score}/100."
     return (
         f"{prop.get_property_type_display()} for sale in {prop.city.name}, {prop.country.name}."
-        f"{score} View price, yield and market data on Vivalty."
+        f"{score} View price, photos and full details on Vivalty."
     )[:160]
 
 
@@ -79,7 +83,7 @@ def site_json_ld() -> str:
                 "url": site,
                 "logo": f"{site}/static/img/og-image.png",
                 "description": (
-                    "AI-powered international real estate platform for investors "
+                    "International real estate marketplace with curated listings "
                     "across Europe and the UAE."
                 ),
             },

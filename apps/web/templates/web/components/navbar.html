@@ -27,7 +27,7 @@ Two visual variants based on context:
       {# ── Buy ─────────────────────────────────────────────────── #}
       <div class="vv-nav-group">
         <a href="{% url 'web:marketplace' %}"
-           class="vv-nav-link {% if url_name == 'marketplace' and not request.GET.type and not request.GET.score_min %}is-active{% endif %}">Buy</a>
+           class="vv-nav-link {% if url_name == 'marketplace' and not request.GET.type and not request.GET.ordering %}is-active{% endif %}">Buy</a>
         <div class="vv-nav-panel" role="menu">
           <a href="{% url 'web:marketplace' %}" class="vv-nav-item">
             <span class="vv-nav-item-title">All properties</span>
@@ -47,7 +47,7 @@ Two visual variants based on context:
           </a>
           <a href="{% url 'web:marketplace' %}?type=commercial" class="vv-nav-item">
             <span class="vv-nav-item-title">Commercial</span>
-            <span class="vv-nav-item-desc">Yield-driven assets</span>
+            <span class="vv-nav-item-desc">Offices, retail &amp; more</span>
           </a>
         </div>
       </div>
@@ -78,28 +78,25 @@ Two visual variants based on context:
 
       {# ── Luxury ──────────────────────────────────────────────── #}
       <div class="vv-nav-group">
-        <a href="{% url 'web:marketplace' %}?score_min=85"
-           class="vv-nav-link {% if request.GET.score_min == '85' %}is-active{% endif %}">Luxury</a>
+        <a href="{% url 'web:marketplace' %}?ordering=-price"
+           class="vv-nav-link {% if request.GET.ordering == '-price' %}is-active{% endif %}">Luxury</a>
         <div class="vv-nav-panel" role="menu">
-          <a href="{% url 'web:marketplace' %}?score_min=85" class="vv-nav-item">
+          <a href="{% url 'web:marketplace' %}?ordering=-price" class="vv-nav-item">
             <span class="vv-nav-item-title">Prestige picks</span>
-            <span class="vv-nav-item-desc">Highest-scored listings</span>
+            <span class="vv-nav-item-desc">Hand-picked premium homes</span>
           </a>
-          <a href="{% url 'web:marketplace' %}?score_min=85&type=villa" class="vv-nav-item">
+          <a href="{% url 'web:marketplace' %}?ordering=-price&type=villa" class="vv-nav-item">
             <span class="vv-nav-item-title">Signature villas</span>
             <span class="vv-nav-item-desc">Iconic private estates</span>
           </a>
-          <a href="{% url 'web:marketplace' %}?score_min=85&type=apartment" class="vv-nav-item">
+          <a href="{% url 'web:marketplace' %}?ordering=-price&type=apartment" class="vv-nav-item">
             <span class="vv-nav-item-title">Penthouses</span>
             <span class="vv-nav-item-desc">Skyline residences</span>
-          </a>
-          <a href="{% url 'web:markets' %}" class="vv-nav-item">
-            <span class="vv-nav-item-title">Featured destinations</span>
-            <span class="vv-nav-item-desc">Markets we curate</span>
           </a>
         </div>
       </div>
 
+      {% if SHOW_INVESTMENT_FEATURES %}
       {# ── AI Invest ───────────────────────────────────────────── #}
       <div class="vv-nav-group">
         <a href="{% url 'web:simulator' %}"
@@ -128,6 +125,7 @@ Two visual variants based on context:
           </a>
         </div>
       </div>
+      {% endif %}
 
     </nav>
 
@@ -151,11 +149,13 @@ Two visual variants based on context:
           <ul class="py-1.5 text-sm">
             <li><a href="{% url 'web:dashboard' %}"    class="dropdown-item">Dashboard</a></li>
             <li><a href="{% url 'web:marketplace' %}"  class="dropdown-item">Browse properties</a></li>
+            {% if SHOW_INVESTMENT_FEATURES %}
             <li><a href="{% url 'web:simulator' %}"    class="dropdown-item">Investment simulator</a></li>
             <li><a href="{% url 'web:compare' %}"      class="dropdown-item">Compare listings</a></li>
             <li><a href="{% url 'web:markets' %}"      class="dropdown-item">Market intelligence</a></li>
             <li><a href="{% url 'web:methodology' %}"  class="dropdown-item">How AI score works</a></li>
-            <li><a href="{% url 'web:chat' %}"         class="dropdown-item">AI Advisor</a></li>
+            {% endif %}
+            <li><a href="{% url 'web:chat' %}"         class="dropdown-item">AI Assistant</a></li>
             <li>
               <a href="{% url 'web:listing_start' %}" class="dropdown-item font-bold text-brand-700 flex items-center gap-2">
                 <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -242,13 +242,15 @@ Two visual variants based on context:
   <div class="px-4 py-5 space-y-1 text-sm font-medium">
     <a href="{% url 'web:marketplace' %}" class="mobile-nav-item">Buy</a>
     <a href="{% url 'web:marketplace' %}?type=apartment" class="mobile-nav-item">Rent</a>
-    <a href="{% url 'web:marketplace' %}?score_min=85" class="mobile-nav-item">Luxury</a>
+    <a href="{% url 'web:marketplace' %}?ordering=-price" class="mobile-nav-item">Luxury</a>
+    {% if SHOW_INVESTMENT_FEATURES %}
     <a href="{% url 'web:simulator' %}" class="mobile-nav-item">
       <span class="inline-flex items-center gap-1.5">
         <span class="rounded-md bg-brand-50 text-brand-700 px-1.5 py-0.5 text-[10px] font-bold tracking-wide ring-1 ring-brand-200">AI</span>
         Invest
       </span>
     </a>
+    {% endif %}
 
     <div class="pt-3 pb-1"><div class="h-px bg-ink-100"></div></div>
 

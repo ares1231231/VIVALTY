@@ -13,28 +13,28 @@ Variables: active, messages, embedded (bool)
         <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-lg text-white text-xl font-black">AI</div>
         <div>
           <div class="font-semibold text-ink-900">Hi {% if user.is_authenticated %}{{ user.first_name|default:user.email }}{% else %}there{% endif %} 👋</div>
-          <div class="mt-1 text-sm text-ink-500 max-w-xs">Ask me anything about international real estate — ROI, markets, risk, or specific listings.</div>
+          <div class="mt-1 text-sm text-ink-500 max-w-xs">Ask me anything about international real estate — destinations, neighbourhoods, or specific listings.</div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg mt-2">
-          <button type="button" data-suggest="Where should I invest €100k for the best ROI?"
+          <button type="button" data-suggest="Which cities do you cover in Portugal and Spain?"
                   class="group text-left rounded-xl border border-ink-200 bg-white px-4 py-3 text-xs text-ink-700 shadow-sm hover:border-brand-500 hover:shadow-md hover:text-brand-700 transition-all duration-150">
-            <div class="font-semibold">💰 Best ROI for €100k?</div>
-            <div class="mt-0.5 text-ink-500 group-hover:text-brand-500">Country and city recommendations</div>
+            <div class="font-semibold">🌍 Where do you cover?</div>
+            <div class="mt-0.5 text-ink-500 group-hover:text-brand-500">Countries and cities on Vivalty</div>
           </button>
-          <button type="button" data-suggest="Compare Spain vs UAE for short-let income."
+          <button type="button" data-suggest="Compare living in Lisbon vs Valencia."
                   class="group text-left rounded-xl border border-ink-200 bg-white px-4 py-3 text-xs text-ink-700 shadow-sm hover:border-brand-500 hover:shadow-md hover:text-brand-700 transition-all duration-150">
-            <div class="font-semibold">🌍 Spain vs UAE</div>
-            <div class="mt-0.5 text-ink-500 group-hover:text-brand-500">Short-let rental income comparison</div>
+            <div class="font-semibold">🏙️ Lisbon vs Valencia</div>
+            <div class="mt-0.5 text-ink-500 group-hover:text-brand-500">Lifestyle and neighbourhood comparison</div>
           </button>
-          <button type="button" data-suggest="What are the lowest-risk markets right now?"
+          <button type="button" data-suggest="What should I check before buying a home abroad?"
                   class="group text-left rounded-xl border border-ink-200 bg-white px-4 py-3 text-xs text-ink-700 shadow-sm hover:border-brand-500 hover:shadow-md hover:text-brand-700 transition-all duration-150">
-            <div class="font-semibold">🛡️ Lowest-risk markets</div>
-            <div class="mt-0.5 text-ink-500 group-hover:text-brand-500">Safe picks with solid yields</div>
+            <div class="font-semibold">📋 Buying abroad checklist</div>
+            <div class="mt-0.5 text-ink-500 group-hover:text-brand-500">What to verify before you commit</div>
           </button>
-          <button type="button" data-suggest="Show me 3 high-score apartments under €300k."
+          <button type="button" data-suggest="Show me 3 apartments under €300k."
                   class="group text-left rounded-xl border border-ink-200 bg-white px-4 py-3 text-xs text-ink-700 shadow-sm hover:border-brand-500 hover:shadow-md hover:text-brand-700 transition-all duration-150">
             <div class="font-semibold">🏢 Apartments under €300k</div>
-            <div class="mt-0.5 text-ink-500 group-hover:text-brand-500">High investment score picks</div>
+            <div class="mt-0.5 text-ink-500 group-hover:text-brand-500">Curated picks from our listings</div>
           </button>
         </div>
       </div>
@@ -59,7 +59,7 @@ Variables: active, messages, embedded (bool)
     <form data-chat-form class="flex gap-2">
       {% csrf_token %}
       <input type="text" name="message" data-chat-input autocomplete="off"
-             placeholder="Ask about ROI, markets, specific listings…"
+             placeholder="Ask about destinations, cities, specific listings…"
              class="input flex-1 rounded-xl" />
       <button type="submit" data-chat-send
               class="btn-primary rounded-xl px-5 gap-1.5 disabled:opacity-50">
@@ -195,7 +195,7 @@ Variables: active, messages, embedded (bool)
       target.innerHTML = mdToHtml(acc);
     } catch (err) {
       if (typing) typing.classList.add("hidden");
-      log.insertAdjacentHTML("beforeend", aiBubble('<span class="text-rose-600 text-xs">The advisor failed to respond. Please try again.</span>'));
+      log.insertAdjacentHTML("beforeend", aiBubble('<span class="text-rose-600 text-xs">The assistant failed to respond. Please try again.</span>'));
     } finally {
       if (typing) typing.classList.add("hidden");
       send.disabled = false;

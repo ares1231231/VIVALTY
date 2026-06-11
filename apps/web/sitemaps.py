@@ -31,13 +31,9 @@ class StaticViewSitemap(_SiteUrlSitemap):
     priority = 0.8
 
     def items(self):
-        return [
+        pages = [
             "web:home",
             "web:marketplace",
-            "web:markets",
-            "web:methodology",
-            "web:simulator",
-            "web:compare",
             "web:become_owner",
             "web:privacy",
             "web:terms",
@@ -45,6 +41,14 @@ class StaticViewSitemap(_SiteUrlSitemap):
             "web:legal_notice",
             "web:contact",
         ]
+        if settings.SHOW_INVESTMENT_FEATURES:
+            pages[2:2] = [
+                "web:markets",
+                "web:methodology",
+                "web:simulator",
+                "web:compare",
+            ]
+        return pages
 
     def location(self, item):
         return reverse(item)

@@ -2,7 +2,7 @@
 
 Two single-shot, non-conversational helpers:
 - :func:`rewrite_description` — turns a raw owner-typed blurb into editorial,
-  investor-friendly copy.
+  buyer-friendly copy.
 - :func:`suggest_price` — proposes an asking price from the city's avg €/m²
   and the listing area (no LLM call, deterministic math).
 
@@ -27,11 +27,12 @@ logger = logging.getLogger("vivalty.listing")
 
 _REWRITE_SYSTEM_PROMPT = (
     "You are Vivalty's senior copywriter for international real-estate listings. "
-    "Rewrite the owner-supplied description in an editorial, investor-friendly tone. "
+    "Rewrite the owner-supplied description in an editorial, buyer-friendly tone. "
     "Lead with a single 12-18 word hook, then 2-3 short paragraphs covering: "
-    "location & lifestyle, property highlights, investment angle (yield, demand, trend). "
+    "location & lifestyle, property highlights, and who the home suits best. "
     "Use concrete sensory detail, never invent facts, keep it under 180 words, "
-    "no bullet points, no emojis, no markdown."
+    "no bullet points, no emojis, no markdown. Do not mention yields, ROI or "
+    "investment returns."
 )
 
 
@@ -70,8 +71,8 @@ def rewrite_description(raw: str, *, context: dict[str, Any] | None = None) -> s
 
 
 def _local_polish(raw: str, context: dict[str, Any]) -> str:
-    """Deterministic offline polish — capitalises sentences, adds an investor
-    closing line if the description doesn't already mention yield / ROI.
+    """Deterministic offline polish — capitalises sentences, adds a closing
+    line about the location if the description doesn't already mention it.
     """
     sentences = [s.strip() for s in raw.replace("\n", " ").split(".") if s.strip()]
     polished = ". ".join(s[:1].upper() + s[1:] for s in sentences)
@@ -80,7 +81,7 @@ def _local_polish(raw: str, context: dict[str, Any]) -> str:
 
     city = context.get("city_name") or ""
     if city and city.lower() not in polished.lower():
-        polished += f" Located in {city}, a market favoured by international investors."
+        polished += f" Located in {city}, a destination loved by international buyers."
 
     return polished
 

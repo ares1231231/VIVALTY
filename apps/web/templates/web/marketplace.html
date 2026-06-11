@@ -46,7 +46,7 @@
     <div class="mt-4 flex flex-wrap gap-2">
       <a href="{% url 'web:marketplace' %}{% if params.type or params.ordering != '-is_featured,-created_at' %}?{% if params.type %}type={{ params.type }}&{% endif %}{% if params.ordering and params.ordering != '-is_featured,-created_at' %}ordering={{ params.ordering }}{% endif %}{% endif %}"
          class="country-pill {% if not params.country %}country-pill-active{% endif %}">
-        🌍 All markets
+        🌍 All countries
       </a>
       {% for c in countries %}
         <a href="?country={{ c.code }}{% if params.type %}&type={{ params.type }}{% endif %}{% if params.ordering and params.ordering != '-is_featured,-created_at' %}&ordering={{ params.ordering }}{% endif %}"
@@ -136,6 +136,7 @@
             </div>
           </div>
 
+          {% if SHOW_INVESTMENT_FEATURES %}
           {# Min investment score #}
           <div>
             <label class="label">Min investment score</label>
@@ -151,14 +152,17 @@
                    value="{{ params.roi_min|default:'' }}"
                    placeholder="e.g. 4.5" />
           </div>
+          {% endif %}
 
           {# Sort #}
           <div>
             <label class="label">Sort by</label>
             <select class="input" name="ordering">
               <option value="-is_featured,-created_at" {% if ordering == '-is_featured,-created_at' %}selected{% endif %}>Recommended</option>
+              {% if SHOW_INVESTMENT_FEATURES %}
               <option value="-metric__investment_score" {% if ordering == '-metric__investment_score' %}selected{% endif %}>Investment score ↓</option>
               <option value="-metric__estimated_roi_max" {% if ordering == '-metric__estimated_roi_max' %}selected{% endif %}>Highest ROI</option>
+              {% endif %}
               <option value="price" {% if ordering == 'price' %}selected{% endif %}>Price: low → high</option>
               <option value="-price" {% if ordering == '-price' %}selected{% endif %}>Price: high → low</option>
               <option value="-created_at" {% if ordering == '-created_at' %}selected{% endif %}>Newest</option>
@@ -223,8 +227,10 @@
           {% if params.roi_min %}<input type="hidden" name="roi_min" value="{{ params.roi_min }}">{% endif %}
           <select class="input text-xs py-1.5 w-44" name="ordering">
             <option value="-is_featured,-created_at" {% if ordering == '-is_featured,-created_at' %}selected{% endif %}>Recommended</option>
+            {% if SHOW_INVESTMENT_FEATURES %}
             <option value="-metric__investment_score" {% if ordering == '-metric__investment_score' %}selected{% endif %}>Best score</option>
             <option value="-metric__estimated_roi_max" {% if ordering == '-metric__estimated_roi_max' %}selected{% endif %}>Highest ROI</option>
+            {% endif %}
             <option value="price" {% if ordering == 'price' %}selected{% endif %}>Price ↑</option>
             <option value="-price" {% if ordering == '-price' %}selected{% endif %}>Price ↓</option>
             <option value="-created_at" {% if ordering == '-created_at' %}selected{% endif %}>Newest</option>
@@ -293,6 +299,7 @@
         <input class="input" type="number" min="0" name="price_max" value="{{ params.price_max|default:'' }}" placeholder="Max" />
       </div>
     </div>
+    {% if SHOW_INVESTMENT_FEATURES %}
     <div>
       <label class="label">Min investment score</label>
       <input class="input" type="number" min="0" max="100" name="score_min" value="{{ params.score_min|default:'' }}" placeholder="0 – 100" />
@@ -301,12 +308,15 @@
       <label class="label">Min ROI %</label>
       <input class="input" type="number" step="0.1" min="0" name="roi_min" value="{{ params.roi_min|default:'' }}" placeholder="e.g. 4.5" />
     </div>
+    {% endif %}
     <div>
       <label class="label">Sort by</label>
       <select class="input" name="ordering">
         <option value="-is_featured,-created_at" {% if ordering == '-is_featured,-created_at' %}selected{% endif %}>Recommended</option>
+        {% if SHOW_INVESTMENT_FEATURES %}
         <option value="-metric__investment_score" {% if ordering == '-metric__investment_score' %}selected{% endif %}>Investment score ↓</option>
         <option value="-metric__estimated_roi_max" {% if ordering == '-metric__estimated_roi_max' %}selected{% endif %}>Highest ROI</option>
+        {% endif %}
         <option value="price" {% if ordering == 'price' %}selected{% endif %}>Price: low → high</option>
         <option value="-price" {% if ordering == '-price' %}selected{% endif %}>Price: high → low</option>
         <option value="-created_at" {% if ordering == '-created_at' %}selected{% endif %}>Newest</option>

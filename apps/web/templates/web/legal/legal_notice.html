@@ -15,28 +15,26 @@
   {% endif %}
   <dt class="font-semibold text-ink-900">General enquiries</dt>
   <dd><a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}">{{ COMPANY_SUPPORT_EMAIL }}</a></dd>
-  <dt class="font-semibold text-ink-900">Investor desk</dt>
+  <dt class="font-semibold text-ink-900">Advisory desk</dt>
   <dd><a href="mailto:{{ COMPANY_INVESTOR_EMAIL }}">{{ COMPANY_INVESTOR_EMAIL }}</a></dd>
 </dl>
 
 <h2 class="text-xl font-extrabold text-ink-900">Nature of the service</h2>
 <p>
-  Vivalty publishes international property listings, market data, investment research scores,
-  financial simulators and an AI assistant. We connect prospective buyers and renters with
-  listing agencies and property owners.
+  Vivalty publishes international property listings, destination guides and an AI assistant.
+  We connect prospective buyers and renters with listing agencies and property owners.
 </p>
 <p>
-  <strong>Regulatory status:</strong> Vivalty is not authorised or regulated by the Financial
-  Conduct Authority (FCA) or any other financial regulator. We do not provide regulated
-  investment advice, portfolio management, payment services or escrow for property transactions.
+  <strong>Regulatory status:</strong> Vivalty is a listing and information platform. We do not
+  provide financial advice, brokerage, payment services or escrow for property transactions.
 </p>
 
-<h2 class="text-xl font-extrabold text-ink-900">Investment &amp; advertising disclosures</h2>
+<h2 class="text-xl font-extrabold text-ink-900">Listing disclosures</h2>
 <ul class="list-disc pl-5 space-y-2">
-  <li>All yield, ROI, score and projection figures are illustrative research outputs, not guarantees.</li>
-  <li>Property values and rental income can go down as well as up.</li>
+  <li>Listing details are provided by sellers and partner agencies and should be independently verified.</li>
+  <li>Prices, availability and property details can change without notice.</li>
   <li>Tax, currency and legal treatment depends on your personal circumstances and jurisdiction.</li>
-  <li>Independent legal, tax and financial advice is recommended before any transaction.</li>
+  <li>Independent legal and tax advice is recommended before any transaction.</li>
 </ul>
 
 <h2 class="text-xl font-extrabold text-ink-900">Hosting &amp; technical contact</h2>
@@ -51,6 +49,8 @@
   <li><a href="{% url 'web:privacy' %}">Privacy Policy</a></li>
   <li><a href="{% url 'web:terms' %}">Terms of Service</a></li>
   <li><a href="{% url 'web:cookies' %}">Cookie Policy</a></li>
+  {% if SHOW_INVESTMENT_FEATURES %}
   <li><a href="{% url 'web:methodology' %}">Methodology &amp; data sources</a></li>
+  {% endif %}
 </ul>
 {% endblock %}

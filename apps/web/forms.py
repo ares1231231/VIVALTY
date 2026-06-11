@@ -56,6 +56,12 @@ class RegisterForm(forms.ModelForm):
     def __init__(self, *args, request=None, **kwargs):
         self._request = request
         super().__init__(*args, **kwargs)
+        # Public-facing role labels (admin excluded; "investor" displayed as
+        # neutral "Buyer / Renter" for ads-safe copy — stored value unchanged).
+        self.fields["role"].choices = [
+            ("investor", "Buyer / Renter"),
+            ("owner", "Owner / Agency"),
+        ]
 
     class Meta:
         model = User
@@ -223,9 +229,22 @@ class LeadForm(forms.ModelForm):
 
 
 class InvestorInquiryForm(forms.ModelForm):
-    """Investor-relations capture form used by the hero, methodology page,
+    """Advisory-desk capture form used by the hero, methodology page,
     premium analytics paywall and footer.
     """
+
+    # Neutral display labels (stored values unchanged — avoids a migration and
+    # keeps the public site free of investment-product wording).
+    profile = forms.ChoiceField(
+        choices=[
+            ("individual", "Private buyer"),
+            ("family_office", "Family office"),
+            ("fund", "Company / institution"),
+            ("developer", "Developer / broker"),
+        ],
+        initial="individual",
+        widget=forms.Select(attrs={"class": "input"}),
+    )
 
     class Meta:
         model = InvestorInquiry
@@ -258,7 +277,7 @@ class InvestorInquiryForm(forms.ModelForm):
                 attrs={
                     "class": "input",
                     "rows": 3,
-                    "placeholder": "Tell us about your investment goals (yield, hold horizon, capital available)…",
+                    "placeholder": "Tell us what you're looking for (city, type of home, must-haves)…",
                 }
             ),
         }
@@ -290,7 +309,7 @@ class ListingTypeForm(_WizardForm):
             "placeholder": "e.g. Sun-drenched 2-bed pied-à-terre, Le Marais",
             "autocomplete": "off",
         }),
-        help_text="Investors skim — lead with the headline that makes them click.",
+        help_text="Buyers skim — lead with the headline that makes them click.",
     )
     property_type = forms.ChoiceField(
         choices=PropertyType.choices,
@@ -380,7 +399,7 @@ class ListingSpecsForm(_WizardForm):
             "rows": 6,
             "id": "id_description",
             "placeholder": (
-                "Tell the investor story: location & lifestyle, what makes this "
+                "Tell the story: location & lifestyle, what makes this "
                 "property distinctive, why now."
             ),
         }),
