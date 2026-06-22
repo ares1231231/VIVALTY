@@ -138,22 +138,22 @@ def robots_txt(request: HttpRequest) -> HttpResponse:
 
 def home(request: HttpRequest) -> HttpResponse:
     featured_order = (
-        "-metric__investment_score"
+        ("-metric__investment_score",)
         if settings.SHOW_INVESTMENT_FEATURES
-        else "-is_featured,-created_at"
+        else ("-is_featured", "-created_at")
     )
     featured = (
         Property.objects.select_related("country", "city", "metric")
         .prefetch_related("images", "tags")
         .filter(status="active", is_featured=True)
-        .order_by(featured_order)[:6]
+        .order_by(*featured_order)[:6]
     )
     if not featured.exists():
         featured = (
             Property.objects.select_related("country", "city", "metric")
             .prefetch_related("images", "tags")
             .filter(status="active")
-            .order_by(featured_order)[:6]
+            .order_by(*featured_order)[:6]
         )
 
     # Hero gallery — pick the highest-scored listing per country (max 3)
@@ -161,15 +161,15 @@ def home(request: HttpRequest) -> HttpResponse:
     seen_countries: set[str] = set()
     hero_gallery: list[Property] = []
     hero_order = (
-        "-metric__investment_score,-is_featured"
+        ("-metric__investment_score", "-is_featured")
         if settings.SHOW_INVESTMENT_FEATURES
-        else "-is_featured,-created_at"
+        else ("-is_featured", "-created_at")
     )
     for prop in (
         Property.objects.select_related("country", "city", "metric")
         .prefetch_related("images")
         .filter(status="active")
-        .order_by(hero_order)
+        .order_by(*hero_order)
     ):
         if prop.country.code in seen_countries:
             continue
@@ -248,7 +248,12 @@ def home(request: HttpRequest) -> HttpResponse:
     from apps.web.models import Testimonial
     from apps.web.seo_helpers import site_json_ld
 
-    testimonials = list(Testimonial.objects.filter(is_active=True).order_by("order", "-created_at")[:6])
+    try:
+        testimonials = list(
+            Testimonial.objects.filter(is_active=True).order_by("order", "-created_at")[:6]
+        )
+    except Exception:
+        testimonials = []
     if not testimonials:
         testimonials = _default_testimonials()
 

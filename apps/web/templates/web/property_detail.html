@@ -22,67 +22,50 @@
         <span>›</span>
         <span class="text-ink-700 truncate">{{ p.city.name }}</span>
       </div>
-      <div class="flex items-center gap-2 shrink-0">
-        {# ── Share menu ─────────────────────────────────────────── #}
-        <div class="relative" x-data="{
-              open: false,
-              url: '{{ request.scheme }}://{{ request.get_host }}{% url 'web:property_detail' p.id %}',
-              title: '{{ p.title|escapejs }}',
-              copied: false,
-              get text() { return this.title + ' — ' + this.url; },
-              async native() {
-                if (navigator.share) { try { await navigator.share({ title: this.title, url: this.url }); } catch(e){} }
-                else { this.open = !this.open; }
-              },
-              async copy() {
-                try { await navigator.clipboard.writeText(this.url); }
-                catch(e) { const t=document.createElement('textarea'); t.value=this.url; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
-                this.copied = true; setTimeout(() => this.copied = false, 1800);
-              }
-            }" @keydown.escape="open=false">
-          <button type="button" @click="navigator.share ? native() : (open=!open)"
-                  class="btn-secondary text-xs rounded-lg py-1.5 px-3 inline-flex items-center gap-1.5">
+      <div class="flex items-center gap-2 shrink-0 relative z-20" id="property-actions" hx-boost="false">
+        {# ── Share menu (vanilla JS — property-detail.js) ───────── #}
+        <div class="relative">
+          <button type="button" id="share-btn"
+                  class="btn-secondary text-xs rounded-lg py-1.5 px-3 inline-flex items-center gap-1.5"
+                  aria-expanded="false" aria-controls="share-menu" aria-haspopup="true">
             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a3 3 0 10-5.464-2.684m5.464 2.684a3 3 0 11-5.464-2.684m5.464 2.684L8.684 9.658"/></svg>
             Share
           </button>
-          <div x-show="open" x-cloak @click.outside="open=false"
-               x-transition.origin.top.right
-               class="absolute right-0 z-30 mt-2 w-52 overflow-hidden rounded-2xl border border-ink-200 bg-white p-1.5 shadow-2xl">
-            <a :href="'https://wa.me/?text=' + encodeURIComponent(text)" target="_blank" rel="noopener"
+          <div id="share-menu" hidden
+               class="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-2xl border border-ink-200 bg-white p-1.5 shadow-2xl">
+            <a href="https://wa.me/?text={{ p.title|urlencode }}%20{{ request.scheme }}%3A%2F%2F{{ request.get_host }}{% url 'web:property_detail' p.id %}"
+               target="_blank" rel="noopener"
                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
               <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white text-xs font-bold">W</span> WhatsApp
             </a>
-            <a :href="'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url)" target="_blank" rel="noopener"
+            <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.scheme }}%3A%2F%2F{{ request.get_host }}{% url 'web:property_detail' p.id %}"
+               target="_blank" rel="noopener"
                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-700 hover:bg-sky-50 hover:text-sky-700 transition-colors">
               <span class="flex h-7 w-7 items-center justify-center rounded-full bg-[#1877F2] text-white text-xs font-bold">f</span> Facebook
             </a>
-            <a :href="'https://twitter.com/intent/tweet?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title)" target="_blank" rel="noopener"
+            <a href="https://twitter.com/intent/tweet?url={{ request.scheme }}%3A%2F%2F{{ request.get_host }}{% url 'web:property_detail' p.id %}&text={{ p.title|urlencode }}"
+               target="_blank" rel="noopener"
                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-700 hover:bg-ink-100 transition-colors">
               <span class="flex h-7 w-7 items-center justify-center rounded-full bg-ink-900 text-white text-xs font-bold">X</span> X / Twitter
             </a>
-            <a :href="'mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(text)"
+            <a href="mailto:?subject={{ p.title|urlencode }}&body={{ p.title|urlencode }}%20-%20{{ request.scheme }}%3A%2F%2F{{ request.get_host }}{% url 'web:property_detail' p.id %}"
                class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-700 hover:bg-ink-100 transition-colors">
               <span class="flex h-7 w-7 items-center justify-center rounded-full bg-ink-200 text-ink-700 text-xs font-bold">@</span> Email
             </a>
-            <button type="button" @click="copy()"
+            <button type="button" id="share-copy-btn"
+               data-url="{{ request.scheme }}://{{ request.get_host }}{% url 'web:property_detail' p.id %}"
                class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-700 hover:bg-brand-50 hover:text-brand-700 transition-colors">
               <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-100 text-brand-700 text-xs font-bold">🔗</span>
-              <span x-text="copied ? 'Copied!' : 'Copy link'">Copy link</span>
+              <span id="share-copy-label">Copy link</span>
             </button>
-            <a href="{% url 'web:property_story' p.id %}" target="_blank" rel="noopener"
-               class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-700 hover:bg-violet-50 hover:text-violet-700 transition-colors">
-              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white text-xs font-bold">▶</span>
-              Reels / TikTok story
-            </a>
           </div>
         </div>
-        <a href="{% url 'web:property_story' p.id %}" target="_blank" rel="noopener"
+        <a href="{% url 'web:property_story' p.id %}" target="_blank" rel="noopener" hx-boost="false"
            class="btn-secondary text-xs rounded-lg py-1.5 px-3 inline-flex items-center gap-1.5">
           <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           Story
         </a>
         <button type="button" id="print-btn"
-                onclick="window.print()"
                 class="btn-secondary text-xs rounded-lg py-1.5 px-3 inline-flex items-center gap-1.5">
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
           Export PDF
@@ -537,8 +520,4 @@
 
 {# ── Recently viewed strip ─────────────────────────────────────── #}
 {% include "web/components/recently_viewed.html" with exclude_id=p.id %}
-{% endblock %}
-
-{% block body_extra %}
-  <script type="module" src="{% static 'js/property-detail.js' %}"></script>
 {% endblock %}

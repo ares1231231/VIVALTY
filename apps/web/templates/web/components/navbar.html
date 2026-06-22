@@ -10,10 +10,10 @@ Two visual variants based on context:
 {% endcomment %}
 
 <header class="vv-nav {% if url_name == 'home' %}vv-nav--overlay{% else %}vv-nav--solid{% endif %}">
-  <div class="relative mx-auto flex h-[84px] max-w-[1320px] items-center gap-6 px-6 sm:px-8 lg:px-12">
+  <div class="relative mx-auto grid h-[84px] max-w-[1320px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 sm:px-8 lg:px-12">
 
     {# ── Brand (gold square + serif wordmark) ─────────────────── #}
-    <a href="{% url 'web:home' %}" class="vv-brand group" aria-label="Vivalty home">
+    <a href="{% url 'web:home' %}" class="vv-brand group justify-self-start" aria-label="Vivalty home">
       <span class="vv-brand-mark">V</span>
       <span class="vv-brand-name">VIVALTY</span>
     </a>
@@ -22,7 +22,7 @@ Two visual variants based on context:
     Desktop nav: flat editorial labels, with a refined hover panel
     revealing sub-categories under each top-level link.
     {% endcomment %}
-    <nav class="hidden lg:flex items-center justify-center gap-12 xl:gap-16 absolute left-1/2 -translate-x-1/2">
+    <nav class="hidden lg:flex items-center justify-center gap-8 xl:gap-12 justify-self-center min-w-0">
 
       {# ── Buy ─────────────────────────────────────────────────── #}
       <div class="vv-nav-group">
@@ -162,7 +162,7 @@ Two visual variants based on context:
     </nav>
 
     {# ── Right side cluster ───────────────────────────────────── #}
-    <div class="ml-auto flex items-center gap-3 sm:gap-5">
+    <div class="flex items-center justify-end gap-2 sm:gap-4 justify-self-end shrink-0">
 
       {% include "web/components/language_switcher.html" %}
 
@@ -287,6 +287,22 @@ Two visual variants based on context:
       </span>
     </a>
     {% endif %}
+
+    <div class="pt-3 pb-1"><div class="h-px bg-ink-100"></div></div>
+
+    <p class="px-3 pt-1 pb-2 text-[10px] font-bold uppercase tracking-widest text-ink-400">Language</p>
+    {% for code, label in UI_LANGUAGES %}
+      <form action="{% url 'web:set_language' %}" method="post" class="px-1">
+        {% csrf_token %}
+        <input type="hidden" name="language" value="{{ code }}" />
+        <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+        <button type="submit"
+                class="mobile-nav-item w-full text-left {% if code == UI_LANGUAGE %}text-brand-700 font-bold{% endif %}"
+                {% if code == 'ar' %}dir="rtl"{% endif %}>
+          {{ label }}{% if code == UI_LANGUAGE %} ✓{% endif %}
+        </button>
+      </form>
+    {% endfor %}
 
     <div class="pt-3 pb-1"><div class="h-px bg-ink-100"></div></div>
 
