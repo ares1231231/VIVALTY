@@ -114,6 +114,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -138,6 +139,8 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "apps.web.context_processors.seo",
                 "apps.web.context_processors.company",
+                "apps.web.context_processors.recently_viewed",
+                "apps.web.context_processors.i18n_ui",
             ],
         },
     },
@@ -207,10 +210,19 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "en"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
+
+LANGUAGES = [
+    ("en", "English"),
+    ("fr", "Français"),
+    ("es", "Español"),
+    ("pt", "Português"),
+    ("it", "Italiano"),
+    ("ar", "العربية"),
+]
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
@@ -324,6 +336,10 @@ COMPANY_REGISTERED_ADDRESS = os.getenv(
 COMPANY_SUPPORT_EMAIL = os.getenv("COMPANY_SUPPORT_EMAIL", "hello@vivalty.com")
 COMPANY_INVESTOR_EMAIL = os.getenv("COMPANY_INVESTOR_EMAIL", "investors@vivalty.com")
 COMPANY_VAT_NUMBER = os.getenv("COMPANY_VAT_NUMBER", "")
+# International WhatsApp number (digits only, incl. country code) for the
+# "Chat on WhatsApp" buttons. Leave blank to hide them when a listing has no
+# direct phone of its own.
+COMPANY_WHATSAPP = os.getenv("COMPANY_WHATSAPP", "")
 
 # --- Feature flags -----------------------------------------------------------
 # Investment analytics (simulator, methodology, compare, market intelligence)

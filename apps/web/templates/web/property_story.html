@@ -1,0 +1,156 @@
+{% load static web_extras %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex" />
+  <title>{{ seo_title }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html, body { height: 100%; margin: 0; background: #0a0a0a; }
+    .story-frame {
+      width: min(100vw, calc(100vh * 9 / 16));
+      height: 100vh;
+      max-height: 100dvh;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      background: #0a0a0a;
+    }
+    .slide {
+      position: absolute; inset: 0;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    .slide.active { opacity: 1; z-index: 1; }
+    .slide img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .price-reveal {
+      position: absolute; inset: 0; z-index: 2;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: linear-gradient(160deg, #0c4a6e 0%, #0a0a0a 55%);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.8s ease;
+    }
+    .price-reveal.active { opacity: 1; pointer-events: auto; }
+    @media (prefers-reduced-motion: reduce) {
+      .slide, .price-reveal { transition: none; }
+    }
+  </style>
+</head>
+<body class="font-sans antialiased">
+  <div class="story-frame" id="story" data-duration="2800">
+
+    {% for img in story_images %}
+      <div class="slide{% if forloop.first %} active{% endif %}" data-index="{{ forloop.counter0 }}">
+        <img src="{{ img }}" alt="{{ p.title }} — photo {{ forloop.counter }}" />
+        <div class="absolute inset-x-0 top-0 p-5 bg-gradient-to-b from-black/60 to-transparent">
+          <div class="text-white/90 text-xs font-bold uppercase tracking-widest">Vivalty</div>
+          <div class="mt-1 text-white font-semibold text-sm line-clamp-2">{{ p.city.name }}, {{ p.country.name }}</div>
+        </div>
+        {% if not forloop.last %}
+          <div class="absolute bottom-0 inset-x-0 h-1 bg-white/20">
+            <div class="h-full bg-white/90 progress-bar" style="width:0%"></div>
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <div class="price-reveal" id="price-reveal">
+      <div class="text-center px-8 text-white">
+        <p class="text-sm font-bold uppercase tracking-[0.3em] text-sky-300 mb-4">Price reveal</p>
+        <p class="font-['Playfair_Display'] text-5xl font-black tracking-tight">{{ p.price|money:p.currency }}</p>
+        <h1 class="mt-4 text-xl font-semibold leading-snug max-w-xs mx-auto">{{ p.title }}</h1>
+        <p class="mt-2 text-white/70">{{ p.city.name }} · {{ p.get_property_type_display }}</p>
+        {% if p.bedrooms %}<p class="mt-1 text-white/60 text-sm">{{ p.bedrooms }} bed{% if p.area_sqm %} · {{ p.area_sqm|floatformat:0 }} m²{% endif %}</p>{% endif %}
+        <a href="{% url 'web:property_detail' p.id %}"
+           class="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-ink-900 shadow-xl">
+          View on Vivalty →
+        </a>
+      </div>
+      <div class="absolute bottom-6 inset-x-0 text-center">
+        <span class="text-[10px] uppercase tracking-widest text-white/40">vivalty.com</span>
+      </div>
+    </div>
+
+    <div class="absolute bottom-5 right-5 z-20 flex gap-2">
+      <button type="button" id="btn-play" aria-label="Play slideshow"
+              class="rounded-full bg-white/20 backdrop-blur px-4 py-2 text-xs font-bold text-white hover:bg-white/30">
+        ▶ Play
+      </button>
+      <a href="{% url 'web:property_detail' p.id %}"
+         class="rounded-full bg-white/20 backdrop-blur px-4 py-2 text-xs font-bold text-white hover:bg-white/30">
+        Exit
+      </a>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const frame = document.getElementById('story');
+      const slides = Array.from(frame.querySelectorAll('.slide'));
+      const reveal = document.getElementById('price-reveal');
+      const duration = parseInt(frame.dataset.duration || '2800', 10);
+      let idx = 0;
+      let timer = null;
+      let playing = false;
+
+      function show(i) {
+        slides.forEach((s, n) => s.classList.toggle('active', n === i));
+        const bar = slides[i]?.querySelector('.progress-bar');
+        if (bar) {
+          bar.style.transition = 'none';
+          bar.style.width = '0%';
+          requestAnimationFrame(() => {
+            bar.style.transition = `width ${duration}ms linear`;
+            bar.style.width = '100%';
+          });
+        }
+      }
+
+      function next() {
+        if (idx < slides.length - 1) {
+          idx += 1;
+          show(idx);
+        } else {
+          reveal.classList.add('active');
+          stop();
+        }
+      }
+
+      function play() {
+        if (playing) return;
+        playing = true;
+        document.getElementById('btn-play').textContent = '⏸ Pause';
+        show(idx);
+        timer = setInterval(next, duration);
+      }
+
+      function stop() {
+        playing = false;
+        clearInterval(timer);
+        document.getElementById('btn-play').textContent = '▶ Replay';
+      }
+
+      document.getElementById('btn-play').addEventListener('click', () => {
+        if (playing) { stop(); return; }
+        if (reveal.classList.contains('active')) {
+          idx = 0;
+          reveal.classList.remove('active');
+        }
+        play();
+      });
+
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setTimeout(play, 800);
+      }
+    })();
+  </script>
+</body>
+</html>

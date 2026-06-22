@@ -1,0 +1,129 @@
+{% extends "web/base.html" %}
+{% load web_extras %}
+
+{% block seo_head %}
+{% include "web/components/seo_meta.html" with title=seo_title description=seo_description og_image=seo_image json_ld=faq_json_ld %}
+{% endblock %}
+
+{% block content %}
+<section class="relative overflow-hidden bg-ink-900 text-white">
+  <img src="{{ hero_image }}" alt="{{ city_guide.name }}"
+       class="absolute inset-0 h-full w-full object-cover opacity-50" />
+  <div class="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-900/80 to-ink-900/40"></div>
+  <div class="relative mx-auto max-w-7xl px-6 md:px-8 py-20 md:py-28">
+    <nav class="flex flex-wrap items-center gap-2 text-xs text-white/55 mb-6" aria-label="Breadcrumb">
+      <a href="{% url 'web:home' %}" class="hover:text-white transition-colors">Home</a>
+      <span aria-hidden="true">›</span>
+      <a href="{% url 'web:destinations' %}" class="hover:text-white transition-colors">Destinations</a>
+      <span aria-hidden="true">›</span>
+      <a href="{% url 'web:destination_detail' country_guide.slug %}" class="hover:text-white transition-colors">{{ country_guide.name }}</a>
+      <span aria-hidden="true">›</span>
+      <span class="text-white/85 font-medium">{{ city_guide.name }}</span>
+    </nav>
+    <p class="text-sm font-bold uppercase tracking-[0.2em] text-brand-300 mb-3">City guide</p>
+    <h1 class="max-w-3xl font-display text-4xl md:text-6xl font-black tracking-tight leading-[1.05]">
+      Living in {{ city_guide.name }}
+    </h1>
+    <p class="mt-5 max-w-2xl text-lg text-white/80 leading-relaxed">{{ city_guide.tagline }}.</p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="{% url 'web:marketplace' %}?country={{ country_guide.code }}{% if city %}&city={{ city.slug }}{% endif %}"
+         class="btn-primary px-6 py-3 rounded-xl">
+        View {% if listings_count %}{{ listings_count }} {% endif %}homes in {{ city_guide.name }}
+      </a>
+      <a href="{% url 'web:destination_detail' country_guide.slug %}"
+         class="inline-flex items-center rounded-xl border border-white/25 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur hover:bg-white/20 transition-colors">
+        {{ country_guide.name }} country guide
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="mx-auto max-w-7xl px-6 md:px-8 py-16 md:py-20">
+  <div class="grid gap-12 lg:grid-cols-[1fr_320px]">
+    <div class="min-w-0 space-y-16">
+
+      <section>
+        <h2 class="font-display text-2xl md:text-3xl font-black tracking-tight text-ink-900">About {{ city_guide.name }}</h2>
+        <p class="mt-4 text-ink-700 leading-relaxed max-w-prose">{{ city_guide.intro }}</p>
+      </section>
+
+      <section>
+        <h2 class="font-display text-2xl md:text-3xl font-black tracking-tight text-ink-900">Neighbourhoods</h2>
+        <p class="mt-3 text-ink-600 max-w-prose">Where buyers and renters typically look in {{ city_guide.name }}.</p>
+        <div class="mt-6 grid gap-4 sm:grid-cols-2">
+          {% for name, desc in city_guide.neighbourhoods %}
+            <div class="rounded-2xl border border-ink-200 bg-white p-5">
+              <div class="font-bold text-ink-900">{{ name }}</div>
+              <p class="mt-2 text-sm text-ink-600 leading-relaxed">{{ desc }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      {% if listings %}
+      <section>
+        <div class="flex items-end justify-between gap-4">
+          <h2 class="font-display text-2xl md:text-3xl font-black tracking-tight text-ink-900">Homes in {{ city_guide.name }}</h2>
+          <a href="{% url 'web:marketplace' %}?country={{ country_guide.code }}{% if city %}&city={{ city.slug }}{% endif %}"
+             class="text-sm font-bold text-brand-700 hover:text-brand-900 whitespace-nowrap">View all →</a>
+        </div>
+        <div class="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          {% for p in listings %}
+            {% include "web/components/property_card.html" with p=p %}
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      <section id="buying" class="scroll-mt-24">
+        <h2 class="font-display text-2xl md:text-3xl font-black tracking-tight text-ink-900">Buying in {{ city_guide.name }}</h2>
+        <ul class="mt-6 space-y-4">
+          {% for tip in city_guide.buying_tips %}
+            <li class="flex items-start gap-3 text-ink-700">
+              <span class="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold">{{ forloop.counter }}</span>
+              {{ tip }}
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      {% if city_guide.faqs %}
+      <section>
+        <h2 class="font-display text-2xl md:text-3xl font-black tracking-tight text-ink-900">FAQ</h2>
+        <div class="mt-6 divide-y divide-ink-200 rounded-2xl border border-ink-200 bg-white">
+          {% for faq in city_guide.faqs %}
+            <details class="group px-5 py-4">
+              <summary class="cursor-pointer list-none font-semibold text-ink-900 flex items-center justify-between gap-4">
+                {{ faq.question }}
+                <span class="text-brand-600 group-open:rotate-180 transition-transform">▼</span>
+              </summary>
+              <p class="mt-3 text-sm text-ink-600 leading-relaxed pb-2">{{ faq.answer }}</p>
+            </details>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+    </div>
+
+    <aside class="space-y-6 lg:sticky lg:top-24 lg:self-start">
+      <div class="rounded-2xl border border-ink-200 bg-white p-6 shadow-sm">
+        <h3 class="text-sm font-bold uppercase tracking-wide text-ink-500">At a glance</h3>
+        <dl class="mt-4 space-y-3">
+          {% for label, value in city_guide.lifestyle %}
+            <div>
+              <dt class="text-xs text-ink-500">{{ label }}</dt>
+              <dd class="font-semibold text-ink-900">{{ value }}</dd>
+            </div>
+          {% endfor %}
+        </dl>
+      </div>
+      <a href="{% url 'web:quiz' %}"
+         class="block rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+        <div class="text-2xl mb-2">✨</div>
+        <div class="font-display text-lg font-black">Not sure yet?</div>
+        <p class="mt-2 text-sm text-white/85">Take our 1-minute quiz to find your perfect destination.</p>
+      </a>
+    </aside>
+  </div>
+</div>
+{% endblock %}

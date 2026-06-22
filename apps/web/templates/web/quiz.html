@@ -1,0 +1,119 @@
+{% extends "web/base.html" %}
+{% load web_extras %}
+
+{% block content %}
+<section class="relative overflow-hidden bg-ink-900 text-white">
+  <div class="absolute inset-0 bg-radial-brand opacity-30"></div>
+  <div class="relative mx-auto max-w-3xl px-6 py-14 md:py-20 text-center">
+    <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide ring-1 ring-white/15">
+      ✨ 1-minute quiz
+    </span>
+    <h1 class="mt-5 font-display text-4xl md:text-5xl font-black tracking-tight leading-[1.05]">
+      Where in the world should you buy?
+    </h1>
+    <p class="mt-4 text-lg text-white/75">
+      Answer five quick questions and we'll match you to your ideal destination —
+      plus real homes that fit your lifestyle and budget.
+    </p>
+  </div>
+</section>
+
+<section class="py-12 md:py-16">
+  <div class="mx-auto max-w-2xl px-6">
+
+    {# ── Quiz card ──────────────────────────────────────────────── #}
+    <div x-data="quizApp()" x-cloak>
+      <div x-show="!submitted" class="rounded-3xl border border-ink-200 bg-white p-6 sm:p-8 shadow-card">
+        {# Progress #}
+        <div class="mb-6">
+          <div class="flex items-center justify-between text-xs font-semibold text-ink-500">
+            <span x-text="'Question ' + (step + 1) + ' of ' + questions.length"></span>
+            <span x-text="Math.round(((step) / questions.length) * 100) + '%'"></span>
+          </div>
+          <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-ink-100">
+            <div class="h-full rounded-full bg-brand-600 transition-all duration-300"
+                 :style="'width:' + ((step) / questions.length * 100) + '%'"></div>
+          </div>
+        </div>
+
+        {# Questions #}
+        <template x-for="(q, qi) in questions" :key="q.id">
+          <div x-show="step === qi" x-transition.opacity>
+            <h2 class="font-display text-2xl font-black text-ink-900" x-text="q.prompt"></h2>
+            <div class="mt-6 grid gap-3">
+              <template x-for="opt in q.options" :key="opt.value">
+                <button type="button" @click="choose(q.id, opt.value)"
+                        class="group flex items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-150"
+                        :class="answers[q.id] === opt.value ? 'border-brand-600 bg-brand-50' : 'border-ink-200 hover:border-brand-300 hover:bg-ink-50'">
+                  <span class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-ink-50 text-2xl group-hover:scale-110 transition-transform" x-text="opt.emoji"></span>
+                  <span class="font-semibold text-ink-900" x-text="opt.label"></span>
+                  <svg class="ml-auto h-5 w-5 text-brand-600 opacity-0 transition-opacity"
+                       :class="answers[q.id] === opt.value ? 'opacity-100' : ''"
+                       fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                </button>
+              </template>
+            </div>
+            <div class="mt-6 flex items-center justify-between">
+              <button type="button" @click="back()" x-show="step > 0"
+                      class="text-sm font-semibold text-ink-500 hover:text-ink-800">← Back</button>
+              <span x-show="step === 0"></span>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      {# Hidden form submitted via HTMX once all answered #}
+      <form id="quiz-form" hx-post="{% url 'web:quiz_result' %}" hx-target="#quiz-result"
+            hx-swap="innerHTML" @htmx:after-request="submitted = true" class="hidden">
+        {% csrf_token %}
+        <template x-for="[k, v] in Object.entries(answers)" :key="k">
+          <input type="hidden" :name="k" :value="v">
+        </template>
+      </form>
+
+      {# Loading state #}
+      <div x-show="submitting" class="rounded-3xl border border-ink-200 bg-white p-12 text-center shadow-card">
+        <div class="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-ink-200 border-t-brand-600"></div>
+        <p class="mt-4 text-sm font-semibold text-ink-600">Finding your perfect destination…</p>
+      </div>
+    </div>
+
+    {# Result swaps in here #}
+    <div id="quiz-result" class="mt-8"></div>
+  </div>
+</section>
+
+<script>
+  function quizApp() {
+    return {
+      questions: {{ questions_json|safe }},
+      step: 0,
+      answers: {},
+      submitting: false,
+      submitted: false,
+      choose(id, value) {
+        this.answers[id] = value;
+        // brief pause so the selection is visible, then advance
+        setTimeout(() => {
+          if (this.step < this.questions.length - 1) {
+            this.step++;
+          } else {
+            this.finish();
+          }
+        }, 220);
+      },
+      back() { if (this.step > 0) this.step--; },
+      finish() {
+        this.submitting = true;
+        this.$nextTick(() => {
+          if (window.htmx) {
+            window.htmx.trigger(document.getElementById('quiz-form'), 'submit');
+          } else {
+            document.getElementById('quiz-form').requestSubmit();
+          }
+        });
+      },
+    };
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% load web_extras %}
+<div x-data="{ copied: false,
+      quizUrl: '{{ request.scheme }}://{{ request.get_host }}{% url 'web:quiz' %}',
+      shareText: 'My perfect place to buy a home is {{ guide.name|escapejs }}{{ flag }} — find yours on Vivalty:',
+      async copy() {
+        try { await navigator.clipboard.writeText(this.shareText + ' ' + this.quizUrl); }
+        catch(e){ const t=document.createElement('textarea'); t.value=this.shareText+' '+this.quizUrl; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+        this.copied = true; setTimeout(()=>this.copied=false, 1800);
+      } }"
+     class="overflow-hidden rounded-3xl border border-ink-200 bg-white shadow-card">
+
+  {# ── Reveal banner ──────────────────────────────────────────────── #}
+  <div class="relative bg-ink-900 px-6 py-10 text-center text-white">
+    <div class="absolute inset-0 bg-radial-brand opacity-40"></div>
+    <div class="relative">
+      <div class="text-xs font-bold uppercase tracking-[0.25em] text-brand-300">Your perfect destination</div>
+      <div class="mt-3 text-6xl">{{ flag }}</div>
+      <h2 class="mt-2 font-display text-3xl md:text-4xl font-black">{{ guide.name|default:"Your match" }}</h2>
+      {% if guide %}<p class="mt-2 text-white/75">{{ guide.tagline }}</p>{% endif %}
+    </div>
+  </div>
+
+  <div class="p-6 sm:p-8">
+    {% if guide %}
+      <p class="text-ink-700 leading-relaxed">{{ guide.intro|truncatewords:45 }}</p>
+    {% endif %}
+
+    {# ── Matching homes ───────────────────────────────────────────── #}
+    {% if listings %}
+      <div class="mt-7">
+        <div class="mb-3 text-sm font-bold text-ink-900">Homes you might love in {{ guide.name }}</div>
+        <div class="grid gap-4 sm:grid-cols-3">
+          {% for p in listings %}
+            <a href="{% url 'web:property_detail' p.id %}" class="group block overflow-hidden rounded-2xl border border-ink-200 bg-white transition-all hover:shadow-md">
+              <div class="aspect-[4/3] overflow-hidden bg-ink-100">
+                <img src="{{ p.primary_image_url|default:'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600' }}"
+                     alt="{{ p.title }}" loading="lazy"
+                     class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              </div>
+              <div class="p-3">
+                <div class="text-[11px] text-ink-500 truncate">{{ p.city.name }}</div>
+                <div class="text-sm font-extrabold text-ink-900">{{ p.price|money:p.currency }}</div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    {# ── CTAs ─────────────────────────────────────────────────────── #}
+    <div class="mt-7 flex flex-wrap gap-3">
+      {% if guide %}
+        <a href="{% url 'web:destination_detail' guide.slug %}" class="btn-primary rounded-xl px-5 py-2.5">Explore {{ guide.name }}</a>
+        <a href="{% url 'web:marketplace' %}?country={{ guide.code }}" class="btn-secondary rounded-xl px-5 py-2.5">See all homes</a>
+      {% else %}
+        <a href="{% url 'web:marketplace' %}" class="btn-primary rounded-xl px-5 py-2.5">Browse homes</a>
+      {% endif %}
+      <a href="{% url 'web:quiz' %}" class="inline-flex items-center rounded-xl px-4 py-2.5 text-sm font-semibold text-ink-500 hover:text-ink-800">↻ Retake quiz</a>
+    </div>
+
+    {# ── Share + email capture ────────────────────────────────────── #}
+    <div class="mt-8 grid gap-4 sm:grid-cols-2">
+      <div class="rounded-2xl border border-ink-200 bg-ink-50 p-4">
+        <div class="text-sm font-bold text-ink-900">Share your result</div>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <a :href="'https://wa.me/?text=' + encodeURIComponent(shareText + ' ' + quizUrl)" target="_blank" rel="noopener"
+             class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-600">WhatsApp</a>
+          <a :href="'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(quizUrl)" target="_blank" rel="noopener"
+             class="inline-flex items-center gap-1.5 rounded-lg bg-[#1877F2] px-3 py-2 text-xs font-bold text-white hover:opacity-90">Facebook</a>
+          <button type="button" @click="copy()"
+             class="inline-flex items-center gap-1.5 rounded-lg bg-ink-200 px-3 py-2 text-xs font-bold text-ink-800 hover:bg-ink-300">
+            <span x-text="copied ? 'Copied!' : 'Copy link'">Copy link</span>
+          </button>
+        </div>
+      </div>
+      <div class="rounded-2xl border border-ink-200 bg-ink-50 p-4">
+        <div class="text-sm font-bold text-ink-900">Get matching homes by email</div>
+        <form hx-post="{% url 'web:newsletter_subscribe' %}" hx-target="this" hx-swap="outerHTML" class="mt-3 flex gap-2">
+          {% csrf_token %}
+          <input type="email" name="email" required placeholder="you@email.com" class="input flex-1 rounded-lg text-sm" />
+          <button type="submit" class="btn-primary rounded-lg px-4 text-sm">Notify me</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

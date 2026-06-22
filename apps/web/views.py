@@ -137,29 +137,39 @@ def robots_txt(request: HttpRequest) -> HttpResponse:
 # ─── Public pages ───────────────────────────────────────────────────────────
 
 def home(request: HttpRequest) -> HttpResponse:
+    featured_order = (
+        "-metric__investment_score"
+        if settings.SHOW_INVESTMENT_FEATURES
+        else "-is_featured,-created_at"
+    )
     featured = (
         Property.objects.select_related("country", "city", "metric")
         .prefetch_related("images", "tags")
         .filter(status="active", is_featured=True)
-        .order_by("-metric__investment_score")[:6]
+        .order_by(featured_order)[:6]
     )
     if not featured.exists():
         featured = (
             Property.objects.select_related("country", "city", "metric")
             .prefetch_related("images", "tags")
             .filter(status="active")
-            .order_by("-metric__investment_score")[:6]
+            .order_by(featured_order)[:6]
         )
 
     # Hero gallery — pick the highest-scored listing per country (max 3)
     # so the floating mosaic feels diverse and product-led.
     seen_countries: set[str] = set()
     hero_gallery: list[Property] = []
+    hero_order = (
+        "-metric__investment_score,-is_featured"
+        if settings.SHOW_INVESTMENT_FEATURES
+        else "-is_featured,-created_at"
+    )
     for prop in (
         Property.objects.select_related("country", "city", "metric")
         .prefetch_related("images")
         .filter(status="active")
-        .order_by("-metric__investment_score", "-is_featured")
+        .order_by(hero_order)
     ):
         if prop.country.code in seen_countries:
             continue
@@ -235,7 +245,12 @@ def home(request: HttpRequest) -> HttpResponse:
             Favorite.objects.filter(user=request.user).values_list("property_id", flat=True)
         )
 
+    from apps.web.models import Testimonial
     from apps.web.seo_helpers import site_json_ld
+
+    testimonials = list(Testimonial.objects.filter(is_active=True).order_by("order", "-created_at")[:6])
+    if not testimonials:
+        testimonials = _default_testimonials()
 
     return render(
         request,
@@ -252,66 +267,47 @@ def home(request: HttpRequest) -> HttpResponse:
             "quick_sim_country": "PT",
             "favorite_ids": favorite_ids,
             "site_json_ld": site_json_ld(),
+            "testimonials": testimonials,
         },
     )
 
 
+def _default_testimonials():
+    """Fallback testimonials when none are configured in admin."""
+    from apps.web.models import Testimonial
+
+    return [
+        Testimonial(
+            name="Sophie M.",
+            location="Bought in Lisbon",
+            quote="Vivalty made finding our apartment in Alfama straightforward — clear photos, honest descriptions and a responsive agent.",
+            rating=5,
+        ),
+        Testimonial(
+            name="James & Priya K.",
+            location="Relocated to Valencia",
+            quote="We compared neighbourhoods using the destination guides, then booked viewings within a week. The whole process felt calm and organised.",
+            rating=5,
+        ),
+        Testimonial(
+            name="Ahmed R.",
+            location="Dubai Marina",
+            quote="As a first-time buyer in Dubai, having verified listings and WhatsApp contact made all the difference. Highly recommend.",
+            rating=5,
+        ),
+    ]
+
+
 def marketplace(request: HttpRequest) -> HttpResponse:
-    qs = (
-        Property.objects.select_related("country", "city", "metric")
-        .prefetch_related("images", "tags")
-        .filter(status="active")
-    )
+    from apps.web.services import listing_filters
 
     p = request.GET
-    if (search := p.get("search")):
-        qs = qs.filter(
-            Q(title__icontains=search)
-            | Q(description__icontains=search)
-            | Q(city__name__icontains=search)
-            | Q(country__name__icontains=search)
-            | Q(listing_agency__icontains=search)
-            | Q(listing_ref__icontains=search)
-        )
-    if (country := p.get("country")):
-        qs = qs.filter(country__code__iexact=country)
-    if (city := p.get("city")):
-        qs = qs.filter(city__slug=city)
-    if (ptype := p.get("type")):
-        qs = qs.filter(property_type=ptype)
-    if (price_min := p.get("price_min")):
-        try: qs = qs.filter(price__gte=float(price_min))
-        except ValueError: pass
-    if (price_max := p.get("price_max")):
-        try: qs = qs.filter(price__lte=float(price_max))
-        except ValueError: pass
-    if (score_min := p.get("score_min")):
-        try: qs = qs.filter(metric__investment_score__gte=int(score_min))
-        except ValueError: pass
-    if (roi_min := p.get("roi_min")):
-        try: qs = qs.filter(metric__estimated_roi_min__gte=float(roi_min))
-        except ValueError: pass
-    purpose = (p.get("purpose") or "buy").strip().lower()
-    if purpose == "rent":
-        if (max_rent := p.get("max_rent")):
-            try:
-                qs = (
-                    qs.filter(metric__rental_yield__gt=0)
-                    .annotate(est_monthly_rent=F("price") * F("metric__rental_yield") / 1200)
-                    .filter(est_monthly_rent__lte=float(max_rent))
-                )
-            except ValueError:
-                pass
-    elif (mx := p.get("max_budget")):
-        try:
-            qs = qs.filter(price__lte=float(mx))
-        except ValueError:
-            pass
+    qs = listing_filters.apply_filters(listing_filters.base_active_queryset(), p)
 
     ordering = p.get("ordering") or "-is_featured,-created_at"
     if p.get("best_match") == "1":
         ordering = "-metric__investment_score,-is_featured,-created_at"
-    qs = qs.order_by(*[o.strip() for o in ordering.split(",") if o.strip()])
+    qs = qs.order_by(*listing_filters.resolve_ordering(p))
 
     try:
         page = max(1, int(p.get("page", 1)))
@@ -340,9 +336,16 @@ def marketplace(request: HttpRequest) -> HttpResponse:
         "faro": (37.02, -7.94),
     }
 
+    show_invest = settings.SHOW_INVESTMENT_FEATURES
+
     def _map_pin(prop) -> dict:
-        city_key = prop.city.name.lower()
-        coords = CITY_COORDS.get(city_key)
+        lat = float(prop.latitude) if prop.latitude is not None else None
+        lon = float(prop.longitude) if prop.longitude is not None else None
+        if lat is None or lon is None:
+            city_key = prop.city.name.lower()
+            coords = CITY_COORDS.get(city_key)
+            if coords:
+                lat, lon = coords
         m = prop.metric if hasattr(prop, "metric") and prop.metric else None
         def _dec(v):
             return float(v) if isinstance(v, Decimal) else (v or 0)
@@ -352,12 +355,17 @@ def marketplace(request: HttpRequest) -> HttpResponse:
             "city": prop.city.name,
             "country": prop.country.name,
             "price": f"{prop.currency} {int(prop.price):,}",
-            "score": m.investment_score if m else None,
-            "roi_min": _dec(m.estimated_roi_min) if m else 0,
-            "roi_max": _dec(m.estimated_roi_max) if m else 0,
-            "yield": _dec(m.rental_yield) if m else 0,
-            "lat": coords[0] if coords else None,
-            "lon": coords[1] if coords else None,
+            "type": prop.get_property_type_display(),
+            "beds": prop.bedrooms,
+            "area": int(prop.area_sqm) if prop.area_sqm else None,
+            # Investment fields are nulled out in ads-safe mode so the map popup
+            # never surfaces ROI / yield / score.
+            "score": (m.investment_score if m else None) if show_invest else None,
+            "roi_min": (_dec(m.estimated_roi_min) if m else 0) if show_invest else None,
+            "roi_max": (_dec(m.estimated_roi_max) if m else 0) if show_invest else None,
+            "yield": (_dec(m.rental_yield) if m else 0) if show_invest else None,
+            "lat": lat,
+            "lon": lon,
         }
 
     _hx_target = (request.headers.get("HX-Target") or "").strip()
@@ -394,13 +402,25 @@ def property_detail(request: HttpRequest, pk: int) -> HttpResponse:
         pk=pk,
     )
     Property.objects.filter(pk=prop.pk).update(views_count=F("views_count") + 1)
-    similar = (
+
+    # Track recently-viewed listings in the session (most-recent first, capped).
+    try:
+        recent = [i for i in request.session.get("recent_views", []) if i != prop.pk]
+        recent.insert(0, prop.pk)
+        request.session["recent_views"] = recent[:12]
+    except Exception:
+        pass
+
+    similar_qs = (
         Property.objects.select_related("country", "city", "metric")
         .prefetch_related("images")
         .filter(country=prop.country, property_type=prop.property_type, status="active")
         .exclude(pk=prop.pk)
-        .order_by("-metric__investment_score")[:4]
     )
+    if settings.SHOW_INVESTMENT_FEATURES:
+        similar = list(similar_qs.order_by("-metric__investment_score")[:4])
+    else:
+        similar = list(similar_qs.order_by("-is_featured", "-created_at")[:4])
     is_favorited = (
         request.user.is_authenticated
         and Favorite.objects.filter(user=request.user, property=prop).exists()
@@ -424,9 +444,12 @@ def property_detail(request: HttpRequest, pk: int) -> HttpResponse:
 
     from apps.web.seo_helpers import property_json_ld, property_meta_description
 
+    from apps.web.services.og_image import absolute_og_url
+
     seo_title = f"{prop.title} · {prop.city.name} · Vivalty"
     seo_description = property_meta_description(prop)
-    seo_image = prop.primary_image_url or f"{settings.SITE_URL.rstrip('/')}/static/img/og-image.png"
+    # Dynamic, branded share card (photo + price + location overlay).
+    seo_image = absolute_og_url(prop)
 
     return render(
         request,
@@ -442,6 +465,357 @@ def property_detail(request: HttpRequest, pk: int) -> HttpResponse:
             "seo_description": seo_description,
             "seo_image": seo_image,
             "property_json_ld": property_json_ld(prop),
+        },
+    )
+
+
+def quiz(request: HttpRequest) -> HttpResponse:
+    """Dream-home matchmaker — a shareable lifestyle quiz."""
+    from apps.web.services.quiz import QUESTIONS
+
+    return render(request, "web/quiz.html", {"questions_json": json.dumps(QUESTIONS)})
+
+
+@require_POST
+def quiz_result(request: HttpRequest) -> HttpResponse:
+    """Score the quiz answers and return the result fragment (HTMX swap)."""
+    from apps.web.services import destinations as dest
+    from apps.web.services.quiz import QUESTIONS, score_answers
+
+    valid_ids = {q["id"] for q in QUESTIONS}
+    answers = {k: v for k, v in request.POST.items() if k in valid_ids}
+    code, budget = score_answers(answers)
+
+    guide = dest.guide_by_code(code)
+    country = Country.objects.filter(code=code).first()
+
+    listings = []
+    if country is not None:
+        listings = list(
+            Property.objects.select_related("country", "city", "metric")
+            .prefetch_related("images")
+            .filter(status=Status.ACTIVE, country=country, price__lte=budget)
+            .order_by("-is_featured", "-created_at")[:3]
+        )
+        if not listings:
+            listings = list(
+                Property.objects.select_related("country", "city", "metric")
+                .prefetch_related("images")
+                .filter(status=Status.ACTIVE, country=country)
+                .order_by("price")[:3]
+            )
+
+    flag = country.flag_emoji if country else "📍"
+    return render(
+        request,
+        "web/components/quiz_result.html",
+        {
+            "guide": guide,
+            "country": country,
+            "flag": flag,
+            "listings": listings,
+            "budget": budget,
+        },
+    )
+
+
+def property_og_image(request: HttpRequest, pk: int) -> HttpResponse:
+    """Dynamic 1200×630 share card for a listing (cached)."""
+    from django.core.cache import cache
+
+    from apps.web.services.og_image import render_property_og
+
+    prop = get_object_or_404(
+        Property.objects.select_related("country", "city").prefetch_related("images"),
+        pk=pk,
+    )
+
+    ts = int(prop.updated_at.timestamp()) if prop.updated_at else 0
+    cache_key = f"og:property:{pk}:{ts}"
+
+    # Cache is a nice-to-have; never let a cache outage break the share card.
+    png = None
+    try:
+        png = cache.get(cache_key)
+    except Exception:
+        logger.warning("OG cache read failed", exc_info=True)
+
+    if png is None:
+        try:
+            png = render_property_og(prop)
+        except Exception:
+            logger.exception("OG render failed for property %s", pk)
+            # Redirect to the static fallback so the tag still resolves.
+            return redirect(f"{settings.SITE_URL.rstrip('/')}/static/img/og-image.png")
+        try:
+            cache.set(cache_key, png, 60 * 60 * 24 * 7)
+        except Exception:
+            logger.warning("OG cache write failed", exc_info=True)
+
+    resp = HttpResponse(png, content_type="image/png")
+    resp["Cache-Control"] = "public, max-age=86400"
+    return resp
+
+
+def property_story(request: HttpRequest, pk: int) -> HttpResponse:
+    """Vertical 9:16 slideshow for TikTok/Reels — screen-record friendly."""
+    prop = get_object_or_404(
+        Property.objects.select_related("country", "city").prefetch_related("images"),
+        pk=pk,
+    )
+    story_images: list[str] = []
+    for img in prop.images.all():
+        if img.url:
+            story_images.append(img.url)
+    if not story_images:
+        primary = prop.primary_image_url
+        if primary:
+            story_images.append(primary)
+    if not story_images:
+        story_images.append(
+            "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1080&q=80"
+        )
+
+    return render(
+        request,
+        "web/property_story.html",
+        {
+            "p": prop,
+            "story_images": story_images,
+            "story_images_json": json.dumps(story_images),
+            "seo_title": f"{prop.title} · Story · Vivalty",
+        },
+    )
+
+
+def price_explorer(request: HttpRequest) -> HttpResponse:
+    """Interactive 'what does €X buy?' comparison across destinations."""
+    from apps.web.services.price_compare import budget_presets, compare_budget
+
+    budget = _safe_int(request.GET.get("budget"), 300_000)
+    budget = max(50_000, min(5_000_000, budget))
+    rows = compare_budget(float(budget))
+    site = settings.SITE_URL.rstrip("/")
+
+    return render(
+        request,
+        "web/price_explorer.html",
+        {
+            "budget": budget,
+            "presets": budget_presets(),
+            "rows": rows,
+            "share_url": f"{site}/explore/prices/?budget={budget}",
+            "seo_title": f"What does €{budget:,} buy abroad? · Vivalty".replace(",", " "),
+            "seo_description": (
+                f"See what €{budget:,} can buy across Portugal, Spain, France, Italy, "
+                "the UK, the UAE and Switzerland — real listings, no financial advice."
+            ).replace(",", " "),
+        },
+    )
+
+
+def destinations_index(request: HttpRequest) -> HttpResponse:
+    """Hub page linking to every country destination guide (ads-safe SEO)."""
+    from apps.web.services import destinations as dest
+
+    guides = dest.all_guides()
+    codes = [g.code for g in guides]
+
+    countries = {c.code: c for c in Country.objects.filter(code__in=codes)}
+    counts = {
+        row["country__code"]: row["n"]
+        for row in (
+            Property.objects.filter(status=Status.ACTIVE, country__code__in=codes)
+            .values("country__code")
+            .annotate(n=Count("id"))
+        )
+    }
+
+    cards = []
+    for g in guides:
+        country = countries.get(g.code)
+        cards.append(
+            {
+                "guide": g,
+                "country": country,
+                "listings_count": counts.get(g.code, 0),
+                "cities": list(country.cities.all()[:4]) if country else [],
+            }
+        )
+
+    return render(
+        request,
+        "web/destinations_index.html",
+        {"cards": cards, "total_listings": sum(counts.values())},
+    )
+
+
+def destination_detail(request: HttpRequest, slug: str) -> HttpResponse:
+    """Per-country destination guide: lifestyle, neighbourhoods, buying steps, FAQ."""
+    from apps.web.services import destinations as dest
+
+    guide = dest.guide_by_slug(slug)
+    if guide is None:
+        from django.http import Http404
+
+        raise Http404("Unknown destination")
+
+    country = Country.objects.filter(code=guide.code).first()
+
+    cities = []
+    listings = []
+    listings_count = 0
+    if country is not None:
+        cities = list(
+            country.cities.annotate(
+                listings_count=Count("properties", filter=Q(properties__status=Status.ACTIVE))
+            ).order_by(F("population").desc(nulls_last=True))
+        )
+        listings_qs = (
+            Property.objects.select_related("country", "city", "metric")
+            .prefetch_related("images")
+            .filter(status=Status.ACTIVE, country=country)
+            .order_by("-is_featured", "-created_at")
+        )
+        listings_count = listings_qs.count()
+        listings = list(listings_qs[:6])
+
+    # FAQ JSON-LD for rich results.
+    faq_ld = None
+    if guide.faqs:
+        faq_ld = json.dumps(
+            {
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": f.question,
+                        "acceptedAnswer": {"@type": "Answer", "text": f.answer},
+                    }
+                    for f in guide.faqs
+                ],
+            },
+            ensure_ascii=False,
+        )
+
+    hero_image = guide.hero_image
+    for p in listings:
+        if p.primary_image_url:
+            hero_image = p.primary_image_url
+            break
+
+    # "Other destinations" rail — (code, slug, name, flag) excluding current.
+    flags = {c.code: c.flag_emoji for c in Country.objects.filter(code__in=[g.code for g in dest.all_guides()])}
+    other_destinations = [
+        (g.code, g.slug, g.name, flags.get(g.code, "📍"))
+        for g in dest.all_guides()
+        if g.code != guide.code
+    ]
+
+    from apps.web.services import city_guides as cg
+
+    city_guide_slugs = {s for (c, s) in cg.all_city_guide_keys() if c == guide.code}
+
+    seo_title = f"Buying property in {guide.name} — a buyer's guide · Vivalty"
+
+    return render(
+        request,
+        "web/destination_detail.html",
+        {
+            "guide": guide,
+            "country": country,
+            "cities": cities,
+            "city_guide_slugs": city_guide_slugs,
+            "listings": listings,
+            "listings_count": listings_count,
+            "hero_image": hero_image,
+            "OTHER_DESTINATIONS": other_destinations,
+            "faq_json_ld": faq_ld,
+            "seo_title": seo_title,
+            "seo_description": guide.meta_description,
+            "seo_image": hero_image,
+        },
+    )
+
+
+def city_destination_detail(
+    request: HttpRequest, country_slug: str, city_slug: str
+) -> HttpResponse:
+    """City-level guide — e.g. Living in Lisbon, Buying in Dubai Marina."""
+    from django.http import Http404
+
+    from apps.web.services import city_guides as cg
+    from apps.web.services import destinations as dest
+
+    country_guide = dest.guide_by_slug(country_slug)
+    if country_guide is None:
+        raise Http404("Unknown destination")
+
+    city_guide = cg.city_guide(country_guide.code, city_slug)
+    if city_guide is None:
+        raise Http404("Unknown city guide")
+
+    country = Country.objects.filter(code=country_guide.code).first()
+    city_obj = (
+        City.objects.filter(country=country, slug=city_slug).first()
+        if country is not None
+        else None
+    )
+
+    listings: list[Property] = []
+    listings_count = 0
+    if city_obj is not None:
+        listings_qs = (
+            Property.objects.select_related("country", "city", "metric")
+            .prefetch_related("images")
+            .filter(status=Status.ACTIVE, city=city_obj)
+            .order_by("-is_featured", "-created_at")
+        )
+        listings_count = listings_qs.count()
+        listings = list(listings_qs[:6])
+
+    faq_ld = None
+    if city_guide.faqs:
+        faq_ld = json.dumps(
+            {
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": f.question,
+                        "acceptedAnswer": {"@type": "Answer", "text": f.answer},
+                    }
+                    for f in city_guide.faqs
+                ],
+            },
+            ensure_ascii=False,
+        )
+
+    hero_image = city_guide.hero_image
+    for p in listings:
+        if p.primary_image_url:
+            hero_image = p.primary_image_url
+            break
+
+    seo_title = f"Living in {city_guide.name} — buyer's guide · Vivalty"
+
+    return render(
+        request,
+        "web/city_destination.html",
+        {
+            "country_guide": country_guide,
+            "city_guide": city_guide,
+            "country": country,
+            "city": city_obj,
+            "listings": listings,
+            "listings_count": listings_count,
+            "hero_image": hero_image,
+            "faq_json_ld": faq_ld,
+            "seo_title": seo_title,
+            "seo_description": city_guide.meta_description,
+            "seo_image": hero_image,
         },
     )
 
@@ -871,6 +1245,63 @@ def home_favorite_toggle(request: HttpRequest, pk: int) -> HttpResponse:
     )
 
 
+_SAVED_SEARCH_KEYS = (
+    "search", "country", "city", "type", "price_min", "price_max",
+    "score_min", "roi_min", "purpose", "max_rent", "max_budget", "ordering",
+)
+
+
+@login_required
+@require_POST
+def save_search(request: HttpRequest) -> HttpResponse:
+    """Persist the user's current marketplace filters as a SavedSearch."""
+    from django.http import QueryDict
+
+    from apps.web.models import SavedSearch
+    from apps.web.services import listing_filters
+
+    # Collect known filter keys from the POST (sent as hidden inputs).
+    clean = QueryDict(mutable=True)
+    for key in _SAVED_SEARCH_KEYS:
+        val = (request.POST.get(key) or "").strip()
+        if val:
+            clean[key] = val
+
+    country_names = {c.code: c.name for c in Country.objects.all()}
+    label = listing_filters.describe_filters(clean, country_names=country_names)
+    query = clean.urlencode()
+
+    # Avoid duplicates for the same user + filter set.
+    existing = SavedSearch.objects.filter(user=request.user, query=query).first()
+    if existing:
+        saved = existing
+        if not existing.is_active:
+            existing.is_active = True
+            existing.save(update_fields=["is_active"])
+        created = False
+    else:
+        saved = SavedSearch.objects.create(
+            user=request.user, label=label, query=query
+        )
+        created = True
+
+    return render(
+        request,
+        "web/components/save_search_button.html",
+        {"saved": saved, "just_saved": True, "created": created},
+    )
+
+
+@login_required
+@require_POST
+def saved_search_delete(request: HttpRequest, pk: int) -> HttpResponse:
+    """Delete one of the current user's saved searches (HTMX → removes the row)."""
+    from apps.web.models import SavedSearch
+
+    SavedSearch.objects.filter(pk=pk, user=request.user).delete()
+    return HttpResponse("")
+
+
 @require_POST
 def newsletter_subscribe(request: HttpRequest) -> HttpResponse:
     """Capture an email for the monthly market-intelligence roundup.
@@ -1174,12 +1605,19 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     else:
         avg_score, avg_yield, total_value = 0, 0, 0
 
+    from apps.web.models import SavedSearch
+
+    saved_searches = list(
+        SavedSearch.objects.filter(user=request.user).order_by("-created_at")
+    )
+
     return render(
         request,
         "web/dashboard.html",
         {
             "favorites": favorites,
             "mine": mine,
+            "saved_searches": saved_searches,
             "watchlist_kpis": {
                 "count": len(favorites),
                 "avg_score": avg_score,

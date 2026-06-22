@@ -21,6 +21,16 @@ _PAGE_SEO: dict[str, tuple[str, str]] = {
         "Explore Vivalty's 7 international property destinations — from Lisbon and Paris to "
         "Dubai and London.",
     ),
+    "destinations": (
+        "Destination guides · Buy property abroad · Vivalty",
+        "Practical guides to buying a home in Portugal, Spain, France, Italy, the UK, the UAE "
+        "and Switzerland — lifestyle, neighbourhoods, the buying process and FAQs.",
+    ),
+    "quiz": (
+        "Where should you buy? · Dream-home quiz · Vivalty",
+        "Take our 1-minute quiz to discover your perfect international destination — "
+        "and see real homes that match your lifestyle and budget.",
+    ),
     "methodology": (
         "About our listings · Vivalty",
         "How Vivalty curates, verifies and presents international property listings.",
@@ -83,6 +93,19 @@ _PAGE_SEO: dict[str, tuple[str, str]] = {
         "Contact · Vivalty",
         "Contact the Vivalty team for buyer enquiries, listing support and general questions.",
     ),
+    "price_explorer": (
+        "What does your budget buy? · Price explorer · Vivalty",
+        "Compare what €150k to €1M buys across Portugal, Spain, France, Italy, the UK, "
+        "the UAE and Switzerland — interactive, curiosity-driven, no financial advice.",
+    ),
+    "city_destination": (
+        "City guide · Vivalty",
+        "Living and buying a home abroad — neighbourhoods, lifestyle and practical tips.",
+    ),
+    "property_story": (
+        "Property story · Vivalty",
+        "Vertical property slideshow — share on TikTok, Reels or WhatsApp.",
+    ),
 }
 
 _DEFAULT_TITLE = "Vivalty — International real estate marketplace"
@@ -115,6 +138,27 @@ def seo(request):
     }
 
 
+def recently_viewed(request):
+    """Expose the user's recently-viewed listings (from the session) site-wide."""
+    try:
+        ids = request.session.get("recent_views", [])
+    except Exception:
+        ids = []
+    if not ids:
+        return {"RECENTLY_VIEWED": []}
+
+    from apps.properties.models import Property, Status
+
+    props = (
+        Property.objects.filter(id__in=ids[:12], status=Status.ACTIVE)
+        .select_related("country", "city", "metric")
+        .prefetch_related("images")
+    )
+    by_id = {p.id: p for p in props}
+    ordered = [by_id[i] for i in ids if i in by_id]
+    return {"RECENTLY_VIEWED": ordered[:8]}
+
+
 def company(request):
     """Business identity shown on legal pages and the site footer."""
     return {
@@ -123,4 +167,17 @@ def company(request):
         "COMPANY_SUPPORT_EMAIL": settings.COMPANY_SUPPORT_EMAIL,
         "COMPANY_INVESTOR_EMAIL": settings.COMPANY_INVESTOR_EMAIL,
         "COMPANY_VAT_NUMBER": settings.COMPANY_VAT_NUMBER,
+        "COMPANY_WHATSAPP": settings.COMPANY_WHATSAPP,
+    }
+
+
+def i18n_ui(request):
+    """Expose supported languages and the active code for the language switcher."""
+    from apps.web.i18n import SUPPORTED_LANGUAGES, active_language
+
+    lang = active_language(request)
+    return {
+        "UI_LANGUAGES": SUPPORTED_LANGUAGES,
+        "UI_LANGUAGE": lang,
+        "UI_RTL": lang == "ar",
     }

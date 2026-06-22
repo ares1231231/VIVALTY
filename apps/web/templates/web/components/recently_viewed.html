@@ -1,0 +1,36 @@
+{% load web_extras %}
+{% comment %}
+Horizontal strip of recently-viewed listings (from the session).
+Pass `exclude_id` to omit the listing currently being viewed.
+{% endcomment %}
+{% with items=RECENTLY_VIEWED %}
+  {% if items %}
+    {% with shown=0 %}{% endwith %}
+    <section class="border-t border-ink-200 bg-white">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="font-display text-lg font-black tracking-tight text-ink-900">Recently viewed</h2>
+        </div>
+        <div class="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
+          {% for p in items %}
+            {% if p.id != exclude_id %}
+              <a href="{% url 'web:property_detail' p.id %}"
+                 class="group w-56 flex-shrink-0 snap-start overflow-hidden rounded-2xl border border-ink-200 bg-white transition-all hover:shadow-md">
+                <div class="aspect-[16/10] overflow-hidden bg-ink-100">
+                  <img src="{{ p.primary_image_url|default:'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500' }}"
+                       alt="{{ p.title }}" loading="lazy"
+                       class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                </div>
+                <div class="p-3">
+                  <div class="text-[11px] text-ink-500 truncate">{{ p.city.name }}, {{ p.country.name }}</div>
+                  <div class="truncate text-sm font-bold text-ink-900 group-hover:text-brand-700 transition-colors">{{ p.title }}</div>
+                  <div class="mt-0.5 text-sm font-extrabold text-brand-700">{{ p.price|money:p.currency }}</div>
+                </div>
+              </a>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+{% endwith %}

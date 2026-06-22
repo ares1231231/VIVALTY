@@ -9,6 +9,8 @@ from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
 
 from apps.properties.models import Property, Status
+from apps.web.services import city_guides as _city_guides
+from apps.web.services import destinations as _destinations
 
 
 class _SiteUrlSitemap(Sitemap):
@@ -34,6 +36,9 @@ class StaticViewSitemap(_SiteUrlSitemap):
         pages = [
             "web:home",
             "web:marketplace",
+            "web:destinations",
+            "web:quiz",
+            "web:price_explorer",
             "web:become_owner",
             "web:privacy",
             "web:terms",
@@ -42,7 +47,7 @@ class StaticViewSitemap(_SiteUrlSitemap):
             "web:contact",
         ]
         if settings.SHOW_INVESTMENT_FEATURES:
-            pages[2:2] = [
+            pages[5:5] = [
                 "web:markets",
                 "web:methodology",
                 "web:simulator",
@@ -52,6 +57,37 @@ class StaticViewSitemap(_SiteUrlSitemap):
 
     def location(self, item):
         return reverse(item)
+
+
+class DestinationSitemap(_SiteUrlSitemap):
+    """Per-country destination guide pages."""
+
+    priority = 0.8
+
+    def items(self):
+        return _destinations.guide_slugs()
+
+    def location(self, slug):
+        return reverse("web:destination_detail", kwargs={"slug": slug})
+
+
+class CityGuideSitemap(_SiteUrlSitemap):
+    """City-level destination guides (Living in Lisbon, etc.)."""
+
+    priority = 0.75
+
+    def items(self):
+        return _city_guides.all_city_guide_keys()
+
+    def location(self, item):
+        country_code, city_slug = item
+        guide = _destinations.guide_by_code(country_code)
+        if guide is None:
+            return "/"
+        return reverse(
+            "web:city_destination",
+            kwargs={"country_slug": guide.slug, "city_slug": city_slug},
+        )
 
 
 class PropertySitemap(_SiteUrlSitemap):

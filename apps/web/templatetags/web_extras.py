@@ -187,3 +187,21 @@ def positive_or_zero(value):
         return max(0.0, float(value))
     except (TypeError, ValueError):
         return 0
+
+
+@register.filter
+def digits(value) -> str:
+    """Keep only digits — used to build wa.me/<number> WhatsApp links."""
+    if not value:
+        return ""
+    return "".join(ch for ch in str(value) if ch.isdigit())
+
+
+@register.simple_tag(takes_context=True)
+def t(context, key: str, default: str = "") -> str:
+    """Translate a UI string key for the active language."""
+    from apps.web.i18n import active_language, translate
+
+    request = context.get("request")
+    lang = active_language(request) if request else "en"
+    return translate(key, lang, default or key)

@@ -207,10 +207,13 @@
       </div>
 
       {# Results count + sort bar (mobile sort) #}
-      <div class="flex items-center justify-between">
-        <p class="text-sm text-ink-500">
-          <span class="font-semibold text-ink-900" data-total>{{ total }}</span> results
-        </p>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <p class="text-sm text-ink-500">
+            <span class="font-semibold text-ink-900" data-total>{{ total }}</span> results
+          </p>
+          {% include "web/components/save_search_button.html" %}
+        </div>
         {# Mobile: sort select #}
         <form class="lg:hidden" method="get" action="{% url 'web:marketplace' %}"
               hx-get="{% url 'web:marketplace' %}"
@@ -246,6 +249,9 @@
     </div>
   </div>
 </div>
+
+{# ── Recently viewed strip ─────────────────────────────────────── #}
+{% include "web/components/recently_viewed.html" %}
 
 
 {# ═══ MOBILE FILTER DRAWER (Flowbite) ══════════════════════════════ #}

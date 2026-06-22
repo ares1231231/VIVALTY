@@ -1,0 +1,93 @@
+{% extends "web/base.html" %}
+{% load web_extras %}
+
+{% block content %}
+{# ── Hero ─────────────────────────────────────────────────────────── #}
+<section class="relative overflow-hidden bg-ink-900 text-white">
+  <div class="absolute inset-0 bg-radial-brand opacity-30"></div>
+  <div class="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/70 to-transparent"></div>
+  <div class="relative mx-auto max-w-7xl px-6 md:px-8 py-20 md:py-28">
+    <nav class="flex items-center gap-2 text-xs text-white/50 mb-6" aria-label="Breadcrumb">
+      <a href="{% url 'web:home' %}" class="hover:text-white transition-colors">Home</a>
+      <span aria-hidden="true">›</span>
+      <span class="text-white/80 font-medium">Destinations</span>
+    </nav>
+    <h1 class="max-w-3xl font-display text-4xl md:text-6xl font-black tracking-tight leading-[1.05]">
+      Find your place in the world
+    </h1>
+    <p class="mt-5 max-w-2xl text-lg text-white/75 leading-relaxed">
+      Honest, practical guides to buying a home across our seven destinations —
+      lifestyle, neighbourhoods, the buying process for foreigners, and answers to
+      the questions buyers ask most.
+    </p>
+    <div class="mt-8 flex flex-wrap items-center gap-4 text-sm text-white/70">
+      <span class="inline-flex items-center gap-2">
+        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/15">🌍</span>
+        7 destinations
+      </span>
+      <span class="inline-flex items-center gap-2">
+        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/15">🏡</span>
+        {{ total_listings }} verified listings
+      </span>
+      <span class="inline-flex items-center gap-2">
+        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/15">✓</span>
+        Updated guides
+      </span>
+    </div>
+  </div>
+</section>
+
+{# ── Destination grid ─────────────────────────────────────────────── #}
+<section class="py-16 md:py-24">
+  <div class="mx-auto max-w-7xl px-6 md:px-8">
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {% for c in cards %}
+        <a href="{% url 'web:destination_detail' c.guide.slug %}"
+           class="group relative flex flex-col overflow-hidden rounded-3xl border border-ink-200/70 bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+          <div class="relative aspect-[16/11] w-full overflow-hidden bg-ink-100">
+            <img src="{{ c.guide.hero_image }}" alt="Property in {{ c.guide.name }}"
+                 loading="lazy"
+                 class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]" />
+            <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-950/85 via-ink-900/20 to-transparent"></div>
+            <div class="absolute inset-x-0 bottom-0 p-5">
+              <div class="flex items-center gap-2 text-3xl drop-shadow">{{ c.country.flag_emoji|default:"📍" }}</div>
+              <h2 class="mt-1 font-display text-2xl font-black text-white drop-shadow">{{ c.guide.name }}</h2>
+            </div>
+            {% if c.listings_count %}
+              <span class="absolute right-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-ink-900 shadow-lg">
+                {{ c.listings_count }} home{{ c.listings_count|pluralize }}
+              </span>
+            {% endif %}
+          </div>
+          <div class="flex flex-1 flex-col p-5">
+            <p class="text-sm text-ink-600 leading-relaxed">{{ c.guide.tagline }}</p>
+            {% if c.cities %}
+              <div class="mt-4 flex flex-wrap gap-1.5">
+                {% for city in c.cities %}
+                  <span class="rounded-full bg-ink-50 px-2.5 py-1 text-[11px] font-medium text-ink-600 ring-1 ring-ink-200/70">{{ city.name }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <span class="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-brand-700 group-hover:gap-2.5 transition-all">
+              Explore {{ c.guide.name }}
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </span>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# ── CTA ──────────────────────────────────────────────────────────── #}
+<section class="border-t border-ink-200 bg-ink-50 py-16">
+  <div class="mx-auto max-w-3xl px-6 text-center">
+    <h2 class="font-display text-3xl font-black tracking-tight text-ink-900">Not sure where to start?</h2>
+    <p class="mt-3 text-ink-600">Take our 1-minute quiz and we'll match you to your ideal destination — with homes to match.</p>
+    <div class="mt-7 flex flex-wrap justify-center gap-3">
+      <a href="{% url 'web:quiz' %}" class="btn-primary px-6 py-3 rounded-xl">✨ Take the quiz</a>
+      <a href="{% url 'web:marketplace' %}" class="btn-secondary px-6 py-3 rounded-xl">Browse all listings</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1021,6 +1021,28 @@ HOW IT WORKS — 3 institutional steps
 </section>
 
 
+{% include "web/components/testimonials.html" %}
+
+<section class="relative overflow-hidden bg-gradient-to-br from-violet-950 via-ink-900 to-brand-950 py-20 reveal">
+  <div class="relative z-10 mx-auto max-w-5xl px-4 sm:px-6">
+    <div class="grid gap-8 md:grid-cols-2">
+      <a href="{% url 'web:quiz' %}" class="group rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur hover:bg-white/10 transition-all">
+        <div class="text-3xl mb-3">✨</div>
+        <h2 class="font-display text-2xl font-black text-white">Dream-home quiz</h2>
+        <p class="mt-2 text-white/70 text-sm leading-relaxed">5 quick questions → your perfect destination + matching listings.</p>
+        <span class="mt-4 inline-flex items-center gap-1 text-sm font-bold text-brand-300 group-hover:gap-2 transition-all">Take the quiz →</span>
+      </a>
+      <a href="{% url 'web:price_explorer' %}" class="group rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur hover:bg-white/10 transition-all">
+        <div class="text-3xl mb-3">💶</div>
+        <h2 class="font-display text-2xl font-black text-white">Price explorer</h2>
+        <p class="mt-2 text-white/70 text-sm leading-relaxed">What does €300k buy in Portugal vs Dubai vs London? Compare instantly.</p>
+        <span class="mt-4 inline-flex items-center gap-1 text-sm font-bold text-sky-300 group-hover:gap-2 transition-all">Explore prices →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+
 {% comment %}
 ═══════════════════════════════════════════════════════════════════
 AI ADVISOR CTA

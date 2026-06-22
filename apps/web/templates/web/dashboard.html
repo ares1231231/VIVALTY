@@ -405,6 +405,60 @@
     </div>
   </div>
 
+  {# ── Saved searches ────────────────────────────────────────────── #}
+  <section id="saved-searches" class="scroll-mt-24">
+    <div class="flex items-end justify-between gap-3">
+      <div>
+        <h2 class="font-display section-title">Saved searches</h2>
+        <p class="section-subtitle">We'll email you when new homes match your filters.</p>
+      </div>
+      <a href="{% url 'web:marketplace' %}" class="btn-secondary text-sm whitespace-nowrap">+ New search</a>
+    </div>
+
+    {% if saved_searches %}
+      <div class="mt-5 space-y-3">
+        {% for s in saved_searches %}
+          <div id="saved-search-{{ s.id }}" class="card flex flex-wrap items-center justify-between gap-4 p-4 sm:p-5">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                </span>
+                <div class="min-w-0">
+                  <div class="font-semibold text-ink-900 truncate">{{ s.label }}</div>
+                  <div class="text-xs text-ink-500">
+                    {{ s.get_frequency_display }} alerts ·
+                    {% if s.last_sent_at %}last sent {{ s.last_sent_at|date:"M j" }}{% else %}no alerts sent yet{% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <a href="{% url 'web:marketplace' %}?{{ s.query }}" class="btn-secondary text-xs rounded-lg py-1.5 px-3">View</a>
+              <button type="button"
+                      hx-post="{% url 'web:saved_search_delete' s.id %}"
+                      hx-target="#saved-search-{{ s.id }}"
+                      hx-swap="outerHTML"
+                      hx-confirm="Delete this saved search?"
+                      class="btn text-xs rounded-lg py-1.5 px-3 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100">
+                Delete
+              </button>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="mt-5 card p-8 text-center">
+        <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-500">
+          <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+        </div>
+        <div class="font-semibold text-ink-900">No saved searches yet</div>
+        <p class="mt-1 text-sm text-ink-500">Search the marketplace, then tap <span class="font-semibold">“Save this search”</span> to get email alerts for new homes.</p>
+        <a href="{% url 'web:marketplace' %}" class="btn-primary mt-4 inline-flex rounded-xl">Start a search</a>
+      </div>
+    {% endif %}
+  </section>
+
   {# ── Quick action cards ────────────────────────────────────────── #}
   <section class="saas-grid">
     <a href="{% url 'web:marketplace' %}" class="card p-5 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group">

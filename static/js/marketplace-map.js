@@ -51,7 +51,13 @@ if (!mapEl) {
     }
 
     function makeIcon(score) {
-      const color = scoreColor(score);
+      // With a score (investment mode) show the number; otherwise a clean
+      // brand-coloured home pin (ads-safe marketplace mode).
+      const hasScore = score !== null && score !== undefined && score !== "";
+      const color = hasScore ? scoreColor(score) : "#059669";
+      const inner = hasScore
+        ? `<span style="transform:rotate(45deg)">${score}</span>`
+        : `<span style="transform:rotate(45deg);font-size:13px">🏠</span>`;
       return L.divIcon({
         className: "",
         html: `<div style="
@@ -65,7 +71,7 @@ if (!mapEl) {
           transform:rotate(-45deg);
           border:2px solid #fff;
           box-shadow:0 2px 8px rgba(0,0,0,.4);
-        "><span style="transform:rotate(45deg)">${score || "?"}</span></div>`,
+        ">${inner}</div>`,
         iconSize: [34, 34],
         iconAnchor: [17, 34],
         popupAnchor: [0, -36],
@@ -75,16 +81,33 @@ if (!mapEl) {
     props.forEach(p => {
       if (!p.lat || !p.lon) return;
       const score = p.score;
+      const hasScore = score !== null && score !== undefined && score !== "";
       const marker = L.marker([p.lat, p.lon], { icon: makeIcon(score) });
+
+      // Build a meta line that works in both modes.
+      let meta = "";
+      if (hasScore) {
+        meta = `<div style="font-size:11px;color:#64748b;margin-top:4px">ROI ${p.roi_min}–${p.roi_max}% · Yield ${p.yield}%</div>`;
+      } else {
+        const bits = [];
+        if (p.beds) bits.push(`${p.beds} bed`);
+        if (p.area) bits.push(`${p.area} m²`);
+        if (p.type) bits.push(p.type);
+        if (bits.length) meta = `<div style="font-size:11px;color:#64748b;margin-top:4px">${bits.join(" · ")}</div>`;
+      }
+      const scoreBadge = hasScore
+        ? `<span style="background:${scoreColor(score)};color:#fff;border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700">${score}/100</span>`
+        : "";
+
       marker.bindPopup(`
         <div style="min-width:200px;font-family:system-ui,sans-serif">
           <a href="/properties/${p.id}/" style="display:block;font-weight:700;color:#0f172a;font-size:13px;text-decoration:none;margin-bottom:4px">${p.title}</a>
           <div style="font-size:11px;color:#64748b;margin-bottom:6px">${p.city}, ${p.country}</div>
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:14px;font-weight:800;color:#059669">${p.price}</span>
-            <span style="background:${scoreColor(score)};color:#fff;border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700">${score}/100</span>
+            ${scoreBadge}
           </div>
-          <div style="font-size:11px;color:#64748b;margin-top:4px">ROI ${p.roi_min}–${p.roi_max}% · Yield ${p.yield}%</div>
+          ${meta}
           <a href="/properties/${p.id}/" style="display:inline-block;margin-top:8px;background:#059669;color:#fff;border-radius:8px;padding:4px 12px;font-size:11px;font-weight:600;text-decoration:none">View listing →</a>
         </div>
       `, { maxWidth: 260 });

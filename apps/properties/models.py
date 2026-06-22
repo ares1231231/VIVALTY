@@ -105,6 +105,11 @@ class Property(models.Model):
 
     is_featured = models.BooleanField(default=False, db_index=True)
     is_premium = models.BooleanField(default=False, db_index=True)
+    is_verified = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Listing details checked by Vivalty's editorial desk.",
+    )
 
     views_count = models.PositiveIntegerField(default=0)
     leads_count = models.PositiveIntegerField(default=0)

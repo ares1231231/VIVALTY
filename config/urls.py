@@ -7,7 +7,12 @@ from django.contrib.sitemaps.views import sitemap
 from django.http import JsonResponse
 from django.urls import include, path
 
-from apps.web.sitemaps import PropertySitemap, StaticViewSitemap
+from apps.web.sitemaps import (
+    CityGuideSitemap,
+    DestinationSitemap,
+    PropertySitemap,
+    StaticViewSitemap,
+)
 from apps.web.views import robots_txt
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -22,6 +27,8 @@ def health(_request):
 
 sitemaps = {
     "static": StaticViewSitemap,
+    "destinations": DestinationSitemap,
+    "city_guides": CityGuideSitemap,
     "properties": PropertySitemap,
 }
 

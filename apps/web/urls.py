@@ -1,5 +1,6 @@
 from django.urls import path
 from django.views.generic import RedirectView
+from django.views.i18n import set_language
 
 from . import views
 
@@ -23,10 +24,30 @@ _listings_legacy_redirect = RedirectView.as_view(
 
 urlpatterns = [
     path("healthz/", views.healthz, name="healthz"),
+    path("i18n/setlang/", set_language, name="set_language"),
 
     path("", views.home, name="home"),
     path("marketplace/", views.marketplace, name="marketplace"),
     path("properties/<int:pk>/", views.property_detail, name="property_detail"),
+    path("properties/<int:pk>/og.png", views.property_og_image, name="property_og"),
+    path("properties/<int:pk>/story/", views.property_story, name="property_story"),
+
+    # Destination guides (ads-safe SEO landing pages)
+    path("destinations/", views.destinations_index, name="destinations"),
+    path(
+        "destinations/<slug:country_slug>/<slug:city_slug>/",
+        views.city_destination_detail,
+        name="city_destination",
+    ),
+    path("destinations/<slug:slug>/", views.destination_detail, name="destination_detail"),
+
+    # Price comparison explorer
+    path("explore/prices/", views.price_explorer, name="price_explorer"),
+
+    # Dream-home matchmaker quiz
+    path("quiz/", views.quiz, name="quiz"),
+    path("htmx/quiz/result/", views.quiz_result, name="quiz_result"),
+
     path("markets/", views.markets, name="markets"),
     path("methodology/", views.methodology, name="methodology"),
     path("compare/", views.compare, name="compare"),
@@ -91,6 +112,10 @@ urlpatterns = [
     path("htmx/home/quick-sim/", views.home_quick_sim, name="home_quick_sim"),
     path("htmx/home/favorite/<int:pk>/", views.home_favorite_toggle, name="home_favorite_toggle"),
     path("htmx/newsletter/", views.newsletter_subscribe, name="newsletter_subscribe"),
+
+    # Saved searches + email alerts
+    path("htmx/saved-search/save/", views.save_search, name="save_search"),
+    path("htmx/saved-search/<int:pk>/delete/", views.saved_search_delete, name="saved_search_delete"),
 
     # HTMX endpoints for the listing wizard
     path("htmx/list/score-preview/",   views.listing_score_preview,  name="listing_score_preview"),

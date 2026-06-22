@@ -86,11 +86,11 @@
       <div>
         <div class="text-xs font-bold uppercase tracking-widest text-white mb-4">Destinations</div>
         <ul class="space-y-2.5 text-sm">
-          <li><a href="{% url 'web:marketplace' %}?country=FR" class="hover:text-white transition-colors">🇫🇷 France</a></li>
-          <li><a href="{% url 'web:marketplace' %}?country=GB" class="hover:text-white transition-colors">🇬🇧 United Kingdom</a></li>
-          <li><a href="{% url 'web:marketplace' %}?country=ES" class="hover:text-white transition-colors">🇪🇸 Spain</a></li>
-          <li><a href="{% url 'web:marketplace' %}?country=IT" class="hover:text-white transition-colors">🇮🇹 Italy</a></li>
-          <li><a href="{% url 'web:marketplace' %}" class="text-brand-300 font-semibold hover:text-brand-200 transition-colors">All 7 destinations →</a></li>
+          <li><a href="{% url 'web:destination_detail' 'portugal' %}" class="hover:text-white transition-colors">🇵🇹 Portugal</a></li>
+          <li><a href="{% url 'web:destination_detail' 'spain' %}" class="hover:text-white transition-colors">🇪🇸 Spain</a></li>
+          <li><a href="{% url 'web:destination_detail' 'france' %}" class="hover:text-white transition-colors">🇫🇷 France</a></li>
+          <li><a href="{% url 'web:destination_detail' 'uae' %}" class="hover:text-white transition-colors">🇦🇪 Dubai &amp; UAE</a></li>
+          <li><a href="{% url 'web:destinations' %}" class="text-brand-300 font-semibold hover:text-brand-200 transition-colors">All 7 destinations →</a></li>
         </ul>
       </div>
 
@@ -103,7 +103,8 @@
           <li><a href="{% url 'web:methodology' %}" class="hover:text-white transition-colors">How our AI score works</a></li>
           <li><a href="{% url 'web:markets' %}" class="hover:text-white transition-colors">Market data</a></li>
           {% else %}
-          <li><a href="{% url 'web:marketplace' %}?ordering=-created_at" class="hover:text-white transition-colors">New listings</a></li>
+          <li><a href="{% url 'web:destinations' %}" class="hover:text-white transition-colors">Destination guides</a></li>
+          <li><a href="{% url 'web:quiz' %}" class="hover:text-white transition-colors">Dream-home quiz</a></li>
           <li><a href="{% url 'web:marketplace' %}?ordering=-price" class="hover:text-white transition-colors">Luxury homes</a></li>
           <li><a href="{% url 'web:become_owner' %}" class="hover:text-white transition-colors">Sell your property</a></li>
           {% endif %}

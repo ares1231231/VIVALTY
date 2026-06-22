@@ -159,6 +159,34 @@ def send_welcome_email(user: User) -> None:
     msg.send(fail_silently=True)
 
 
+def send_saved_search_alert(user: User, saved_search, properties: list) -> None:
+    """Email a user the new listings that match one of their saved searches."""
+    from django.core.mail import EmailMultiAlternatives
+
+    ctx = {
+        "user": user,
+        "search": saved_search,
+        "properties": properties,
+        "count": len(properties),
+        "marketplace_url": _absolute_url(f"/marketplace/?{saved_search.query}"),
+        "manage_url": _absolute_url("/dashboard/#saved-searches"),
+        "site_url": settings.SITE_URL,
+    }
+    text_body = render_to_string("web/emails/saved_search_alert.txt", ctx)
+    html_body = render_to_string("web/emails/saved_search_alert.html", ctx)
+
+    n = len(properties)
+    subject = f"{n} new home{'s' if n != 1 else ''} for “{saved_search.label}”"
+    msg = EmailMultiAlternatives(
+        subject=subject,
+        body=text_body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[user.email],
+    )
+    msg.attach_alternative(html_body, "text/html")
+    msg.send(fail_silently=True)
+
+
 def send_password_reset_email(user: User) -> None:
     from django.core.mail import EmailMultiAlternatives
     from django.urls import reverse

@@ -1,0 +1,10 @@
+{% load web_extras %}{{ count }} new home{{ count|pluralize }} for your saved search "{{ search.label }}"
+
+{% for p in properties %}- {{ p.title }} — {{ p.city.name }}, {{ p.country.name }} — {{ p.price|money:p.currency }}
+  {{ site_url }}/properties/{{ p.id }}/
+{% endfor %}
+View all matches: {{ marketplace_url }}
+
+Manage your saved searches: {{ manage_url }}
+
+— Vivalty

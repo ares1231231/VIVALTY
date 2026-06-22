@@ -23,13 +23,64 @@
         <span class="text-ink-700 truncate">{{ p.city.name }}</span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <button type="button" id="share-btn"
-                data-title="{{ p.title }}"
-                data-url="{{ request.scheme }}://{{ request.get_host }}{% url 'web:property_detail' p.id %}"
-                class="btn-secondary text-xs rounded-lg py-1.5 px-3 inline-flex items-center gap-1.5">
-          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a3 3 0 10-5.464-2.684m5.464 2.684a3 3 0 11-5.464-2.684m5.464 2.684L8.684 9.658"/></svg>
-          Share
-        </button>
+        {# ── Share menu ─────────────────────────────────────────── #}
+        <div class="relative" x-data="{
+              open: false,
+              url: '{{ request.scheme }}://{{ request.get_host }}{% url 'web:property_detail' p.id %}',
+              title: '{{ p.title|escapejs }}',
+              copied: false,
+              get text() { return this.title + ' — ' + this.url; },
+              async native() {
+                if (navigator.share) { try { await navigator.share({ title: this.title, url: this.url }); } catch(e){} }
+                else { this.open = !this.open; }
+              },
+              async copy() {
+                try { await navigator.clipboard.writeText(this.url); }
+                catch(e) { const t=document.createElement('textarea'); t.value=this.url; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+                this.copied = true; setTimeout(() => this.copied = false, 1800);
+              }
+            }" @keydown.escape="open=false">
+          <button type="button" @click="navigator.share ? native() : (open=!open)"
+                  class="btn-secondary text-xs rounded-lg py-1.5 px-3 inline-flex items-center gap-1.5">
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a3 3 0 10-5.464-2.684m5.464 2.684a3 3 0 11-5.464-2.684m5.464 2.684L8.684 9.658"/></svg>
+            Share
+          </button>
+          <div x-show="open" x-cloak @click.outside="open=false"
+               x-transition.origin.top.right
+               class="absolute right-0 z-30 mt-2 w-52 overflow-hidden rounded-2xl border border-ink-200 bg-white p-1.5 shadow-2xl">
+            <a :href="'https://wa.me/?text=' + encodeURIComponent(text)" target="_blank" rel="noopener"
+               class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
+              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white text-xs font-bold">W</span> WhatsApp
+            </a>
+            <a :href="'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url)" target="_blank" rel="noopener"
+               class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-700 hover:bg-sky-50 hover:text-sky-700 transition-colors">
+              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-[#1877F2] text-white text-xs font-bold">f</span> Facebook
+            </a>
+            <a :href="'https://twitter.com/intent/tweet?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title)" target="_blank" rel="noopener"
+               class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-700 hover:bg-ink-100 transition-colors">
+              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-ink-900 text-white text-xs font-bold">X</span> X / Twitter
+            </a>
+            <a :href="'mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(text)"
+               class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-700 hover:bg-ink-100 transition-colors">
+              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-ink-200 text-ink-700 text-xs font-bold">@</span> Email
+            </a>
+            <button type="button" @click="copy()"
+               class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-700 hover:bg-brand-50 hover:text-brand-700 transition-colors">
+              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-100 text-brand-700 text-xs font-bold">🔗</span>
+              <span x-text="copied ? 'Copied!' : 'Copy link'">Copy link</span>
+            </button>
+            <a href="{% url 'web:property_story' p.id %}" target="_blank" rel="noopener"
+               class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-700 hover:bg-violet-50 hover:text-violet-700 transition-colors">
+              <span class="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white text-xs font-bold">▶</span>
+              Reels / TikTok story
+            </a>
+          </div>
+        </div>
+        <a href="{% url 'web:property_story' p.id %}" target="_blank" rel="noopener"
+           class="btn-secondary text-xs rounded-lg py-1.5 px-3 inline-flex items-center gap-1.5">
+          <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Story
+        </a>
         <button type="button" id="print-btn"
                 onclick="window.print()"
                 class="btn-secondary text-xs rounded-lg py-1.5 px-3 inline-flex items-center gap-1.5">
@@ -83,6 +134,12 @@
           <p class="mt-1 text-sm text-ink-600">{{ p.address }}</p>
         {% endif %}
         <div class="mt-3 flex flex-wrap gap-1.5">
+          {% if p.is_verified %}
+            <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-800 ring-1 ring-emerald-200">
+              <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              {% t "verified.badge" "Verified listing" %}
+            </span>
+          {% endif %}
           {% for t in p.tags.all %}
             <span class="pill bg-{{ t.color }}-50 text-{{ t.color }}-700">{{ t.name }}</span>
           {% endfor %}
@@ -439,6 +496,19 @@
           Reference <span class="font-mono text-ink-700">{{ p.listing_ref }}</span>
         </div>
       {% endif %}
+
+      {# WhatsApp — international buyers strongly prefer it #}
+      {% with wa=p.contact_phone|digits|default:COMPANY_WHATSAPP|digits %}
+        {% if wa %}
+          <a href="https://wa.me/{{ wa }}?text={{ p.title|urlencode }}%20%E2%80%94%20{{ request.scheme }}://{{ request.get_host }}{% url 'web:property_detail' p.id %}"
+             target="_blank" rel="noopener"
+             class="mb-3 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-emerald-600 hover:shadow-md">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 018.413 3.488 11.82 11.82 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.51 5.26l-.999 3.648 3.978-1.715zm5.443-9.486c-.18-.043-.31-.043-.444.063-.18.135-.69.81-.844.973-.155.18-.31.193-.572.064-.27-.135-1.14-.42-2.172-1.341-.804-.717-1.346-1.602-1.503-1.872-.155-.27-.017-.42.116-.553.12-.12.27-.31.405-.464.139-.155.18-.27.27-.45.09-.18.045-.336-.022-.471-.066-.135-.604-1.456-.827-1.994-.218-.524-.44-.453-.605-.461-.156-.008-.336-.01-.515-.01a.99.99 0 00-.717.336c-.247.27-.945.923-.945 2.25 0 1.328.967 2.61 1.102 2.79.135.18 1.902 2.904 4.607 4.072.644.278 1.146.444 1.538.568.646.205 1.234.176 1.699.107.518-.078 1.595-.652 1.82-1.282.224-.63.224-1.17.157-1.282-.066-.112-.246-.18-.515-.315z"/></svg>
+            Chat on WhatsApp
+          </a>
+        {% endif %}
+      {% endwith %}
+
       <div id="lead-wrap">
         {% include "web/components/lead_form.html" with p=p lead_form=lead_form %}
       </div>
@@ -465,30 +535,8 @@
   </aside>
 </div>
 
-{# ── Share modal (web share API + clipboard fallback) ──────────── #}
-<script>
-(function(){
-  const btn = document.getElementById('share-btn');
-  if (!btn) return;
-  btn.addEventListener('click', async () => {
-    const data = {
-      title: btn.dataset.title || document.title,
-      text: btn.dataset.title || '',
-      url: btn.dataset.url || window.location.href,
-    };
-    if (navigator.share) {
-      try { await navigator.share(data); return; } catch(e) {}
-    }
-    try {
-      await navigator.clipboard.writeText(data.url);
-      btn.innerHTML = '<svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied';
-      setTimeout(() => location.reload(), 1500);
-    } catch(e) {
-      window.prompt('Copy this link', data.url);
-    }
-  });
-})();
-</script>
+{# ── Recently viewed strip ─────────────────────────────────────── #}
+{% include "web/components/recently_viewed.html" with exclude_id=p.id %}
 {% endblock %}
 
 {% block body_extra %}

@@ -96,6 +96,38 @@ Two visual variants based on context:
         </div>
       </div>
 
+      {# ── Destinations ────────────────────────────────────────── #}
+      <div class="vv-nav-group">
+        <a href="{% url 'web:destinations' %}"
+           class="vv-nav-link {% if url_name == 'destinations' or url_name == 'destination_detail' %}is-active{% endif %}">Destinations</a>
+        <div class="vv-nav-panel" role="menu">
+          <a href="{% url 'web:destination_detail' 'portugal' %}" class="vv-nav-item">
+            <span class="vv-nav-item-title">🇵🇹 Portugal</span>
+            <span class="vv-nav-item-desc">Lisbon, Porto &amp; the Algarve</span>
+          </a>
+          <a href="{% url 'web:destination_detail' 'spain' %}" class="vv-nav-item">
+            <span class="vv-nav-item-title">🇪🇸 Spain</span>
+            <span class="vv-nav-item-desc">Madrid, Barcelona &amp; the coast</span>
+          </a>
+          <a href="{% url 'web:destination_detail' 'uae' %}" class="vv-nav-item">
+            <span class="vv-nav-item-title">🇦🇪 Dubai &amp; UAE</span>
+            <span class="vv-nav-item-desc">Marina, Business Bay &amp; more</span>
+          </a>
+          <a href="{% url 'web:destinations' %}" class="vv-nav-item">
+            <span class="vv-nav-item-title">All destinations →</span>
+            <span class="vv-nav-item-desc">Guides for all 7 countries</span>
+          </a>
+          <a href="{% url 'web:quiz' %}" class="vv-nav-item">
+            <span class="vv-nav-item-title">✨ {% t "nav.quiz" "Find your home" %}</span>
+            <span class="vv-nav-item-desc">Find your perfect destination</span>
+          </a>
+          <a href="{% url 'web:price_explorer' %}" class="vv-nav-item">
+            <span class="vv-nav-item-title">💶 {% t "nav.explore" "Price explorer" %}</span>
+            <span class="vv-nav-item-desc">What does your budget buy?</span>
+          </a>
+        </div>
+      </div>
+
       {% if SHOW_INVESTMENT_FEATURES %}
       {# ── AI Invest ───────────────────────────────────────────── #}
       <div class="vv-nav-group">
@@ -130,7 +162,9 @@ Two visual variants based on context:
     </nav>
 
     {# ── Right side cluster ───────────────────────────────────── #}
-    <div class="ml-auto flex items-center gap-5 sm:gap-7">
+    <div class="ml-auto flex items-center gap-3 sm:gap-5">
+
+      {% include "web/components/language_switcher.html" %}
 
       {% if user.is_authenticated %}
 
@@ -243,6 +277,8 @@ Two visual variants based on context:
     <a href="{% url 'web:marketplace' %}" class="mobile-nav-item">Buy</a>
     <a href="{% url 'web:marketplace' %}?type=apartment" class="mobile-nav-item">Rent</a>
     <a href="{% url 'web:marketplace' %}?ordering=-price" class="mobile-nav-item">Luxury</a>
+    <a href="{% url 'web:destinations' %}" class="mobile-nav-item">Destinations</a>
+    <a href="{% url 'web:quiz' %}" class="mobile-nav-item">Dream-home quiz</a>
     {% if SHOW_INVESTMENT_FEATURES %}
     <a href="{% url 'web:simulator' %}" class="mobile-nav-item">
       <span class="inline-flex items-center gap-1.5">

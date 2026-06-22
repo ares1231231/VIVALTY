@@ -7,7 +7,67 @@ which is scoped to a single listing.
 
 from __future__ import annotations
 
+from django.conf import settings
 from django.db import models
+
+
+class SavedSearch(models.Model):
+    """A user's saved marketplace search, used to send 'new homes' email alerts.
+
+    ``query`` stores the marketplace querystring (without paging) so the alert
+    command can replay the exact filters the user saved.
+    """
+
+    class Frequency(models.TextChoices):
+        DAILY = "daily", "Daily"
+        WEEKLY = "weekly", "Weekly"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="saved_searches",
+    )
+    label = models.CharField(max_length=160)
+    query = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="URL-encoded marketplace filters, e.g. 'country=PT&type=apartment&price_max=300000'.",
+    )
+    frequency = models.CharField(
+        max_length=10, choices=Frequency.choices, default=Frequency.DAILY
+    )
+    is_active = models.BooleanField(default=True)
+    last_sent_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name_plural = "Saved searches"
+        indexes = [
+            models.Index(fields=["user", "is_active"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.label} ({self.user_id})"
+
+
+class Testimonial(models.Model):
+    """A short buyer/owner testimonial shown on marketing surfaces (home page)."""
+
+    name = models.CharField(max_length=120)
+    location = models.CharField(max_length=120, blank=True, help_text="e.g. 'Bought in Lisbon'")
+    quote = models.TextField()
+    rating = models.PositiveSmallIntegerField(default=5, help_text="1–5 stars")
+    avatar_url = models.URLField(max_length=600, blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    order = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["order", "-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.rating}★)"
 
 
 class InvestorProfile(models.TextChoices):

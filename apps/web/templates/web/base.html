@@ -1,5 +1,5 @@
 {% load static web_extras %}<!doctype html>
-<html lang="en" class="h-full scroll-smooth">
+<html lang="{{ UI_LANGUAGE|default:'en' }}" class="h-full scroll-smooth"{% if UI_RTL %} dir="rtl"{% endif %}>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -19,6 +19,7 @@
 
   {# Compiled Tailwind: source in assets/src/input.css → built to static/css/tailwind.css. #}
   <link rel="stylesheet" href="{% static 'css/tailwind.css' %}" />
+  <style>[x-cloak]{display:none!important}</style>
 
   {# HTMX for filters / favorite toggle / lead form. ~14 KB gzipped. #}
   <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
