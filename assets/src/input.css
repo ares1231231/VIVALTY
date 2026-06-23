@@ -1428,6 +1428,7 @@
            transition-colors duration-150;
   }
   .vv-locale-text { @apply text-[12px] font-bold tracking-wide; }
+  #locale-switcher.is-open .locale-switcher-caret { transform: rotate(180deg); }
   .vv-nav--overlay .vv-locale {
     @apply border-white/35 bg-white/10 text-white/95 hover:bg-white/20;
   }

@@ -339,6 +339,41 @@ function initHeroCountryCoverflow() {
   });
 }
 
+// ── Language switcher (vanilla — avoids Alpine + HTMX conflicts) ─────────────
+function initLocaleSwitcher(root = document) {
+  const wrap = root.querySelector("#locale-switcher");
+  if (!wrap || wrap.dataset.localeInit === "1") return;
+  wrap.dataset.localeInit = "1";
+
+  const btn = wrap.querySelector("#locale-switcher-btn");
+  const menu = wrap.querySelector("#locale-menu");
+  if (!btn || !menu) return;
+
+  const close = () => {
+    menu.hidden = true;
+    btn.setAttribute("aria-expanded", "false");
+    wrap.classList.remove("is-open");
+  };
+
+  const open = () => {
+    menu.hidden = false;
+    btn.setAttribute("aria-expanded", "true");
+    wrap.classList.add("is-open");
+  };
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    menu.hidden ? open() : close();
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!wrap.contains(e.target)) close();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") close();
+  });
+}
+
 // ── Cookie consent (GDPR / ad-platform compliance) ───────────────────────────
 function initCookieConsent() {
   const banner = document.getElementById("cookie-consent");
@@ -369,10 +404,12 @@ document.addEventListener("DOMContentLoaded", () => {
   initQuickSim();
   initHeroVideo();
   initHeroCountryCoverflow();
+  initLocaleSwitcher();
   initCookieConsent();
 });
 
 // Re-init counters after HTMX swaps (e.g. boosted navigation back to home).
-document.addEventListener("htmx:afterSettle", () => {
+document.addEventListener("htmx:afterSettle", (e) => {
   initCounters();
+  initLocaleSwitcher(e.detail.elt || document);
 });

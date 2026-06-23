@@ -27,7 +27,7 @@ Two visual variants based on context:
       {# ── Buy ─────────────────────────────────────────────────── #}
       <div class="vv-nav-group">
         <a href="{% url 'web:marketplace' %}"
-           class="vv-nav-link {% if url_name == 'marketplace' and not request.GET.type and not request.GET.ordering %}is-active{% endif %}">Buy</a>
+           class="vv-nav-link {% if url_name == 'marketplace' and not request.GET.type and not request.GET.ordering %}is-active{% endif %}">{% t "nav.buy" "Buy" %}</a>
         <div class="vv-nav-panel" role="menu">
           <a href="{% url 'web:marketplace' %}" class="vv-nav-item">
             <span class="vv-nav-item-title">All properties</span>
@@ -55,7 +55,7 @@ Two visual variants based on context:
       {# ── Rent ────────────────────────────────────────────────── #}
       <div class="vv-nav-group">
         <a href="{% url 'web:marketplace' %}?type=apartment"
-           class="vv-nav-link {% if url_name == 'marketplace' and request.GET.type == 'apartment' %}is-active{% endif %}">Rent</a>
+           class="vv-nav-link {% if url_name == 'marketplace' and request.GET.type == 'apartment' %}is-active{% endif %}">{% t "nav.rent" "Rent" %}</a>
         <div class="vv-nav-panel" role="menu">
           <a href="{% url 'web:marketplace' %}?type=apartment" class="vv-nav-item">
             <span class="vv-nav-item-title">All rentals</span>
@@ -79,7 +79,7 @@ Two visual variants based on context:
       {# ── Luxury ──────────────────────────────────────────────── #}
       <div class="vv-nav-group">
         <a href="{% url 'web:marketplace' %}?ordering=-price"
-           class="vv-nav-link {% if request.GET.ordering == '-price' %}is-active{% endif %}">Luxury</a>
+           class="vv-nav-link {% if request.GET.ordering == '-price' %}is-active{% endif %}">{% t "nav.luxury" "Luxury" %}</a>
         <div class="vv-nav-panel" role="menu">
           <a href="{% url 'web:marketplace' %}?ordering=-price" class="vv-nav-item">
             <span class="vv-nav-item-title">Prestige picks</span>
@@ -99,7 +99,7 @@ Two visual variants based on context:
       {# ── Destinations ────────────────────────────────────────── #}
       <div class="vv-nav-group">
         <a href="{% url 'web:destinations' %}"
-           class="vv-nav-link {% if url_name == 'destinations' or url_name == 'destination_detail' %}is-active{% endif %}">Destinations</a>
+           class="vv-nav-link {% if url_name == 'destinations' or url_name == 'destination_detail' or url_name == 'city_destination' %}is-active{% endif %}">{% t "nav.destinations" "Destinations" %}</a>
         <div class="vv-nav-panel" role="menu">
           <a href="{% url 'web:destination_detail' 'portugal' %}" class="vv-nav-item">
             <span class="vv-nav-item-title">🇵🇹 Portugal</span>
@@ -292,7 +292,7 @@ Two visual variants based on context:
 
     <p class="px-3 pt-1 pb-2 text-[10px] font-bold uppercase tracking-widest text-ink-400">Language</p>
     {% for code, label in UI_LANGUAGES %}
-      <form action="{% url 'web:set_language' %}" method="post" class="px-1">
+      <form action="{% url 'web:set_language' %}" method="post" class="px-1" hx-boost="false">
         {% csrf_token %}
         <input type="hidden" name="language" value="{{ code }}" />
         <input type="hidden" name="next" value="{{ request.get_full_path }}" />
