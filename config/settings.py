@@ -334,8 +334,8 @@ COMPANY_REGISTERED_ADDRESS = os.getenv(
     "COMPANY_REGISTERED_ADDRESS",
     "30 N Gould St Ste R, Sheridan, WY 82801, United States",
 )
-COMPANY_SUPPORT_EMAIL = os.getenv("COMPANY_SUPPORT_EMAIL", "evem20000@hotmail.com")
-COMPANY_INVESTOR_EMAIL = os.getenv("COMPANY_INVESTOR_EMAIL", "evem20000@hotmail.com")
+COMPANY_SUPPORT_EMAIL = os.getenv("COMPANY_SUPPORT_EMAIL", "even20000@hotmail.com")
+COMPANY_INVESTOR_EMAIL = os.getenv("COMPANY_INVESTOR_EMAIL", "even20000@hotmail.com")
 # US Employer Identification Number (IRS). Optional EU VAT in COMPANY_VAT_NUMBER.
 COMPANY_EIN = os.getenv("COMPANY_EIN", "98-1950360")
 COMPANY_VAT_NUMBER = os.getenv("COMPANY_VAT_NUMBER", "")
