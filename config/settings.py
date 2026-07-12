@@ -328,18 +328,24 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Vivalty <onboarding@resend
 SITE_URL = os.getenv("SITE_URL", "http://localhost:8000").rstrip("/")
 
 # --- Company / legal (required for ad-platform landing-page policy) ----------
-COMPANY_LEGAL_NAME = os.getenv("COMPANY_LEGAL_NAME", "Vivalty")
+# Defaults match NovaDigital Global LLC (Wyoming) — override via env in production.
+COMPANY_LEGAL_NAME = os.getenv("COMPANY_LEGAL_NAME", "NovaDigital Global LLC")
 COMPANY_REGISTERED_ADDRESS = os.getenv(
     "COMPANY_REGISTERED_ADDRESS",
-    "London, United Kingdom",
+    "30 N Gould St Ste R, Sheridan, WY 82801, United States",
 )
-COMPANY_SUPPORT_EMAIL = os.getenv("COMPANY_SUPPORT_EMAIL", "hello@vivalty.com")
-COMPANY_INVESTOR_EMAIL = os.getenv("COMPANY_INVESTOR_EMAIL", "investors@vivalty.com")
+COMPANY_SUPPORT_EMAIL = os.getenv("COMPANY_SUPPORT_EMAIL", "evem20000@hotmail.com")
+COMPANY_INVESTOR_EMAIL = os.getenv("COMPANY_INVESTOR_EMAIL", "evem20000@hotmail.com")
+# US Employer Identification Number (IRS). Optional EU VAT in COMPANY_VAT_NUMBER.
+COMPANY_EIN = os.getenv("COMPANY_EIN", "98-1950360")
 COMPANY_VAT_NUMBER = os.getenv("COMPANY_VAT_NUMBER", "")
+COMPANY_PHONE = os.getenv("COMPANY_PHONE", "+1 913-420-5346")
+COMPANY_STATE_OF_FORMATION = os.getenv("COMPANY_STATE_OF_FORMATION", "Wyoming, United States")
+COMPANY_FILING_ID = os.getenv("COMPANY_FILING_ID", "2026-002016024")
 # International WhatsApp number (digits only, incl. country code) for the
 # "Chat on WhatsApp" buttons. Leave blank to hide them when a listing has no
 # direct phone of its own.
-COMPANY_WHATSAPP = os.getenv("COMPANY_WHATSAPP", "")
+COMPANY_WHATSAPP = os.getenv("COMPANY_WHATSAPP", "19134205346")
 
 # --- Feature flags -----------------------------------------------------------
 # Investment analytics (simulator, methodology, compare, market intelligence)

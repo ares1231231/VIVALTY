@@ -1,0 +1,26 @@
+import scrapy
+
+
+class ListingItem(scrapy.Item):
+    listing_ref = scrapy.Field()
+    title = scrapy.Field()
+    description = scrapy.Field()
+    property_type = scrapy.Field()
+    price = scrapy.Field()
+    currency = scrapy.Field()
+    country_code = scrapy.Field()
+    city_name = scrapy.Field()
+    address = scrapy.Field()
+    latitude = scrapy.Field()
+    longitude = scrapy.Field()
+    bedrooms = scrapy.Field()
+    bathrooms = scrapy.Field()
+    area_sqm = scrapy.Field()
+    year_built = scrapy.Field()
+    contact_name = scrapy.Field()
+    contact_email = scrapy.Field()
+    contact_phone = scrapy.Field()
+    listing_agency = scrapy.Field()
+    images = scrapy.Field()
+    source_url = scrapy.Field()
+    is_verified = scrapy.Field()

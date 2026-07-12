@@ -1,0 +1,50 @@
+# Scraper feed configuration — edit start URLs for your authorized sources.
+# Run: python manage.py scrape_listings --spider kyero --country PT --max 100
+
+countries:
+  PT:
+    name: Portugal
+    currency: EUR
+    kyero_location: portugal
+    # Fallback cities when scraper cannot resolve city from page
+    default_city: Lisbon
+  ES:
+    name: Spain
+    currency: EUR
+    kyero_location: spain
+    default_city: Madrid
+  FR:
+    name: France
+    currency: EUR
+    kyero_location: france
+    default_city: Paris
+  GB:
+    name: United Kingdom
+    currency: GBP
+    kyero_location: united-kingdom
+    default_city: London
+  IT:
+    name: Italy
+    currency: EUR
+    kyero_location: italy
+    default_city: Milan
+  CH:
+    name: Switzerland
+    currency: CHF
+    kyero_location: switzerland
+    default_city: Geneva
+  AE:
+    name: United Arab Emirates
+    currency: AED
+    kyero_location: united-arab-emirates
+    default_city: Dubai Marina
+
+# Generic JSON-LD spider: add listing index URLs per country (your authorized feeds).
+json_ld_start_urls:
+  PT: []
+  ES: []
+  FR: []
+  GB: []
+  IT: []
+  CH: []
+  AE: []

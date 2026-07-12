@@ -1,8 +1,9 @@
 {% extends "web/legal/_base_legal.html" %}
+{% load web_extras %}
 
 {% block legal_body %}
 <p class="text-base">
-  We respond to buyer, listing and press enquiries during UK business hours (Monday–Friday).
+  We respond to buyer, listing and press enquiries Monday–Friday (US Mountain Time).
 </p>
 
 <div class="grid gap-4 sm:grid-cols-2 not-prose">
@@ -12,6 +13,11 @@
     <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}" class="mt-4 inline-flex text-sm font-semibold text-brand-700 hover:text-brand-900 underline">
       {{ COMPANY_SUPPORT_EMAIL }}
     </a>
+    {% if COMPANY_PHONE %}
+    <a href="tel:{{ COMPANY_PHONE|digits }}" class="mt-2 block text-sm font-semibold text-ink-700 hover:text-ink-900">
+      {{ COMPANY_PHONE }}
+    </a>
+    {% endif %}
   </div>
   <div class="card p-5">
     <h2 class="font-extrabold text-ink-900">Advisory desk</h2>
@@ -19,11 +25,22 @@
     <a href="mailto:{{ COMPANY_INVESTOR_EMAIL }}" class="mt-4 inline-flex text-sm font-semibold text-brand-700 hover:text-brand-900 underline">
       {{ COMPANY_INVESTOR_EMAIL }}
     </a>
+    {% if COMPANY_WHATSAPP %}
+    <a href="https://wa.me/{{ COMPANY_WHATSAPP|digits }}"
+       class="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1ebe57] transition-colors"
+       rel="noopener noreferrer" target="_blank">
+      WhatsApp Business
+    </a>
+    {% endif %}
   </div>
 </div>
 
 <h2 class="text-xl font-extrabold text-ink-900">Postal address</h2>
-<p>{{ COMPANY_LEGAL_NAME }}<br>{{ COMPANY_REGISTERED_ADDRESS }}</p>
+<p>
+  {{ COMPANY_LEGAL_NAME }}<br>
+  {{ COMPANY_REGISTERED_ADDRESS }}
+  {% if COMPANY_EIN %}<br>EIN: {{ COMPANY_EIN }}{% endif %}
+</p>
 
 <h2 class="text-xl font-extrabold text-ink-900">Speak to the advisory desk online</h2>
 <p>

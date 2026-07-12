@@ -145,6 +145,7 @@
         <span>&copy; {% now "Y" %} {{ COMPANY_LEGAL_NAME }}. All rights reserved.</span>
         <span class="hidden sm:inline text-ink-600">·</span>
         <span class="w-full sm:w-auto text-ink-500">{{ COMPANY_REGISTERED_ADDRESS }}</span>
+        {% if COMPANY_EIN %}<span class="text-ink-500">EIN {{ COMPANY_EIN }}</span>{% endif %}
         <a href="{% url 'web:privacy' %}" class="hover:text-white transition-colors">Privacy</a>
         <a href="{% url 'web:terms' %}" class="hover:text-white transition-colors">Terms</a>
         <a href="{% url 'web:cookies' %}" class="hover:text-white transition-colors">Cookies</a>

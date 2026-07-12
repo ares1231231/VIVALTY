@@ -1,4 +1,5 @@
 {% extends "web/legal/_base_legal.html" %}
+{% load web_extras %}
 
 {% block legal_body %}
 <h2 class="text-xl font-extrabold text-ink-900">Publisher</h2>
@@ -7,11 +8,33 @@
   <dd>{{ COMPANY_LEGAL_NAME }}</dd>
   <dt class="font-semibold text-ink-900">Website</dt>
   <dd><a href="{{ SITE_URL }}">{{ SITE_URL }}</a></dd>
+  <dt class="font-semibold text-ink-900">State of formation</dt>
+  <dd>{{ COMPANY_STATE_OF_FORMATION }}</dd>
   <dt class="font-semibold text-ink-900">Registered address</dt>
   <dd>{{ COMPANY_REGISTERED_ADDRESS }}</dd>
+  {% if COMPANY_EIN %}
+  <dt class="font-semibold text-ink-900">EIN</dt>
+  <dd>{{ COMPANY_EIN }}</dd>
+  {% endif %}
+  {% if COMPANY_FILING_ID %}
+  <dt class="font-semibold text-ink-900">Wyoming SOS ID</dt>
+  <dd>{{ COMPANY_FILING_ID }}</dd>
+  {% endif %}
   {% if COMPANY_VAT_NUMBER %}
   <dt class="font-semibold text-ink-900">VAT number</dt>
   <dd>{{ COMPANY_VAT_NUMBER }}</dd>
+  {% endif %}
+  {% if COMPANY_PHONE %}
+  <dt class="font-semibold text-ink-900">Phone</dt>
+  <dd><a href="tel:{{ COMPANY_PHONE|digits }}">{{ COMPANY_PHONE }}</a></dd>
+  {% endif %}
+  {% if COMPANY_WHATSAPP %}
+  <dt class="font-semibold text-ink-900">WhatsApp</dt>
+  <dd>
+    <a href="https://wa.me/{{ COMPANY_WHATSAPP|digits }}" rel="noopener noreferrer" target="_blank">
+      +{{ COMPANY_WHATSAPP|digits }}
+    </a>
+  </dd>
   {% endif %}
   <dt class="font-semibold text-ink-900">General enquiries</dt>
   <dd><a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}">{{ COMPANY_SUPPORT_EMAIL }}</a></dd>
@@ -21,7 +44,8 @@
 
 <h2 class="text-xl font-extrabold text-ink-900">Nature of the service</h2>
 <p>
-  Vivalty publishes international property listings, destination guides and an AI assistant.
+  Vivalty is operated by {{ COMPANY_LEGAL_NAME }}, a Wyoming limited liability company.
+  The platform publishes international property listings, destination guides and an AI assistant.
   We connect prospective buyers and renters with listing agencies and property owners.
 </p>
 <p>
@@ -40,7 +64,10 @@
 <h2 class="text-xl font-extrabold text-ink-900">Hosting &amp; technical contact</h2>
 <p>
   For technical issues or to report illegal content, email
-  <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}">{{ COMPANY_SUPPORT_EMAIL }}</a>.
+  <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}">{{ COMPANY_SUPPORT_EMAIL }}</a>
+  {% if COMPANY_PHONE %}
+  or call <a href="tel:{{ COMPANY_PHONE|digits }}">{{ COMPANY_PHONE }}</a>
+  {% endif %}.
   We aim to respond within five business days.
 </p>
 
