@@ -4,223 +4,149 @@
 {# Hide footer on full-bleed app screens (chat, login, register, 404) where it would intrude. #}
 {% if url_name != 'chat' and url_name != 'chat_session' and url_name != 'login' and url_name != 'register' and url_name != 'logout' %}
 
-<footer class="relative mt-auto bg-ink-900 text-ink-300 overflow-hidden">
+<footer class="relative mt-auto overflow-hidden bg-[#0c1117] text-ink-300">
+  <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-400/50 to-transparent"></div>
+  <div class="pointer-events-none absolute -left-32 top-0 h-72 w-72 rounded-full bg-brand-500/10 blur-3xl"></div>
+  <div class="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full bg-sky-500/10 blur-3xl"></div>
 
-  {# Top fade-in glow #}
-  <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/40 to-transparent"></div>
-  <div class="absolute inset-0 pointer-events-none opacity-50"
-       style="background:radial-gradient(ellipse 60% 60% at 20% 0%,rgba(16,185,129,.08),transparent 60%),
-                          radial-gradient(ellipse 60% 60% at 90% 100%,rgba(14,165,233,.06),transparent 60%);"></div>
+  <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-  <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 py-14">
-
-    {# ── Top: brand + newsletter ─────────────────────────────────── #}
-    <div class="grid gap-10 lg:grid-cols-[1.2fr_1fr] mb-12 pb-10 border-b border-white/10">
-
-      <div>
-        <a href="{% url 'web:home' %}" class="inline-flex items-center gap-2.5 group">
-          <span class="flex h-10 w-10 items-center justify-center rounded-xl
-                       bg-gradient-to-br from-brand-500 to-brand-700 text-white font-black text-lg
-                       shadow-lg shadow-brand-500/30 group-hover:shadow-brand-400/50 transition-all">V</span>
-          <span class="text-lg font-extrabold tracking-tight text-white">Vivalty</span>
-        </a>
-        <p class="mt-4 max-w-md text-sm leading-relaxed text-ink-400">
-          Your gateway to global real estate. Buy, sell or rent across 7 international
-          destinations, with verified listings and local guides.
-        </p>
-
-        {# Company identity — prominent for visitors & ad reviewers #}
-        <div class="mt-6 max-w-lg rounded-2xl border border-white/15 bg-white/5 p-5">
-          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-300">Operated by</p>
-          <p class="mt-1.5 text-xl font-extrabold tracking-tight text-white sm:text-2xl">
+    {# ── Company identity band (highly visible) ─────────────────── #}
+    <div class="border-b border-white/10 py-10 sm:py-12">
+      <div class="grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-end">
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-[0.28em] text-brand-300">Official company</p>
+          <h2 class="mt-3 font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-[2.75rem] leading-[1.1]">
             {{ COMPANY_LEGAL_NAME }}
-          </p>
-          <p class="mt-1 text-sm font-medium text-ink-300">
-            Wyoming LLC · United States
+          </h2>
+          <p class="mt-3 max-w-xl text-base text-ink-300">
+            Wyoming limited liability company · United States
             {% if COMPANY_EIN %}<span class="text-ink-500"> · EIN {{ COMPANY_EIN }}</span>{% endif %}
           </p>
-          <div class="mt-4 space-y-2.5 text-sm text-ink-200">
-            <p class="flex items-start gap-2.5">
-              <svg class="mt-0.5 h-4 w-4 shrink-0 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-              </svg>
-              <span class="font-medium leading-snug text-white">{{ COMPANY_REGISTERED_ADDRESS }}</span>
-            </p>
-            {% if COMPANY_PHONE %}
-            <p class="flex items-center gap-2.5">
-              <svg class="h-4 w-4 shrink-0 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-              </svg>
-              <a href="tel:{{ COMPANY_PHONE|digits }}" class="font-semibold text-white hover:text-brand-300 transition-colors">{{ COMPANY_PHONE }}</a>
-            </p>
-            {% endif %}
-            {% if COMPANY_WHATSAPP %}
-            <p class="flex items-center gap-2.5">
-              <svg class="h-4 w-4 shrink-0 text-[#25D366]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-              </svg>
-              <a href="https://wa.me/{{ COMPANY_WHATSAPP|digits }}"
-                 class="inline-flex items-center gap-2 font-bold text-[#25D366] hover:text-[#4ae07e] transition-colors"
-                 rel="noopener noreferrer" target="_blank">
-                WhatsApp +{{ COMPANY_WHATSAPP|digits }}
-              </a>
-            </p>
-            {% endif %}
-          </div>
+          <p class="mt-5 flex items-start gap-3 text-base font-medium leading-relaxed text-white sm:text-lg">
+            <svg class="mt-1 h-5 w-5 shrink-0 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span>{{ COMPANY_REGISTERED_ADDRESS }}</span>
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-3 sm:items-start lg:items-end">
           {% if COMPANY_WHATSAPP %}
           <a href="https://wa.me/{{ COMPANY_WHATSAPP|digits }}"
-             class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-[#25D366]/20 hover:bg-[#1ebe57] transition-colors sm:w-auto"
+             class="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-[#25D366] px-6 py-4 text-base font-bold text-white shadow-[0_12px_40px_-12px_rgba(37,211,102,0.55)] transition hover:bg-[#1ebe57] hover:scale-[1.01] active:scale-[0.99] sm:w-auto"
              rel="noopener noreferrer" target="_blank">
-            Chat on WhatsApp
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            WhatsApp +{{ COMPANY_WHATSAPP|digits }}
           </a>
           {% endif %}
+          <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            {% if COMPANY_PHONE %}
+            <a href="tel:{{ COMPANY_PHONE|digits }}"
+               class="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10">
+              {{ COMPANY_PHONE }}
+            </a>
+            {% endif %}
+            <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}"
+               class="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10">
+              {{ COMPANY_SUPPORT_EMAIL }}
+            </a>
+          </div>
         </div>
       </div>
+    </div>
 
-      <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-        <div class="text-xs font-bold uppercase tracking-widest text-brand-300 mb-2">Stay informed</div>
-        <h3 class="text-lg font-extrabold text-white">New homes, monthly.</h3>
-        <p class="mt-1.5 text-sm text-ink-400">
-          Get our monthly roundup of new listings and destination guides — no spam.
+    {# ── Brand + links ──────────────────────────────────────────── #}
+    <div class="grid gap-12 py-12 lg:grid-cols-[1.1fr_2fr]">
+      <div>
+        <a href="{% url 'web:home' %}" class="inline-flex items-center gap-3 group">
+          <span class="flex h-11 w-11 items-center justify-center rounded-xl
+                       bg-gradient-to-br from-brand-400 to-brand-700 text-white font-black text-lg
+                       shadow-lg shadow-brand-500/25 transition group-hover:scale-105">V</span>
+          <span class="font-display text-xl font-semibold tracking-[0.12em] text-white">VIVALTY</span>
+        </a>
+        <p class="mt-5 max-w-sm text-sm leading-relaxed text-ink-400">
+          International real estate, beautifully curated. Browse verified homes across
+          Portugal, Spain, France, Italy, the UK, Switzerland and the UAE.
         </p>
-        <form class="mt-4 flex flex-col sm:flex-row gap-2"
+        <form class="mt-6 flex max-w-md flex-col gap-2 sm:flex-row"
               hx-post="{% url 'web:newsletter_subscribe' %}"
               hx-target="this"
               hx-swap="outerHTML">
           {% csrf_token %}
-          <input type="email" name="email" required placeholder="you@example.com"
-                 class="flex-1 rounded-xl border border-white/10 bg-ink-900/80 px-4 py-2.5 text-sm text-white
-                        placeholder:text-ink-500 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition" />
+          <label class="sr-only" for="footer-newsletter-email">Email</label>
+          <input id="footer-newsletter-email" type="email" name="email" required placeholder="Email for monthly homes"
+                 class="flex-1 rounded-xl border border-white/10 bg-[#121820] px-4 py-2.5 text-sm text-white
+                        placeholder:text-ink-500 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30" />
           <button type="submit"
-                  class="inline-flex items-center justify-center rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white
-                         hover:bg-brand-500 shadow-lg shadow-brand-500/20 transition-all">
+                  class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white
+                         transition hover:bg-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400">
             Subscribe
           </button>
         </form>
       </div>
-    </div>
 
-    {# ── Middle: link columns ───────────────────────────────────── #}
-    <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
-
-      <div>
-        <div class="text-xs font-bold uppercase tracking-widest text-white mb-4">Marketplace</div>
-        <ul class="space-y-2.5 text-sm">
-          <li><a href="{% url 'web:marketplace' %}" class="hover:text-white transition-colors">All listings</a></li>
-          <li><a href="{% url 'web:marketplace' %}?type=apartment" class="hover:text-white transition-colors">Apartments</a></li>
-          <li><a href="{% url 'web:marketplace' %}?type=house" class="hover:text-white transition-colors">Houses</a></li>
-          <li><a href="{% url 'web:marketplace' %}?type=villa" class="hover:text-white transition-colors">Villas</a></li>
-          <li><a href="{% url 'web:marketplace' %}?type=studio" class="hover:text-white transition-colors">Studios</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="text-xs font-bold uppercase tracking-widest text-white mb-4">Destinations</div>
-        <ul class="space-y-2.5 text-sm">
-          <li><a href="{% url 'web:destination_detail' 'portugal' %}" class="hover:text-white transition-colors">🇵🇹 Portugal</a></li>
-          <li><a href="{% url 'web:destination_detail' 'spain' %}" class="hover:text-white transition-colors">🇪🇸 Spain</a></li>
-          <li><a href="{% url 'web:destination_detail' 'france' %}" class="hover:text-white transition-colors">🇫🇷 France</a></li>
-          <li><a href="{% url 'web:destination_detail' 'uae' %}" class="hover:text-white transition-colors">🇦🇪 Dubai &amp; UAE</a></li>
-          <li><a href="{% url 'web:destinations' %}" class="text-brand-300 font-semibold hover:text-brand-200 transition-colors">All 7 destinations →</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="text-xs font-bold uppercase tracking-widest text-white mb-4">Explore</div>
-        <ul class="space-y-2.5 text-sm">
-          {% if SHOW_INVESTMENT_FEATURES %}
-          <li><a href="{% url 'web:simulator' %}" class="hover:text-white transition-colors">Investment simulator</a></li>
-          <li><a href="{% url 'web:compare' %}" class="hover:text-white transition-colors">Compare listings</a></li>
-          <li><a href="{% url 'web:methodology' %}" class="hover:text-white transition-colors">How our AI score works</a></li>
-          <li><a href="{% url 'web:markets' %}" class="hover:text-white transition-colors">Market data</a></li>
-          {% else %}
-          <li><a href="{% url 'web:destinations' %}" class="hover:text-white transition-colors">Destination guides</a></li>
-          <li><a href="{% url 'web:quiz' %}" class="hover:text-white transition-colors">Dream-home quiz</a></li>
-          <li><a href="{% url 'web:marketplace' %}?ordering=-price" class="hover:text-white transition-colors">Luxury homes</a></li>
-          <li><a href="{% url 'web:become_owner' %}" class="hover:text-white transition-colors">Sell your property</a></li>
-          {% endif %}
-          <li><a href="{% url 'web:chat' %}" class="hover:text-white transition-colors">AI Assistant</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="text-xs font-bold uppercase tracking-widest text-white mb-4">Company</div>
-        <ul class="space-y-2.5 text-sm">
-          <li><a href="{% url 'web:contact' %}" class="hover:text-white transition-colors">Contact</a></li>
-          <li><a href="{% url 'web:home' %}#advisory-desk" class="hover:text-white transition-colors">Speak to our team</a></li>
-          {% if user.is_authenticated %}
-            <li><a href="{% url 'web:dashboard' %}" class="hover:text-white transition-colors">My dashboard</a></li>
-            <li><a href="{% url 'web:owner_new' %}" class="hover:text-white transition-colors">List a property</a></li>
-          {% else %}
-            <li><a href="{% url 'web:register' %}" class="hover:text-white transition-colors">Create account</a></li>
-            <li><a href="{% url 'web:login' %}" class="hover:text-white transition-colors">Sign in</a></li>
-          {% endif %}
-          <li><a href="mailto:{{ COMPANY_INVESTOR_EMAIL }}" class="hover:text-white transition-colors">{{ COMPANY_INVESTOR_EMAIL }}</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="text-xs font-bold uppercase tracking-widest text-white mb-4">Legal</div>
-        <ul class="space-y-2.5 text-sm">
-          <li><a href="{% url 'web:privacy' %}" class="hover:text-white transition-colors">Privacy Policy</a></li>
-          <li><a href="{% url 'web:terms' %}" class="hover:text-white transition-colors">Terms of Service</a></li>
-          <li><a href="{% url 'web:cookies' %}" class="hover:text-white transition-colors">Cookie Policy</a></li>
-          <li><a href="{% url 'web:legal_notice' %}" class="hover:text-white transition-colors">Legal notice</a></li>
-        </ul>
-      </div>
-    </div>
-
-    {# ── Bottom: company identity + legal links ─────────────────── #}
-    <div class="mt-12 space-y-6 border-t border-white/10 pt-8">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <p class="text-base font-extrabold text-white sm:text-lg">{{ COMPANY_LEGAL_NAME }}</p>
-          <p class="mt-1 text-sm font-medium text-ink-200">{{ COMPANY_REGISTERED_ADDRESS }}</p>
-          <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-            {% if COMPANY_PHONE %}
-            <a href="tel:{{ COMPANY_PHONE|digits }}" class="font-semibold text-white hover:text-brand-300 transition-colors">{{ COMPANY_PHONE }}</a>
-            {% endif %}
-            {% if COMPANY_WHATSAPP %}
-            <a href="https://wa.me/{{ COMPANY_WHATSAPP|digits }}"
-               class="font-bold text-[#25D366] hover:text-[#4ae07e] transition-colors"
-               rel="noopener noreferrer" target="_blank">
-              WhatsApp +{{ COMPANY_WHATSAPP|digits }}
-            </a>
-            {% endif %}
-            {% if COMPANY_EIN %}
-            <span class="text-ink-400">EIN {{ COMPANY_EIN }}</span>
-            {% endif %}
-          </div>
+          <div class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/90 mb-4">Marketplace</div>
+          <ul class="space-y-2.5 text-sm">
+            <li><a href="{% url 'web:marketplace' %}" class="text-ink-400 transition hover:text-white">All listings</a></li>
+            <li><a href="{% url 'web:marketplace' %}?type=apartment" class="text-ink-400 transition hover:text-white">Apartments</a></li>
+            <li><a href="{% url 'web:marketplace' %}?type=villa" class="text-ink-400 transition hover:text-white">Villas</a></li>
+            <li><a href="{% url 'web:marketplace' %}?ordering=-price" class="text-ink-400 transition hover:text-white">Luxury</a></li>
+            <li><a href="{% url 'web:become_owner' %}" class="text-ink-400 transition hover:text-white">List a property</a></li>
+          </ul>
         </div>
-        <div class="flex items-center gap-2">
-          {% if COMPANY_WHATSAPP %}
-          <a href="https://wa.me/{{ COMPANY_WHATSAPP|digits }}"
-             aria-label="WhatsApp {{ COMPANY_WHATSAPP }}"
-             class="inline-flex h-10 items-center gap-2 rounded-xl bg-[#25D366] px-4 text-sm font-bold text-white hover:bg-[#1ebe57] transition-colors"
-             rel="noopener noreferrer" target="_blank">
-            WhatsApp
-          </a>
-          {% endif %}
-          <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}" aria-label="Email {{ COMPANY_SUPPORT_EMAIL }}"
-             class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-ink-300 hover:text-white hover:border-white/20 hover:bg-white/10 transition-all">
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
-          </a>
+        <div>
+          <div class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/90 mb-4">Destinations</div>
+          <ul class="space-y-2.5 text-sm">
+            <li><a href="{% url 'web:destination_detail' 'portugal' %}" class="text-ink-400 transition hover:text-white">Portugal</a></li>
+            <li><a href="{% url 'web:destination_detail' 'spain' %}" class="text-ink-400 transition hover:text-white">Spain</a></li>
+            <li><a href="{% url 'web:destination_detail' 'france' %}" class="text-ink-400 transition hover:text-white">France</a></li>
+            <li><a href="{% url 'web:destination_detail' 'uae' %}" class="text-ink-400 transition hover:text-white">Dubai &amp; UAE</a></li>
+            <li><a href="{% url 'web:destinations' %}" class="font-semibold text-brand-300 transition hover:text-brand-200">All destinations →</a></li>
+          </ul>
         </div>
-      </div>
-
-      <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-ink-500">
-        <span>&copy; {% now "Y" %} {{ COMPANY_LEGAL_NAME }}. All rights reserved.</span>
-        <a href="{% url 'web:privacy' %}" class="hover:text-white transition-colors">Privacy</a>
-        <a href="{% url 'web:terms' %}" class="hover:text-white transition-colors">Terms</a>
-        <a href="{% url 'web:cookies' %}" class="hover:text-white transition-colors">Cookies</a>
-        <a href="{% url 'web:legal_notice' %}" class="hover:text-white transition-colors">Legal notice</a>
-        <a href="{% url 'web:contact' %}" class="hover:text-white transition-colors">Contact</a>
+        <div>
+          <div class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/90 mb-4">Explore</div>
+          <ul class="space-y-2.5 text-sm">
+            <li><a href="{% url 'web:quiz' %}" class="text-ink-400 transition hover:text-white">Dream-home quiz</a></li>
+            <li><a href="{% url 'web:price_explorer' %}" class="text-ink-400 transition hover:text-white">Price explorer</a></li>
+            <li><a href="{% url 'web:chat' %}" class="text-ink-400 transition hover:text-white">AI Assistant</a></li>
+            <li><a href="{% url 'web:contact' %}" class="text-ink-400 transition hover:text-white">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/90 mb-4">Legal</div>
+          <ul class="space-y-2.5 text-sm">
+            <li><a href="{% url 'web:legal_notice' %}" class="text-ink-400 transition hover:text-white">Legal notice</a></li>
+            <li><a href="{% url 'web:privacy' %}" class="text-ink-400 transition hover:text-white">Privacy Policy</a></li>
+            <li><a href="{% url 'web:terms' %}" class="text-ink-400 transition hover:text-white">Terms of Service</a></li>
+            <li><a href="{% url 'web:cookies' %}" class="text-ink-400 transition hover:text-white">Cookie Policy</a></li>
+          </ul>
+        </div>
       </div>
     </div>
 
+    {# ── Bottom bar ─────────────────────────────────────────────── #}
+    <div class="flex flex-col gap-4 border-t border-white/10 py-8 sm:flex-row sm:items-center sm:justify-between">
+      <p class="text-sm text-ink-500">
+        &copy; {% now "Y" %} <span class="font-semibold text-ink-300">{{ COMPANY_LEGAL_NAME }}</span>
+        · Vivalty marketplace · All rights reserved
+      </p>
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+        {% if COMPANY_WHATSAPP %}
+        <a href="https://wa.me/{{ COMPANY_WHATSAPP|digits }}" class="font-bold text-[#25D366] transition hover:text-[#4ae07e]" rel="noopener noreferrer" target="_blank">
+          +{{ COMPANY_WHATSAPP|digits }}
+        </a>
+        {% endif %}
+        <a href="{% url 'web:legal_notice' %}" class="text-ink-400 transition hover:text-white">Legal notice</a>
+        <a href="{% url 'web:contact' %}" class="text-ink-400 transition hover:text-white">Contact</a>
+      </div>
+    </div>
   </div>
 </footer>
 
