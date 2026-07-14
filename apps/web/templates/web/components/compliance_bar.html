@@ -17,6 +17,8 @@
     <span class="mx-1.5 text-amber-700">·</span>
     <a href="tel:{{ COMPANY_PHONE|digits }}" class="font-semibold underline underline-offset-2 hover:text-amber-900">{{ COMPANY_PHONE }}</a>
     {% endif %}
+    <span class="mx-1.5 text-amber-700">·</span>
+    <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}" class="font-semibold underline underline-offset-2 hover:text-amber-900">{{ COMPANY_SUPPORT_EMAIL }}</a>
     <span class="mx-1.5 hidden text-amber-700 sm:inline">·</span>
     <a href="{% url 'web:legal_notice' %}" class="mt-1 inline-block font-semibold underline underline-offset-2 hover:text-amber-900 sm:mt-0">Legal notice</a>
   </div>
