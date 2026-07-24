@@ -17,6 +17,10 @@ python manage.py import_curated_listings || echo "[start] Curated import failed 
 echo "[start] Expiring lapsed featured boosts..."
 python manage.py expire_featured || echo "[start] Boost expiry failed (non-fatal), continuing."
 
+# Renewal reminders for boosts expiring within 2 days (idempotent via DB flag).
+echo "[start] Sending boost-expiry reminders..."
+python manage.py notify_expiring_boosts || echo "[start] Boost reminders failed (non-fatal), continuing."
+
 echo "[start] Starting gunicorn on 0.0.0.0:${PORT:-8000} ..."
 exec gunicorn config.wsgi:application \
   --bind "0.0.0.0:${PORT:-8000}" \

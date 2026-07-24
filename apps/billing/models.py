@@ -64,6 +64,9 @@ class FeaturedListingPurchase(models.Model):
     starts_at = models.DateTimeField()
     ends_at = models.DateTimeField()
     external_ref = models.CharField(max_length=200, blank=True)
+    expiry_reminder_sent = models.BooleanField(
+        default=False, help_text="Renewal reminder emailed before the boost lapsed."
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

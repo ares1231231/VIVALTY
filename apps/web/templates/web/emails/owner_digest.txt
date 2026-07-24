@@ -1,0 +1,21 @@
+Your Vivalty listings this week
+
+Hi {{ user.first_name|default:"there" }},
+
+Here's how your {{ stats.listing_count }} listing{{ stats.listing_count|pluralize }} on Vivalty {% if stats.listing_count == 1 %}is{% else %}are{% endif %} performing:
+
+  Total views: {{ stats.total_views }}
+  Enquiries:   {{ stats.total_leads }}
+{% if stats.boost_multiplier %}
+Featured listings on Vivalty currently get {{ stats.boost_multiplier }}x more
+views than standard ones. Boost any live listing for EUR {{ boost_price }} /
+{{ boost_days }} days.
+{% endif %}
+Open your dashboard:
+{{ dashboard_url }}
+
+See plans & boosts:
+{{ pricing_url }}
+
+— Vivalty
+{{ site_url }}

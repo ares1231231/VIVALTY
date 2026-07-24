@@ -1,0 +1,15 @@
+Your featured placement ends {{ ends_at|date:"l, N j" }}
+
+"{{ property.title }}" — {{ property.city.name }}, {{ property.country.name }} —
+is about to drop out of the top spots on the home page and marketplace.
+
+Renew for EUR {{ boost_price }} and keep your premium placement for another
+{{ boost_days }} days. Featured listings get significantly more views and enquiries.
+
+Renew from your dashboard:
+{{ dashboard_url }}
+
+If you do nothing, your listing stays live — it just loses its featured placement.
+
+— Vivalty
+{{ site_url }}

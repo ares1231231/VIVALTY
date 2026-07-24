@@ -38,6 +38,7 @@ logger = logging.getLogger("vivalty.web")
 
 from apps.ai_advisor.models import AIConversationSession, ChatMessage, Role as ChatRole
 from apps.ai_advisor.services.advisor import generate, stream as advisor_stream
+from apps.billing.services import quotas
 from apps.geo.models import City, Country
 from apps.properties.models import Favorite, Lead, LeadStatus, Property, PropertyType, Status
 from apps.properties.services.scoring import FACTOR_WEIGHTS
@@ -1583,6 +1584,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     )
     mine = []
     my_leads = []
+    plan_usage = None
     if request.user.role in {"owner", "admin"} or request.user.is_staff:
         mine = (
             Property.objects.select_related("country", "city", "metric")
@@ -1595,6 +1597,30 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             .filter(property__owner=request.user)
             .order_by("-created_at")[:100]
         )
+
+        # Plan usage + boost stats — fuels the upgrade bar and Go-Pro card.
+        plan = quotas.get_user_plan(request.user)
+        used = quotas.listing_count(request.user)
+        featured_stats = Property.objects.filter(status="active").aggregate(
+            feat=Avg("views_count", filter=Q(is_featured=True)),
+            reg=Avg("views_count", filter=Q(is_featured=False)),
+        )
+        # Only claim a multiplier once standard listings average >= 1 view,
+        # otherwise tiny seed data produces absurd ratios.
+        boost_multiplier = 0
+        if featured_stats["feat"] and featured_stats["reg"] and featured_stats["reg"] >= 1:
+            boost_multiplier = min(10, round(featured_stats["feat"] / featured_stats["reg"]))
+        plan_usage = {
+            "plan": plan,
+            "used": used,
+            "quota": plan.listing_quota,
+            "pct": min(100, round(used * 100 / max(1, plan.listing_quota))),
+            "is_free": plan.monthly_price <= 0,
+            "featured_slots_left": quotas.remaining_featured_slots(request.user),
+            "boost_multiplier": boost_multiplier if boost_multiplier >= 2 else 0,
+            "boost_price": settings.FEATURED_BOOST_PRICE_EUR,
+            "boost_days": settings.FEATURED_BOOST_DAYS,
+        }
 
     # Watchlist analytics — institutional-feeling KPIs at the top of the dashboard.
     fav_props = [f.property for f in favorites]
@@ -1630,6 +1656,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             "favorites": favorites,
             "mine": mine,
             "my_leads": my_leads,
+            "plan_usage": plan_usage,
             "new_leads_count": sum(1 for lead in my_leads if lead.status == "new"),
             "saved_searches": saved_searches,
             "watchlist_kpis": {
@@ -1837,7 +1864,17 @@ def listing_success(request: HttpRequest, pk: int) -> HttpResponse:
         pk=pk,
         owner=request.user,
     )
-    return render(request, "web/listing/success.html", {"p": prop})
+    return render(
+        request,
+        "web/listing/success.html",
+        {
+            "p": prop,
+            "boost_price": settings.FEATURED_BOOST_PRICE_EUR,
+            "boost_days": settings.FEATURED_BOOST_DAYS,
+            "has_free_featured_slot": quotas.remaining_featured_slots(request.user) > 0,
+            "owner_is_premium": quotas.owner_has_premium_plan(request.user),
+        },
+    )
 
 
 @login_required

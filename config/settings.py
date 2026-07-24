@@ -366,6 +366,8 @@ STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 # Featured-listing boost: one-off purchase surfacing a listing on home/marketplace.
 FEATURED_BOOST_PRICE_EUR = int(os.getenv("FEATURED_BOOST_PRICE_EUR", "29"))
 FEATURED_BOOST_DAYS = int(os.getenv("FEATURED_BOOST_DAYS", "14"))
+# Free trial on paid plans for first-time subscribers (0 disables trials).
+PLAN_TRIAL_DAYS = int(os.getenv("PLAN_TRIAL_DAYS", "14"))
 
 # --- Bot protection (Cloudflare Turnstile) ---------------------------------
 # Leave both blank in dev to disable the challenge.

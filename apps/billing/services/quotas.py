@@ -72,6 +72,11 @@ def can_apply_plan_featured(user: User) -> bool:
     return remaining_featured_slots(user) > 0
 
 
+def owner_has_premium_plan(user: User) -> bool:
+    """True when the user is on a paying tier (Pro / Agency)."""
+    return get_user_plan(user).monthly_price > 0
+
+
 def has_active_featured_purchase(prop: Property) -> bool:
     now = timezone.now()
     return FeaturedListingPurchase.objects.filter(

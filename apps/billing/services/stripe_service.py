@@ -56,6 +56,13 @@ def _absolute(path: str) -> str:
     return settings.SITE_URL.rstrip("/") + path
 
 
+def user_trial_eligible(user: User) -> bool:
+    """First-time subscribers get a free trial; anyone with history doesn't."""
+    if settings.PLAN_TRIAL_DAYS <= 0:
+        return False
+    return not Subscription.objects.filter(user=user).exists()
+
+
 # ─── Checkout sessions ────────────────────────────────────────────────────
 
 def create_featured_checkout_session(user: User, prop: Property) -> str:
@@ -107,6 +114,10 @@ def create_plan_checkout_session(user: User, plan: Plan, interval: str) -> str:
         "interval": interval,
         "user_id": str(user.pk),
     }
+    subscription_data: dict = {"metadata": metadata}
+    if user_trial_eligible(user):
+        subscription_data["trial_period_days"] = settings.PLAN_TRIAL_DAYS
+
     session = stripe.checkout.Session.create(
         mode="subscription",
         integration_identifier=INTEGRATION_ID,
@@ -127,7 +138,7 @@ def create_plan_checkout_session(user: User, plan: Plan, interval: str) -> str:
             }
         ],
         metadata=metadata,
-        subscription_data={"metadata": metadata},
+        subscription_data=subscription_data,
         success_url=_absolute(reverse("billing:checkout_success")) + "?session_id={CHECKOUT_SESSION_ID}",
         cancel_url=_absolute(reverse("billing:checkout_cancel")),
     )
@@ -262,6 +273,7 @@ def _activate_plan(session, meta: dict) -> None:
             "current_period_end": period_end,
         },
     )
+    _sync_premium_badge(user)
     logger.info("Subscription %s (%s) active for user %s.", sub_id, plan.code, user.pk)
 
 
@@ -276,6 +288,18 @@ def _sync_subscription(stripe_sub) -> None:
     if status == Subscription.Status.CANCELED and not sub.canceled_at:
         sub.canceled_at = timezone.now()
     sub.save(update_fields=["status", "current_period_end", "canceled_at"])
+    if sub.user_id:
+        _sync_premium_badge(sub.user)
+
+
+def _sync_premium_badge(user: User) -> None:
+    """Mirror the owner's paid-plan status onto their listings' premium badge."""
+    is_premium = (
+        Subscription.objects.filter(
+            user=user, status__in=["active", "trialing"], plan__monthly_price__gt=0
+        ).exists()
+    )
+    Property.objects.filter(owner=user).exclude(is_premium=is_premium).update(is_premium=is_premium)
 
 
 def _period_end(stripe_sub) -> datetime | None:

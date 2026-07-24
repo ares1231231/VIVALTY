@@ -392,7 +392,7 @@ def publish_draft(request: HttpRequest) -> Property:
     to `Status.ACTIVE`. The InvestmentMetric is computed automatically by
     the post_save signal on Property.
     """
-    from apps.billing.services.quotas import can_create_listing
+    from apps.billing.services.quotas import can_create_listing, owner_has_premium_plan
 
     user = request.user
     draft = get_draft(request)
@@ -416,6 +416,7 @@ def publish_draft(request: HttpRequest) -> Property:
         description=draft.get("description") or "",
         property_type=draft.get("property_type") or PropertyType.APARTMENT,
         status=status,
+        is_premium=owner_has_premium_plan(user),
         price=_to_decimal(draft.get("price")) or Decimal("0"),
         currency=draft.get("currency") or "EUR",
         country=country,

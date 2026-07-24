@@ -74,6 +74,39 @@
       </div>
     </div>
 
+    {# ── Boost offer (live listings) / priority-review upsell (pending) ── #}
+    {% if p.status == "active" and not p.is_featured %}
+      <div class="card mt-8 p-6 text-left border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-white">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-2xl ring-1 ring-amber-200">⚡</div>
+          <div class="min-w-0 flex-1">
+            <h2 class="font-display text-lg font-black text-ink-900">Get seen first — boost this listing</h2>
+            <p class="mt-0.5 text-sm text-ink-600 leading-relaxed">
+              Featured listings sit at the top of the marketplace and on the home page.
+              {% if has_free_featured_slot %}Your plan includes a free featured slot — use it now.{% else %}{{ boost_days }} days of premium placement, one-off payment, no subscription.{% endif %}
+            </p>
+          </div>
+          <form method="post" action="{% url 'billing:feature_checkout' p.pk %}" class="w-full sm:w-auto">
+            {% csrf_token %}
+            <button type="submit" class="btn-primary w-full sm:w-auto rounded-xl px-6 py-3 text-sm whitespace-nowrap">
+              {% if has_free_featured_slot %}⚡ Feature free{% else %}⚡ Boost — €{{ boost_price }}{% endif %}
+            </button>
+          </form>
+        </div>
+      </div>
+    {% elif p.status == "pending" and not owner_is_premium %}
+      <div class="card mt-8 p-5 text-left border border-ink-200">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">🚀</span>
+          <p class="text-sm text-ink-600 leading-relaxed">
+            <strong class="text-ink-900">Skip the queue:</strong> Pro listings get priority editorial review —
+            usually live within hours instead of a day.
+            <a href="{% url 'billing:pricing' %}" class="font-bold text-brand-700 hover:underline">See plans →</a>
+          </p>
+        </div>
+      </div>
+    {% endif %}
+
     {# Next-step CTAs #}
     <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
       {% if p.status == "active" %}

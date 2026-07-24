@@ -128,6 +128,15 @@ Two visual variants based on context:
         </div>
       </div>
 
+      {# ── Sell faster (pricing) ───────────────────────────────── #}
+      <a href="{% url 'billing:pricing' %}"
+         class="vv-nav-link {% if url_name == 'pricing' %}is-active{% endif %}">
+        <span class="inline-flex items-center gap-1.5">
+          <span class="text-amber-500">⚡</span>
+          {% t "nav.sell_faster" "Sell faster" %}
+        </span>
+      </a>
+
       {% if SHOW_INVESTMENT_FEATURES %}
       {# ── AI Invest ───────────────────────────────────────────── #}
       <div class="vv-nav-group">
@@ -196,6 +205,12 @@ Two visual variants based on context:
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1V10"/>
                 </svg>
                 Sell Your Property
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'billing:pricing' %}" class="dropdown-item font-bold text-amber-700 flex items-center gap-2">
+                <span class="text-sm leading-none">⚡</span>
+                Plans &amp; boosts
               </a>
             </li>
           </ul>
@@ -279,6 +294,9 @@ Two visual variants based on context:
     <a href="{% url 'web:marketplace' %}?ordering=-price" class="mobile-nav-item">Luxury</a>
     <a href="{% url 'web:destinations' %}" class="mobile-nav-item">Destinations</a>
     <a href="{% url 'web:quiz' %}" class="mobile-nav-item">Dream-home quiz</a>
+    <a href="{% url 'billing:pricing' %}" class="mobile-nav-item">
+      <span class="inline-flex items-center gap-1.5"><span class="text-amber-500">⚡</span> Sell faster — plans</span>
+    </a>
     {% if SHOW_INVESTMENT_FEATURES %}
     <a href="{% url 'web:simulator' %}" class="mobile-nav-item">
       <span class="inline-flex items-center gap-1.5">

@@ -322,6 +322,58 @@
       {# Listings tab — owners + admins see their listings with inline actions #}
       {% if user.role == 'owner' or user.role == 'admin' or user.is_staff %}
       <div id="tab-listings" role="tabpanel" aria-labelledby="listings-tab" class="hidden">
+
+        {# ── Plan usage bar + upgrade nudge ─────────────────────── #}
+        {% if plan_usage %}
+        <div class="card p-5 mb-4 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-baseline gap-2">
+              <span class="text-sm font-bold text-ink-900">{{ plan_usage.plan.name }} plan</span>
+              <span class="text-xs text-ink-500">
+                {{ plan_usage.used }} of {{ plan_usage.quota }} listing{{ plan_usage.quota|pluralize }} used
+              </span>
+              {% if plan_usage.featured_slots_left > 0 %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 text-[10px] font-bold">
+                  ★ {{ plan_usage.featured_slots_left }} featured slot{{ plan_usage.featured_slots_left|pluralize }} available
+                </span>
+              {% endif %}
+            </div>
+            <div class="mt-2 h-2 w-full max-w-md overflow-hidden rounded-full bg-ink-100" role="progressbar"
+                 aria-valuenow="{{ plan_usage.used }}" aria-valuemin="0" aria-valuemax="{{ plan_usage.quota }}"
+                 aria-label="Listing quota used">
+              <div class="h-full rounded-full {% if plan_usage.pct >= 100 %}bg-rose-500{% elif plan_usage.pct >= 70 %}bg-amber-500{% else %}bg-brand-600{% endif %} transition-all"
+                   style="width:{{ plan_usage.pct }}%"></div>
+            </div>
+            {% if plan_usage.is_free %}
+              <p class="mt-2 text-xs text-ink-500">
+                {% if plan_usage.pct >= 70 %}
+                  Almost full — Pro gives you <strong class="text-ink-700">15 listings</strong> and an always-on featured slot.
+                {% else %}
+                  Upgrade to Pro for 15 listings, a permanent featured slot and priority review.
+                {% endif %}
+              </p>
+            {% endif %}
+          </div>
+          {% if plan_usage.is_free %}
+            <a href="{% url 'billing:pricing' %}" class="btn-primary rounded-xl px-5 py-2.5 text-sm justify-self-start sm:justify-self-end">
+              ⚡ Upgrade
+            </a>
+          {% endif %}
+        </div>
+
+        {# ── Boost value banner (data-driven when we have enough signal) ── #}
+        {% if plan_usage.boost_multiplier %}
+        <div class="mb-4 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span class="text-lg">⚡</span>
+          <span>
+            Featured listings currently get <strong>{{ plan_usage.boost_multiplier }}× more views</strong>
+            than standard ones. Boost any live listing below for
+            <strong>€{{ plan_usage.boost_price }}</strong> / {{ plan_usage.boost_days }} days.
+          </span>
+        </div>
+        {% endif %}
+        {% endif %}
+
         {% if mine %}
           <div class="space-y-3">
             {% for p in mine %}
@@ -391,8 +443,8 @@
                       <form method="post" action="{% url 'billing:feature_checkout' p.pk %}">
                         {% csrf_token %}
                         <button type="submit" class="w-full btn rounded-lg text-xs px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100"
-                                title="Premium placement on home + marketplace">
-                          ★ Feature
+                                title="{% if plan_usage and plan_usage.featured_slots_left > 0 %}Included in your plan — premium placement on home + marketplace{% else %}€{{ plan_usage.boost_price|default:'29' }} for {{ plan_usage.boost_days|default:'14' }} days of premium placement on home + marketplace{% endif %}">
+                          ⚡ Boost{% if plan_usage and plan_usage.featured_slots_left > 0 %} — free slot{% elif plan_usage %} · €{{ plan_usage.boost_price }}{% endif %}
                         </button>
                       </form>
                     {% endif %}

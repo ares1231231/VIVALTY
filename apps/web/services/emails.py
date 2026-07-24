@@ -224,6 +224,67 @@ def send_lead_notification(lead) -> None:
     msg.send(fail_silently=True)
 
 
+def send_boost_expiring(purchase) -> None:
+    """Remind an owner that a paid featured boost lapses soon (renewal nudge)."""
+    from django.core.mail import EmailMultiAlternatives
+
+    prop = purchase.property
+    to_email = (purchase.user.email if purchase.user_id else "") or prop.contact_email
+    if not to_email:
+        logger.warning("Boost-expiry reminder for purchase %s has no recipient.", purchase.pk)
+        return
+
+    ctx = {
+        "purchase": purchase,
+        "property": prop,
+        "ends_at": purchase.ends_at,
+        "boost_price": settings.FEATURED_BOOST_PRICE_EUR,
+        "boost_days": settings.FEATURED_BOOST_DAYS,
+        "dashboard_url": _absolute_url("/dashboard/#tab-listings"),
+        "site_url": settings.SITE_URL,
+    }
+    text_body = render_to_string("web/emails/boost_expiring.txt", ctx)
+    html_body = render_to_string("web/emails/boost_expiring.html", ctx)
+
+    msg = EmailMultiAlternatives(
+        subject=f"Your featured placement ends soon — {prop.title[:70]}",
+        body=text_body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[to_email],
+    )
+    msg.attach_alternative(html_body, "text/html")
+    msg.send(fail_silently=True)
+
+
+def send_owner_digest(user: User, stats: dict) -> None:
+    """Weekly performance digest for listing owners, with a boost CTA."""
+    from django.core.mail import EmailMultiAlternatives
+
+    if not user.email:
+        return
+
+    ctx = {
+        "user": user,
+        "stats": stats,
+        "boost_price": settings.FEATURED_BOOST_PRICE_EUR,
+        "boost_days": settings.FEATURED_BOOST_DAYS,
+        "dashboard_url": _absolute_url("/dashboard/#tab-listings"),
+        "pricing_url": _absolute_url("/pricing/"),
+        "site_url": settings.SITE_URL,
+    }
+    text_body = render_to_string("web/emails/owner_digest.txt", ctx)
+    html_body = render_to_string("web/emails/owner_digest.html", ctx)
+
+    msg = EmailMultiAlternatives(
+        subject="Your Vivalty listings this week",
+        body=text_body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[user.email],
+    )
+    msg.attach_alternative(html_body, "text/html")
+    msg.send(fail_silently=True)
+
+
 def send_password_reset_email(user: User) -> None:
     from django.core.mail import EmailMultiAlternatives
     from django.urls import reverse

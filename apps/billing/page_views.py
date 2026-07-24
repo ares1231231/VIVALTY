@@ -26,6 +26,7 @@ logger = logging.getLogger("vivalty.billing")
 def pricing(request: HttpRequest) -> HttpResponse:
     plans = Plan.objects.filter(is_active=True).order_by("monthly_price")
     current_plan_code = ""
+    trial_eligible = False
     if request.user.is_authenticated:
         active = (
             Subscription.objects.filter(user=request.user, status__in=["active", "trialing"])
@@ -34,6 +35,11 @@ def pricing(request: HttpRequest) -> HttpResponse:
         )
         if active:
             current_plan_code = active.plan.code
+        trial_eligible = stripe_service.user_trial_eligible(request.user)
+    else:
+        # New visitors will be eligible once they sign up.
+        trial_eligible = settings.PLAN_TRIAL_DAYS > 0
+    boost_days = settings.FEATURED_BOOST_DAYS
     return render(
         request,
         "billing/pricing.html",
@@ -42,7 +48,9 @@ def pricing(request: HttpRequest) -> HttpResponse:
             "current_plan_code": current_plan_code,
             "stripe_enabled": stripe_service.stripe_enabled(),
             "boost_price": settings.FEATURED_BOOST_PRICE_EUR,
-            "boost_days": settings.FEATURED_BOOST_DAYS,
+            "boost_days": boost_days,
+            "boost_per_day": round(settings.FEATURED_BOOST_PRICE_EUR / max(1, boost_days), 2),
+            "trial_days": settings.PLAN_TRIAL_DAYS if trial_eligible else 0,
         },
     )
 
