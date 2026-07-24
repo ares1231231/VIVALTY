@@ -104,6 +104,13 @@ class Property(models.Model):
     tags = models.ManyToManyField(InvestmentTag, blank=True, related_name="properties")
 
     is_featured = models.BooleanField(default=False, db_index=True)
+    featured_until = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="When set, auto-expire unfeatures after this time (paid boost). "
+        "Null means editorial / plan-slot featuring — never auto-expired.",
+    )
     is_premium = models.BooleanField(default=False, db_index=True)
     is_verified = models.BooleanField(
         default=False,

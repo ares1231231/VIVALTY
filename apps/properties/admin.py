@@ -67,11 +67,12 @@ class PropertyAdmin(admin.ModelAdmin):
 
     @admin.action(description="Mark selected as Featured")
     def mark_featured(self, request, queryset):
-        queryset.update(is_featured=True)
+        # featured_until=None → editorial; expire_featured never strips these.
+        queryset.update(is_featured=True, featured_until=None)
 
     @admin.action(description="Unmark Featured")
     def unmark_featured(self, request, queryset):
-        queryset.update(is_featured=False)
+        queryset.update(is_featured=False, featured_until=None)
 
     @admin.action(description="Mark selected as Premium")
     def mark_premium(self, request, queryset):

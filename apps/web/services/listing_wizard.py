@@ -392,11 +392,17 @@ def publish_draft(request: HttpRequest) -> Property:
     to `Status.ACTIVE`. The InvestmentMetric is computed automatically by
     the post_save signal on Property.
     """
+    from apps.billing.services.quotas import can_create_listing
+
     user = request.user
     draft = get_draft(request)
 
     if not can_review(draft):
         raise ValueError("Draft is incomplete.")
+
+    allowed, quota_msg = can_create_listing(user)
+    if not allowed:
+        raise ValueError(quota_msg)
 
     country = Country.objects.get(pk=draft["country_id"])
     city = City.objects.get(pk=draft["city_id"])

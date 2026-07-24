@@ -14,6 +14,8 @@ Design notes:
       payment methods pick the best options per customer.
     - Fulfillment happens ONLY in the webhook (never on the success redirect),
       and is idempotent via ``external_ref`` so replayed events are harmless.
+    - One-off payments are fulfilled only when ``payment_status == "paid"``
+      (or on ``checkout.session.async_payment_succeeded`` for delayed methods).
 """
 
 from __future__ import annotations
@@ -34,6 +36,9 @@ logger = logging.getLogger("vivalty.billing")
 
 # Tags checkout flows in the Stripe Dashboard (suffix is a fixed random label).
 INTEGRATION_ID = "vivalty-checkout-wqzxkmpr"
+
+# Session payment_status values that mean money has cleared.
+_PAID_STATUSES = frozenset({"paid", "no_payment_required"})
 
 
 def stripe_enabled() -> bool:
@@ -141,7 +146,23 @@ def handle_event(event) -> None:
     kind = event["type"]
     obj = event["data"]["object"]
     if kind == "checkout.session.completed":
+        # Card/instant methods: payment_status is already "paid".
+        # Delayed methods (e.g. bank debit): wait for async_payment_succeeded.
+        if obj.get("payment_status") in _PAID_STATUSES:
+            _fulfill_checkout_session(obj)
+        else:
+            logger.info(
+                "Deferring checkout %s until payment clears (status=%s).",
+                obj.get("id"),
+                obj.get("payment_status"),
+            )
+    elif kind == "checkout.session.async_payment_succeeded":
         _fulfill_checkout_session(obj)
+    elif kind == "checkout.session.async_payment_failed":
+        logger.warning(
+            "Async payment failed for checkout %s — no fulfillment.",
+            obj.get("id"),
+        )
     elif kind in ("customer.subscription.updated", "customer.subscription.deleted"):
         _sync_subscription(obj)
     else:
@@ -170,6 +191,7 @@ def _activate_featured(session, meta: dict) -> None:
 
     days = int(meta.get("duration_days") or settings.FEATURED_BOOST_DAYS)
     now = timezone.now()
+    ends_at = now + timedelta(days=days)
     FeaturedListingPurchase.objects.create(
         property=prop,
         user=User.objects.filter(pk=meta.get("user_id")).first(),
@@ -177,11 +199,14 @@ def _activate_featured(session, meta: dict) -> None:
         amount=Decimal(session.get("amount_total") or 0) / 100,
         currency=(session.get("currency") or "eur").upper(),
         starts_at=now,
-        ends_at=now + timedelta(days=days),
+        ends_at=ends_at,
         external_ref=session_id,
     )
-    Property.objects.filter(pk=prop.pk).update(is_featured=True)
-    logger.info("Featured boost activated for property %s until +%sd (%s).", prop.pk, days, session_id)
+    # Extend featured_until if an overlapping paid window already exists.
+    current_until = prop.featured_until
+    new_until = max(current_until, ends_at) if current_until else ends_at
+    Property.objects.filter(pk=prop.pk).update(is_featured=True, featured_until=new_until)
+    logger.info("Featured boost activated for property %s until %s (%s).", prop.pk, new_until, session_id)
 
 
 STRIPE_STATUS_MAP = {
@@ -189,6 +214,18 @@ STRIPE_STATUS_MAP = {
     "trialing": Subscription.Status.TRIALING,
     "past_due": Subscription.Status.PAST_DUE,
 }
+
+
+def _cancel_stripe_subscription(stripe, sub_id: str) -> None:
+    """Cancel a Stripe subscription; swallow already-canceled / missing refs."""
+    if not sub_id:
+        return
+    try:
+        stripe.Subscription.cancel(sub_id)
+        logger.info("Canceled previous Stripe subscription %s.", sub_id)
+    except Exception as exc:
+        # stripe.error.InvalidRequestError for already canceled / missing
+        logger.warning("Could not cancel Stripe subscription %s: %s", sub_id, exc)
 
 
 def _activate_plan(session, meta: dict) -> None:
@@ -203,7 +240,15 @@ def _activate_plan(session, meta: dict) -> None:
     stripe_sub = stripe.Subscription.retrieve(sub_id)
     period_end = _period_end(stripe_sub)
 
-    # One active subscription per user: retire any previous ones.
+    # One active subscription per user: cancel prior Stripe subs, then retire local rows.
+    prior = list(
+        Subscription.objects.filter(user=user, status__in=["active", "trialing", "past_due"])
+        .exclude(external_ref=sub_id)
+        .exclude(external_ref="")
+    )
+    for old in prior:
+        _cancel_stripe_subscription(stripe, old.external_ref)
+
     Subscription.objects.filter(user=user, status__in=["active", "trialing", "past_due"]).exclude(
         external_ref=sub_id
     ).update(status=Subscription.Status.CANCELED, canceled_at=timezone.now())
@@ -245,18 +290,19 @@ def _period_end(stripe_sub) -> datetime | None:
 # ─── Boost expiry (run by cron / boot script) ─────────────────────────────
 
 def expire_featured_boosts() -> int:
-    """Unfeature properties whose paid boosts have all lapsed.
+    """Unfeature properties whose paid boost windows have lapsed.
 
-    Only touches properties that were featured through a purchase — curated
-    listings featured editorially (no purchase rows) are left alone.
+    Only clears listings with ``featured_until`` set (paid boosts). Editorial
+    and plan-slot featuring leave ``featured_until`` null and are never touched.
     """
     now = timezone.now()
-    expired = (
-        Property.objects.filter(is_featured=True, feature_purchases__isnull=False)
-        .exclude(feature_purchases__ends_at__gt=now)
-        .distinct()
-    )
-    count = expired.update(is_featured=False)
+    expired = Property.objects.filter(is_featured=True, featured_until__isnull=False, featured_until__lte=now)
+    count = expired.update(is_featured=False, featured_until=None)
     if count:
         logger.info("Unfeatured %d propert(ies) with lapsed boosts.", count)
     return count
+
+
+def apply_plan_featured(prop: Property) -> None:
+    """Mark a listing featured via an included plan slot (no auto-expiry)."""
+    Property.objects.filter(pk=prop.pk).update(is_featured=True, featured_until=None)

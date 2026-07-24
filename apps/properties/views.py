@@ -53,6 +53,13 @@ class PropertyViewSet(viewsets.ModelViewSet):
         return PropertyDetailSerializer
 
     def perform_create(self, serializer):
+        from rest_framework.exceptions import ValidationError
+
+        from apps.billing.services.quotas import can_create_listing
+
+        allowed, quota_msg = can_create_listing(self.request.user)
+        if not allowed:
+            raise ValidationError({"detail": quota_msg})
         serializer.save(owner=self.request.user)
 
     def retrieve(self, request, *args, **kwargs):

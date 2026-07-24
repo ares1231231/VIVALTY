@@ -1820,8 +1820,11 @@ def listing_publish(request: HttpRequest) -> HttpResponse:
         return redirect("web:become_owner")
     try:
         prop = listing_wizard.publish_draft(request)
-    except ValueError:
-        messages.error(request, "Your draft is incomplete. Please review every step.")
+    except ValueError as exc:
+        msg = str(exc) or "Your draft is incomplete. Please review every step."
+        messages.error(request, msg)
+        if "plan limit" in msg.lower() or "upgrade" in msg.lower():
+            return redirect("billing:pricing")
         return redirect("web:listing_review")
     return redirect("web:listing_success", pk=prop.pk)
 

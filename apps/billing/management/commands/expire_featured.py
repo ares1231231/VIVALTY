@@ -1,7 +1,7 @@
 """Unfeature listings whose paid boosts have lapsed.
 
-Run daily (or on every boot via railway-start.sh). Editorially featured
-listings — those without any purchase rows — are never touched.
+Run daily (or on every boot via railway-start.sh). Listings featured
+editorially or via a plan slot (``featured_until`` is null) are never touched.
 
 Usage:
     python manage.py expire_featured

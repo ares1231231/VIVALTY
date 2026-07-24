@@ -17,7 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from apps.billing.models import Plan, Subscription
-from apps.billing.services import stripe_service
+from apps.billing.services import quotas, stripe_service
 from apps.properties.models import Property
 
 logger = logging.getLogger("vivalty.billing")
@@ -53,9 +53,16 @@ def feature_checkout(request: HttpRequest, pk: int) -> HttpResponse:
     prop = get_object_or_404(Property, pk=pk)
     if prop.owner_id != request.user.pk and not request.user.is_staff:
         return HttpResponse(status=403)
-    if prop.is_featured:
+    if prop.is_featured or quotas.has_active_featured_purchase(prop):
         messages.info(request, "This listing is already featured.")
         return redirect("web:dashboard")
+
+    # Use an included plan slot when available (no Stripe charge).
+    if quotas.can_apply_plan_featured(request.user):
+        stripe_service.apply_plan_featured(prop)
+        messages.success(request, "Listing featured using your plan slot.")
+        return redirect("web:dashboard")
+
     if not stripe_service.stripe_enabled():
         messages.error(request, "Payments are not configured yet. Please try again later.")
         return redirect("web:dashboard")
