@@ -187,6 +187,43 @@ def send_saved_search_alert(user: User, saved_search, properties: list) -> None:
     msg.send(fail_silently=True)
 
 
+def send_lead_notification(lead) -> None:
+    """Alert the listing owner (and the platform, via BCC) about a new enquiry.
+
+    Recipient priority: the listing's own contact email, else the owner
+    account's email. Reply-To is the enquirer so the agent can answer with one
+    click. Fails silently — a mail hiccup must never lose the saved lead.
+    """
+    from django.core.mail import EmailMultiAlternatives
+
+    prop = lead.property
+    to_email = prop.contact_email or (prop.owner.email if prop.owner_id else "")
+    if not to_email:
+        logger.warning("Lead %s has no recipient (property %s has no contact/owner email).", lead.pk, prop.pk)
+        return
+
+    ctx = {
+        "lead": lead,
+        "property": prop,
+        "property_url": _absolute_url(f"/properties/{prop.pk}/"),
+        "dashboard_url": _absolute_url("/dashboard/#tab-leads"),
+        "site_url": settings.SITE_URL,
+    }
+    text_body = render_to_string("web/emails/lead_notification.txt", ctx)
+    html_body = render_to_string("web/emails/lead_notification.html", ctx)
+
+    msg = EmailMultiAlternatives(
+        subject=f"New enquiry — {prop.title[:80]}",
+        body=text_body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[to_email],
+        bcc=[settings.COMPANY_INVESTOR_EMAIL] if settings.COMPANY_INVESTOR_EMAIL else None,
+        reply_to=[lead.email],
+    )
+    msg.attach_alternative(html_body, "text/html")
+    msg.send(fail_silently=True)
+
+
 def send_password_reset_email(user: User) -> None:
     from django.core.mail import EmailMultiAlternatives
     from django.urls import reverse

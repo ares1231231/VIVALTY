@@ -1,0 +1,17 @@
+{% load web_extras %}New enquiry for "{{ property.title }}"
+
+{{ lead.name }} is interested in your listing at {{ property.city.name }}, {{ property.country.name }} ({{ property.price|money:property.currency }}).
+
+Name:  {{ lead.name }}
+Email: {{ lead.email }}
+{% if lead.phone %}Phone: {{ lead.phone }}
+{% endif %}
+Message:
+{{ lead.message }}
+
+Reply directly to this email to answer {{ lead.name }}.
+
+View the listing: {{ property_url }}
+Manage your leads: {{ dashboard_url }}
+
+— Vivalty

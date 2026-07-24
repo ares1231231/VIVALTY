@@ -105,6 +105,7 @@ urlpatterns = [
     # HTMX endpoints
     path("htmx/properties/<int:pk>/favorite/", views.favorite_toggle, name="favorite_toggle"),
     path("htmx/properties/<int:pk>/lead/", views.lead_create, name="lead_create"),
+    path("leads/<int:pk>/status/", views.lead_status_update, name="lead_status_update"),
     path("htmx/simulator/", views.simulator_compute, name="simulator_compute"),
     path("htmx/smart-search/", views.smart_search, name="smart_search"),
 

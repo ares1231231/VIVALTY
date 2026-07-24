@@ -1,0 +1,114 @@
+{% extends "web/base.html" %}
+{% load web_extras %}
+
+{% block seo_head %}
+{% include "web/components/seo_meta.html" with title="Pricing — sell faster on Vivalty" description="Choose the plan that fits: free listings, Pro placement or full Agency tools. Plus one-off featured boosts for maximum exposure." %}
+{% endblock %}
+
+{% block content %}
+<main class="mx-auto max-w-7xl px-6 md:px-8 py-16 md:py-24">
+
+  <header class="mx-auto max-w-2xl text-center">
+    <h1 class="font-display text-4xl md:text-5xl font-black tracking-tight text-ink-900">
+      Simple pricing, serious buyers
+    </h1>
+    <p class="mt-4 text-lg leading-relaxed text-ink-600">
+      Every plan includes instant email lead alerts and your own lead inbox.
+      Upgrade for more listings and premium placement in front of international investors.
+    </p>
+  </header>
+
+  <div class="mt-12 grid gap-6 md:grid-cols-3">
+    {% for plan in plans %}
+      <section class="card relative flex flex-col p-6 md:p-8 {% if plan.code == 'pro' %}ring-2 ring-brand-600{% endif %}">
+        {% if plan.code == 'pro' %}
+          <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-600 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white">Most popular</span>
+        {% endif %}
+
+        <h2 class="font-display text-xl font-black text-ink-900">{{ plan.name }}</h2>
+        <div class="mt-3 flex items-baseline gap-1">
+          <span class="font-display text-4xl font-black tracking-tight text-ink-900">
+            {% if plan.monthly_price > 0 %}€{{ plan.monthly_price|floatformat:0 }}{% else %}€0{% endif %}
+          </span>
+          <span class="text-sm text-ink-500">/month</span>
+        </div>
+        {% if plan.yearly_price > 0 %}
+          <p class="mt-1 text-xs text-ink-500">or €{{ plan.yearly_price|floatformat:0 }}/year — 2 months free</p>
+        {% endif %}
+
+        <p class="mt-4 text-sm leading-relaxed text-ink-600">{{ plan.description }}</p>
+
+        <ul class="mt-5 space-y-2 text-sm text-ink-700">
+          <li class="flex items-start gap-2">
+            <svg class="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Up to <strong class="mx-1">{{ plan.listing_quota }}</strong> active listing{{ plan.listing_quota|pluralize }}
+          </li>
+          <li class="flex items-start gap-2">
+            <svg class="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            {% if plan.featured_quota > 0 %}{{ plan.featured_quota }} always-on featured slot{{ plan.featured_quota|pluralize }}{% else %}Featured boosts available à la carte{% endif %}
+          </li>
+          <li class="flex items-start gap-2">
+            <svg class="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Email lead alerts + lead inbox
+          </li>
+        </ul>
+
+        <div class="mt-auto pt-6">
+          {% if plan.code == current_plan_code %}
+            <span class="btn-secondary w-full justify-center cursor-default opacity-70">Current plan</span>
+          {% elif plan.monthly_price == 0 %}
+            {% if user.is_authenticated %}
+              <a href="{% url 'web:listing_start' %}" class="btn-secondary w-full justify-center">Start listing free</a>
+            {% else %}
+              <a href="{% url 'web:register' %}" class="btn-secondary w-full justify-center">Start free</a>
+            {% endif %}
+          {% elif user.is_authenticated %}
+            <div class="space-y-2">
+              <form method="post" action="{% url 'billing:plan_checkout' plan.code %}">
+                {% csrf_token %}
+                <input type="hidden" name="interval" value="monthly">
+                <button type="submit" class="btn-primary w-full justify-center" {% if not stripe_enabled %}disabled title="Payments coming soon"{% endif %}>
+                  Subscribe monthly
+                </button>
+              </form>
+              <form method="post" action="{% url 'billing:plan_checkout' plan.code %}">
+                {% csrf_token %}
+                <input type="hidden" name="interval" value="yearly">
+                <button type="submit" class="btn-secondary w-full justify-center text-sm" {% if not stripe_enabled %}disabled title="Payments coming soon"{% endif %}>
+                  Subscribe yearly
+                </button>
+              </form>
+            </div>
+          {% else %}
+            <a href="{% url 'web:register' %}?next=/pricing/" class="btn-primary w-full justify-center">Sign up to subscribe</a>
+          {% endif %}
+        </div>
+      </section>
+    {% endfor %}
+  </div>
+
+  <section class="mx-auto mt-16 max-w-3xl">
+    <div class="card flex flex-col items-center gap-4 p-8 text-center md:flex-row md:text-left">
+      <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 ring-1 ring-amber-200">
+        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.5c.2-.62 1.04-.62 1.24 0l1.85 5.7h5.99c.65 0 .92.83.4 1.21l-4.85 3.52 1.86 5.7c.2.61-.5 1.12-1.02.74L12 16.85l-4.95 3.52c-.52.38-1.22-.13-1.02-.74l1.86-5.7-4.85-3.52c-.52-.38-.25-1.21.4-1.21h5.99l1.85-5.7z"/></svg>
+      </div>
+      <div class="min-w-0 flex-1">
+        <h2 class="font-display text-lg font-black text-ink-900">Featured boost — one-off, any plan</h2>
+        <p class="mt-1 text-sm leading-relaxed text-ink-600">
+          Put a single listing at the top of the marketplace and on the home page for
+          {{ boost_days }} days. No subscription required.
+        </p>
+      </div>
+      <div class="text-center">
+        <div class="font-display text-3xl font-black text-ink-900">€{{ boost_price }}</div>
+        <div class="text-xs text-ink-500">per listing · {{ boost_days }} days</div>
+      </div>
+    </div>
+    <p class="mt-3 text-center text-xs text-ink-500">
+      Boost any listing from <a href="{% url 'web:dashboard' %}#tab-listings" class="text-brand-700 hover:underline">your dashboard</a>.
+      Secure payment by Stripe. Cancel subscriptions any time.
+    </p>
+  </section>
+
+</main>
+{% endblock %}

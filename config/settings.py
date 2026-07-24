@@ -358,6 +358,15 @@ if RESEND_API_KEY:
 else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+# --- Stripe -----------------------------------------------------------------
+# Use a restricted key (rk_...) in production. Leave empty to disable billing
+# endpoints gracefully (buttons hidden, checkout returns a friendly error).
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+# Featured-listing boost: one-off purchase surfacing a listing on home/marketplace.
+FEATURED_BOOST_PRICE_EUR = int(os.getenv("FEATURED_BOOST_PRICE_EUR", "29"))
+FEATURED_BOOST_DAYS = int(os.getenv("FEATURED_BOOST_DAYS", "14"))
+
 # --- Bot protection (Cloudflare Turnstile) ---------------------------------
 # Leave both blank in dev to disable the challenge.
 TURNSTILE_SITE_KEY = os.getenv("TURNSTILE_SITE_KEY", "")

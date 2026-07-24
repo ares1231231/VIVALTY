@@ -39,7 +39,7 @@ logger = logging.getLogger("vivalty.web")
 from apps.ai_advisor.models import AIConversationSession, ChatMessage, Role as ChatRole
 from apps.ai_advisor.services.advisor import generate, stream as advisor_stream
 from apps.geo.models import City, Country
-from apps.properties.models import Favorite, Property, PropertyType, Status
+from apps.properties.models import Favorite, Lead, LeadStatus, Property, PropertyType, Status
 from apps.properties.services.scoring import FACTOR_WEIGHTS
 from apps.properties.services.simulator import (
     COUNTRY_ASSUMPTIONS,
@@ -50,6 +50,7 @@ from apps.properties.services.simulator import (
 from apps.users.models import Role, User
 from apps.web.services import geocoding, listing_ai, listing_wizard
 from apps.web.services.emails import (
+    send_lead_notification,
     send_password_reset_email,
     send_verification_email,
     send_welcome_email,
@@ -1581,12 +1582,18 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         .filter(user=request.user)
     )
     mine = []
+    my_leads = []
     if request.user.role in {"owner", "admin"} or request.user.is_staff:
         mine = (
             Property.objects.select_related("country", "city", "metric")
             .prefetch_related("images", "tags")
             .filter(owner=request.user)
             .order_by("-created_at")
+        )
+        my_leads = list(
+            Lead.objects.select_related("property__city", "property__country")
+            .filter(property__owner=request.user)
+            .order_by("-created_at")[:100]
         )
 
     # Watchlist analytics — institutional-feeling KPIs at the top of the dashboard.
@@ -1622,6 +1629,8 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         {
             "favorites": favorites,
             "mine": mine,
+            "my_leads": my_leads,
+            "new_leads_count": sum(1 for lead in my_leads if lead.status == "new"),
             "saved_searches": saved_searches,
             "watchlist_kpis": {
                 "count": len(favorites),
@@ -2075,10 +2084,15 @@ def favorite_toggle(request: HttpRequest, pk: int) -> HttpResponse:
     )
 
 
+@ratelimit(key="ip", rate="5/m", block=False)
+@ratelimit(key="ip", rate="30/h", block=False)
 @require_POST
 def lead_create(request: HttpRequest, pk: int) -> HttpResponse:
     prop = get_object_or_404(Property, pk=pk)
     form = LeadForm(request.POST)
+    if getattr(request, "limited", False):
+        form.add_error(None, "Too many enquiries from this connection. Please try again in a minute.")
+        return render(request, "web/components/lead_form.html", {"p": prop, "lead_form": form})
     if form.is_valid():
         lead = form.save(commit=False)
         lead.property = prop
@@ -2086,8 +2100,23 @@ def lead_create(request: HttpRequest, pk: int) -> HttpResponse:
             lead.user = request.user
         lead.save()
         Property.objects.filter(pk=prop.pk).update(leads_count=F("leads_count") + 1)
+        send_lead_notification(lead)
         return render(request, "web/components/lead_success.html")
     return render(request, "web/components/lead_form.html", {"p": prop, "lead_form": form})
+
+
+@login_required
+@require_POST
+def lead_status_update(request: HttpRequest, pk: int) -> HttpResponse:
+    """Owner marks one of their leads as contacted / closed / new."""
+    lead = get_object_or_404(Lead.objects.select_related("property"), pk=pk)
+    if lead.property.owner_id != request.user.pk and not request.user.is_staff:
+        return HttpResponse(status=403)
+    status = request.POST.get("status", "")
+    if status in LeadStatus.values:
+        lead.status = status
+        lead.save(update_fields=["status"])
+    return redirect(f"{reverse('web:dashboard')}#tab-leads")
 
 
 # ─── AI advisor (server-rendered chat) ──────────────────────────────────────

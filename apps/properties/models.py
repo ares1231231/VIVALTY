@@ -229,6 +229,12 @@ class Favorite(models.Model):
         ordering = ["-created_at"]
 
 
+class LeadStatus(models.TextChoices):
+    NEW = "new", "New"
+    CONTACTED = "contacted", "Contacted"
+    CLOSED = "closed", "Closed"
+
+
 class Lead(models.Model):
     """Contact-form submission for a property — feeds the lead-gen funnel."""
 
@@ -244,6 +250,9 @@ class Lead(models.Model):
     email = models.EmailField()
     phone = models.CharField(max_length=32, blank=True)
     message = models.TextField()
+    status = models.CharField(
+        max_length=12, choices=LeadStatus.choices, default=LeadStatus.NEW, db_index=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

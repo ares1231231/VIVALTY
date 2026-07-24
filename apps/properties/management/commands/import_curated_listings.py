@@ -1,10 +1,11 @@
 """Import editorial curated listings from data/curated_listings.json.
 
 These are hand-written flagship properties (not scraped from other portals).
-Safe to re-run: upserts by ``listing_ref``.
+Safe to re-run: upserts by ``listing_ref``. Self-sufficient: missing
+countries, cities and tags referenced by the JSON are created on the fly,
+so this command can run on a fresh production database without ``seed``.
 
 Usage:
-    python manage.py seed                          # countries + cities first
     python manage.py import_curated_listings       # add / update curated set
     python manage.py import_curated_listings --file path/to/custom.json
 """
@@ -25,6 +26,28 @@ from apps.properties.services.scoring import upsert_metric
 from apps.users.models import Role, User
 
 DEFAULT_FILE = Path(__file__).resolve().parents[4] / "data" / "curated_listings.json"
+
+# Minimal country bootstrap so the import works standalone on production.
+# Market baselines fall back to model defaults; `seed` refines them later.
+COUNTRY_DEFAULTS: dict[str, dict[str, str]] = {
+    "FR": {"name": "France", "currency": "EUR", "flag_emoji": "🇫🇷"},
+    "GB": {"name": "United Kingdom", "currency": "GBP", "flag_emoji": "🇬🇧"},
+    "ES": {"name": "Spain", "currency": "EUR", "flag_emoji": "🇪🇸"},
+    "CH": {"name": "Switzerland", "currency": "CHF", "flag_emoji": "🇨🇭"},
+    "IT": {"name": "Italy", "currency": "EUR", "flag_emoji": "🇮🇹"},
+    "AE": {"name": "United Arab Emirates", "currency": "AED", "flag_emoji": "🇦🇪"},
+    "PT": {"name": "Portugal", "currency": "EUR", "flag_emoji": "🇵🇹"},
+}
+
+TAG_DEFAULTS: dict[str, tuple[str, str]] = {
+    "high-roi": ("High ROI", "emerald"),
+    "luxury": ("Luxury", "amber"),
+    "emerging-market": ("Emerging market", "sky"),
+    "short-let-friendly": ("Short-let friendly", "rose"),
+    "capital-preservation": ("Capital preservation", "indigo"),
+    "new-build": ("New build", "lime"),
+    "beachfront": ("Beachfront", "cyan"),
+}
 
 
 class Command(BaseCommand):
@@ -81,19 +104,36 @@ class Command(BaseCommand):
             if not listing_ref:
                 raise CommandError("Each listing must include listing_ref.")
 
-            country = Country.objects.filter(code=row["country_code"]).first()
+            code = row["country_code"]
+            country = Country.objects.filter(code=code).first()
             if not country:
-                raise CommandError(
-                    f"Unknown country {row['country_code']} for {listing_ref}. "
-                    "Run `python manage.py seed` first."
-                )
+                bootstrap = COUNTRY_DEFAULTS.get(code)
+                if not bootstrap:
+                    raise CommandError(
+                        f"Unknown country {code} for {listing_ref} and no bootstrap "
+                        "defaults available — add it to COUNTRY_DEFAULTS."
+                    )
+                if dry_run:
+                    self.stdout.write(f"[dry-run] would create country {code}")
+                    country = Country(code=code, **bootstrap)
+                else:
+                    country = Country.objects.create(code=code, **bootstrap)
+                    self.stdout.write(f"Created country: {bootstrap['name']} ({code})")
 
-            city = City.objects.filter(country=country, name=row["city_name"]).first()
+            city_name = row["city_name"]
+            city = City.objects.filter(country=country, name=city_name).first()
             if not city:
-                raise CommandError(
-                    f"Unknown city {row['city_name']} ({country.code}) for {listing_ref}. "
-                    "Run `python manage.py seed` first."
-                )
+                if dry_run:
+                    self.stdout.write(f"[dry-run] would create city {city_name} ({code})")
+                    city = City(country=country, name=city_name, slug=slugify(city_name))
+                else:
+                    city, city_created = City.objects.get_or_create(
+                        country=country,
+                        slug=slugify(city_name),
+                        defaults={"name": city_name},
+                    )
+                    if city_created:
+                        self.stdout.write(f"Created city: {city_name} ({code})")
 
             ptype = row.get("property_type", "apartment")
             if ptype not in PropertyType.values:
@@ -147,6 +187,9 @@ class Command(BaseCommand):
 
             tag_slugs = row.get("tags") or []
             if tag_slugs:
+                for slug in tag_slugs:
+                    name, color = TAG_DEFAULTS.get(slug, (slug.replace("-", " ").title(), "emerald"))
+                    InvestmentTag.objects.get_or_create(slug=slug, defaults={"name": name, "color": color})
                 prop.tags.set(InvestmentTag.objects.filter(slug__in=tag_slugs))
 
             upsert_metric(prop)

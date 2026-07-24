@@ -112,4 +112,13 @@ class InvestmentTagAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Favorite)
-admin.site.register(Lead)
+
+
+@admin.register(Lead)
+class LeadAdmin(admin.ModelAdmin):
+    list_display = ("name", "email", "phone", "property", "status", "created_at")
+    list_filter = ("status", "created_at", "property__country")
+    search_fields = ("name", "email", "phone", "message", "property__title")
+    list_editable = ("status",)
+    readonly_fields = ("created_at",)
+    date_hierarchy = "created_at"

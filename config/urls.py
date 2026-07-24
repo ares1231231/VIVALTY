@@ -54,6 +54,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("health/", health),
     path("api/v1/", include(api_v1)),
+    # Billing pages (pricing, Stripe checkout redirects, webhook).
+    path("", include("apps.billing.page_urls")),
     # Server-rendered website (Django templates + Tailwind + HTMX).
     # Mounted last so /admin/, /health/ and /api/v1/ take precedence.
     path("", include("apps.web.urls")),
