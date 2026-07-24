@@ -120,6 +120,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Real-visit analytics for the admin stats dashboard (after auth so staff
+    # traffic can be excluded).
+    "apps.web.middleware.VisitTrackingMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"

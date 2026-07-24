@@ -70,6 +70,55 @@ class Testimonial(models.Model):
         return f"{self.name} ({self.rating}★)"
 
 
+class DailyPageView(models.Model):
+    """Aggregated page views per (day, path) — written by VisitTrackingMiddleware.
+
+    One row per path per day keeps the table tiny regardless of traffic
+    (≈ pages × days, not one row per hit).
+    """
+
+    date = models.DateField(db_index=True)
+    path = models.CharField(max_length=300)
+    count = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["date", "path"], name="uniq_pageview_date_path"),
+        ]
+        ordering = ["-date", "-count"]
+
+    def __str__(self) -> str:
+        return f"{self.date} {self.path} ({self.count})"
+
+
+class DailyVisitor(models.Model):
+    """One row per unique visitor per day.
+
+    ``visitor_hash`` is a salted hash of IP + user-agent that rotates daily,
+    so visitors can be counted without storing any identifying data (GDPR-safe).
+    """
+
+    date = models.DateField(db_index=True)
+    visitor_hash = models.CharField(max_length=40)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["date", "visitor_hash"], name="uniq_visitor_date_hash"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.date} {self.visitor_hash[:8]}"
+
+
+class SiteStats(DailyPageView):
+    """Proxy model whose only job is to surface the stats dashboard in admin."""
+
+    class Meta:
+        proxy = True
+        verbose_name = "Site statistics"
+        verbose_name_plural = "Site statistics"
+
+
 class InvestorProfile(models.TextChoices):
     INDIVIDUAL = "individual", "Individual investor"
     FAMILY_OFFICE = "family_office", "Family office"

@@ -1,0 +1,102 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content_title %}<h1>📊 Site statistics</h1>{% endblock %}
+
+{% block content %}
+<style>
+  .vs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin: 16px 0 28px; }
+  .vs-card { background: var(--darkened-bg, #f8f8f8); border: 1px solid var(--hairline-color, #e5e5e5); border-radius: 8px; padding: 14px 16px; }
+  .vs-card .vs-num { font-size: 26px; font-weight: 700; line-height: 1.1; color: var(--body-fg, #333); }
+  .vs-card .vs-label { font-size: 12px; color: var(--body-quiet-color, #666); margin-top: 4px; }
+  .vs-card .vs-sub { font-size: 11px; color: var(--body-quiet-color, #888); margin-top: 2px; }
+  .vs-section { margin: 28px 0 10px; font-size: 15px; font-weight: 600; }
+  .vs-table { width: 100%; border-collapse: collapse; }
+  .vs-table th, .vs-table td { padding: 5px 10px; font-size: 12.5px; text-align: left; border-bottom: 1px solid var(--hairline-color, #eee); }
+  .vs-table th { color: var(--body-quiet-color, #666); font-weight: 600; }
+  .vs-table td.vs-r, .vs-table th.vs-r { text-align: right; white-space: nowrap; }
+  .vs-bar { display: inline-block; height: 9px; border-radius: 4px; background: var(--link-fg, #417690); vertical-align: middle; min-width: 2px; }
+  .vs-bar.green { background: #2e9e5b; }
+  .vs-bar.orange { background: #d97706; }
+  .vs-barcell { width: 34%; }
+  .vs-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+  @media (max-width: 1000px) { .vs-cols { grid-template-columns: 1fr; } }
+  .vs-path { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
+</style>
+
+<div class="vs-grid">
+  <div class="vs-card"><div class="vs-num">{{ kpis.visitors_today }}</div><div class="vs-label">Visiteurs aujourd'hui</div><div class="vs-sub">{{ kpis.visitors_7d }} sur 7 jours</div></div>
+  <div class="vs-card"><div class="vs-num">{{ kpis.views_today }}</div><div class="vs-label">Pages vues aujourd'hui</div><div class="vs-sub">{{ kpis.views_7d }} sur 7 jours</div></div>
+  <div class="vs-card"><div class="vs-num">{{ kpis.users_today }}</div><div class="vs-label">Nouveaux comptes aujourd'hui</div><div class="vs-sub">{{ kpis.users_7d }} sur 7 j · {{ kpis.users_total }} au total</div></div>
+  <div class="vs-card"><div class="vs-num">{{ kpis.leads_7d }}</div><div class="vs-label">Leads (7 jours)</div><div class="vs-sub">{{ kpis.leads_total }} au total</div></div>
+  <div class="vs-card"><div class="vs-num">{{ kpis.listings_active }}</div><div class="vs-label">Annonces actives</div><div class="vs-sub">{{ kpis.listings_pending }} en attente</div></div>
+  <div class="vs-card"><div class="vs-num">{{ kpis.newsletter_emails }}</div><div class="vs-label">Emails newsletter</div></div>
+  <div class="vs-card"><div class="vs-num">{{ kpis.subs_active }}</div><div class="vs-label">Abonnements actifs</div></div>
+  <div class="vs-card"><div class="vs-num">{{ kpis.boost_revenue }} €</div><div class="vs-label">Revenus boosts</div><div class="vs-sub">{{ kpis.boosts_active }} boost(s) actif(s)</div></div>
+</div>
+
+<div class="vs-cols">
+  <div>
+    <div class="vs-section">Visites réelles par jour ({{ trend_days }} derniers jours)</div>
+    <p style="font-size:11.5px;color:var(--body-quiet-color,#888);margin:0 0 8px;">
+      Bots, personnel (staff) et pages admin exclus. Le suivi démarre au déploiement — les jours antérieurs restent à 0.
+    </p>
+    <table class="vs-table">
+      <tr><th>Date</th><th class="vs-r">Visiteurs</th><th class="vs-barcell"></th><th class="vs-r">Pages vues</th><th class="vs-barcell"></th></tr>
+      {% for d in days %}
+      <tr>
+        <td>{{ d.date|date:"D d M" }}</td>
+        <td class="vs-r">{{ d.visitors }}</td>
+        <td><span class="vs-bar green" style="width: {{ d.visitors_pct }}%;"></span></td>
+        <td class="vs-r">{{ d.views }}</td>
+        <td><span class="vs-bar" style="width: {{ d.views_pct }}%;"></span></td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <div class="vs-section">Nouveaux comptes &amp; leads par jour</div>
+    <table class="vs-table">
+      <tr><th>Date</th><th class="vs-r">Comptes</th><th class="vs-barcell"></th><th class="vs-r">Leads</th><th class="vs-barcell"></th></tr>
+      {% for d in days %}
+      <tr>
+        <td>{{ d.date|date:"D d M" }}</td>
+        <td class="vs-r">{{ d.signups }}</td>
+        <td><span class="vs-bar orange" style="width: {{ d.signups_pct }}%;"></span></td>
+        <td class="vs-r">{{ d.leads }}</td>
+        <td><span class="vs-bar" style="width: {{ d.leads_pct }}%;"></span></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div>
+    <div class="vs-section">Pages les plus visitées ({{ top_pages_days }} derniers jours)</div>
+    <table class="vs-table">
+      <tr><th>Page</th><th class="vs-r">Vues</th><th class="vs-barcell"></th></tr>
+      {% for p in top_pages %}
+      <tr>
+        <td><a href="{{ p.path }}" target="_blank" rel="noopener"><span class="vs-path">{{ p.path }}</span></a></td>
+        <td class="vs-r">{{ p.total }}</td>
+        <td><span class="vs-bar" style="width: {{ p.total_pct }}%;"></span></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3" style="color:var(--body-quiet-color,#888);">Aucune visite enregistrée pour l'instant — les données apparaîtront après le prochain déploiement.</td></tr>
+      {% endfor %}
+    </table>
+
+    <div class="vs-section">10 derniers comptes créés</div>
+    <table class="vs-table">
+      <tr><th>Email</th><th>Rôle</th><th class="vs-r">Inscrit le</th></tr>
+      {% for u in recent_users %}
+      <tr>
+        <td><a href="{% url 'admin:users_user_change' u.pk %}">{{ u.email }}</a></td>
+        <td>{{ u.role|default:"—" }}</td>
+        <td class="vs-r">{{ u.date_joined|date:"d M Y H:i" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3" style="color:var(--body-quiet-color,#888);">Aucun compte.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+{% endblock %}
