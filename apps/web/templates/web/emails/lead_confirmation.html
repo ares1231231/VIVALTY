@@ -1,0 +1,59 @@
+{% load web_extras %}<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f4;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f4;padding:24px 0;">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8e6;">
+
+        <tr><td style="padding:24px 32px;background:#0f172a;">
+          <span style="display:inline-block;width:30px;height:30px;border-radius:8px;background:#059669;color:#fff;text-align:center;line-height:30px;font-weight:900;vertical-align:middle;">V</span>
+          <span style="color:#fff;font-size:18px;font-weight:800;letter-spacing:.04em;vertical-align:middle;margin-left:8px;">VIVALTY</span>
+        </td></tr>
+
+        <tr><td style="padding:32px 32px 8px 32px;">
+          <h1 style="margin:0 0 6px 0;font-size:22px;line-height:1.25;color:#0f172a;">
+            ✓ Your enquiry is on its way
+          </h1>
+          <p style="margin:0;color:#475569;font-size:14px;line-height:1.55;">
+            Hi {{ lead.name }} — we've sent your message about
+            <a href="{{ property_url }}" style="color:#059669;font-weight:700;text-decoration:none;">{{ property.title }}</a>
+            ({{ property.city.name }}, {{ property.country.name }}) to the owner.
+            They usually reply within 1–2 business days, directly to this email address.
+          </p>
+        </td></tr>
+
+        {% if not has_account %}
+        <tr><td style="padding:20px 32px 0 32px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #a7f3d0;background:#ecfdf5;border-radius:12px;">
+            <tr><td style="padding:16px 18px;">
+              <div style="font-size:14px;font-weight:800;color:#065f46;">Make your search easier — free account</div>
+              <div style="margin-top:4px;font-size:13px;color:#047857;line-height:1.6;">
+                Track your enquiries, save favourites, get instant alerts when matching
+                homes are listed, and chat with our AI property advisor.
+              </div>
+            </td></tr>
+          </table>
+        </td></tr>
+        {% endif %}
+
+        <tr><td style="padding:28px 32px;">
+          {% if has_account %}
+            <a href="{{ property_url }}" style="display:inline-block;background:#059669;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 24px;border-radius:10px;">View the listing →</a>
+          {% else %}
+            <a href="{{ register_url }}" style="display:inline-block;background:#059669;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 24px;border-radius:10px;">Create my free account →</a>
+          {% endif %}
+          <a href="{{ marketplace_url }}" style="display:inline-block;margin-left:8px;color:#0f172a;text-decoration:none;font-weight:700;font-size:14px;padding:12px 24px;border-radius:10px;border:1px solid #e2e8e6;">Browse more homes</a>
+        </td></tr>
+
+        <tr><td style="padding:0 32px 28px 32px;border-top:1px solid #f1f5f4;">
+          <p style="margin:16px 0 0 0;color:#94a3b8;font-size:12px;line-height:1.6;">
+            You're receiving this one-time confirmation because you sent an enquiry on Vivalty.
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

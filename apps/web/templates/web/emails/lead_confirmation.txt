@@ -1,0 +1,22 @@
+Your enquiry is on its way
+
+Hi {{ lead.name }},
+
+We've sent your message about "{{ property.title }}"
+({{ property.city.name }}, {{ property.country.name }}) to the owner.
+They usually reply within 1-2 business days, directly to this email address.
+
+View the listing:
+{{ property_url }}
+{% if not has_account %}
+Make your search easier — create a free account to track your enquiries,
+save favourites and get instant alerts when matching homes are listed:
+{{ register_url }}
+{% endif %}
+Browse more homes:
+{{ marketplace_url }}
+
+— Vivalty
+{{ site_url }}
+
+You're receiving this one-time confirmation because you sent an enquiry on Vivalty.

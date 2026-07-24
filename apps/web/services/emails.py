@@ -224,6 +224,41 @@ def send_lead_notification(lead) -> None:
     msg.send(fail_silently=True)
 
 
+def send_lead_confirmation(lead) -> None:
+    """Confirm to the enquirer that their message reached the owner.
+
+    Doubles as an account-creation hook: anonymous enquirers get a CTA to
+    register so they can track enquiries, save favourites and set alerts.
+    """
+    from django.core.mail import EmailMultiAlternatives
+
+    if not lead.email:
+        return
+    prop = lead.property
+    has_account = bool(lead.user_id) or User.objects.filter(email__iexact=lead.email).exists()
+
+    ctx = {
+        "lead": lead,
+        "property": prop,
+        "has_account": has_account,
+        "property_url": _absolute_url(f"/properties/{prop.pk}/"),
+        "register_url": _absolute_url(f"/auth/register/?next=/properties/{prop.pk}/"),
+        "marketplace_url": _absolute_url("/marketplace/"),
+        "site_url": settings.SITE_URL,
+    }
+    text_body = render_to_string("web/emails/lead_confirmation.txt", ctx)
+    html_body = render_to_string("web/emails/lead_confirmation.html", ctx)
+
+    msg = EmailMultiAlternatives(
+        subject=f"Your enquiry was sent — {prop.title[:70]}",
+        body=text_body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[lead.email],
+    )
+    msg.attach_alternative(html_body, "text/html")
+    msg.send(fail_silently=True)
+
+
 def send_boost_expiring(purchase) -> None:
     """Remind an owner that a paid featured boost lapses soon (renewal nudge)."""
     from django.core.mail import EmailMultiAlternatives

@@ -51,6 +51,7 @@ from apps.properties.services.simulator import (
 from apps.users.models import Role, User
 from apps.web.services import geocoding, listing_ai, listing_wizard
 from apps.web.services.emails import (
+    send_lead_confirmation,
     send_lead_notification,
     send_password_reset_email,
     send_verification_email,
@@ -1309,24 +1310,38 @@ def saved_search_delete(request: HttpRequest, pk: int) -> HttpResponse:
     return HttpResponse("")
 
 
+_NEWSLETTER_SOURCES = {"footer", "quiz", "home"}
+
+
 @require_POST
 def newsletter_subscribe(request: HttpRequest) -> HttpResponse:
-    """Capture an email for the monthly market-intelligence roundup.
+    """Capture an email for the market roundup / matching-homes alerts.
 
-    Persisted as an InvestorInquiry (source_page="newsletter_home") so the
-    growth desk sees signups alongside other leads — no separate model needed.
+    Persisted as an InvestorInquiry so the growth desk sees signups alongside
+    other leads. Deduped by email: resubmitting the same address never creates
+    a duplicate row.
     """
-    email = (request.POST.get("email") or "").strip()
-    if email:
-        from apps.web.models import InvestorInquiry
+    from apps.web.models import InvestorInquiry
 
-        InvestorInquiry.objects.create(
-            name="Newsletter subscriber",
-            email=email[:254],
-            source_page="newsletter_home",
-            message="Monthly market-intelligence subscription.",
-        )
-    return render(request, "web/components/newsletter_success.html")
+    email = (request.POST.get("email") or "").strip()[:254]
+    source = (request.POST.get("source") or "footer").strip()
+    if source not in _NEWSLETTER_SOURCES:
+        source = "footer"
+    if email and "@" in email:
+        if not InvestorInquiry.objects.filter(
+            email__iexact=email, source_page__startswith="newsletter_"
+        ).exists():
+            InvestorInquiry.objects.create(
+                name="Newsletter subscriber",
+                email=email,
+                source_page=f"newsletter_{source}",
+                message="Email capture — market roundup / matching homes.",
+            )
+    return render(
+        request,
+        "web/components/newsletter_success.html",
+        {"light": source == "quiz"},
+    )
 
 
 def smart_search(request: HttpRequest) -> HttpResponse:
@@ -2141,6 +2156,7 @@ def lead_create(request: HttpRequest, pk: int) -> HttpResponse:
         lead.save()
         Property.objects.filter(pk=prop.pk).update(leads_count=F("leads_count") + 1)
         send_lead_notification(lead)
+        send_lead_confirmation(lead)
         return render(request, "web/components/lead_success.html")
     return render(request, "web/components/lead_form.html", {"p": prop, "lead_form": form})
 

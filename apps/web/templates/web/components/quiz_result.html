@@ -77,6 +77,7 @@
         <div class="text-sm font-bold text-ink-900">Get matching homes by email</div>
         <form hx-post="{% url 'web:newsletter_subscribe' %}" hx-target="this" hx-swap="outerHTML" class="mt-3 flex gap-2">
           {% csrf_token %}
+          <input type="hidden" name="source" value="quiz" />
           <input type="email" name="email" required placeholder="you@email.com" class="input flex-1 rounded-lg text-sm" />
           <button type="submit" class="btn-primary rounded-lg px-4 text-sm">Notify me</button>
         </form>
