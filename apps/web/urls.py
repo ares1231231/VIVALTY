@@ -58,6 +58,7 @@ urlpatterns = [
     path("cookies/", views.cookie_policy, name="cookies"),
     path("legal/", views.legal_notice, name="legal_notice"),
     path("contact/", views.contact, name="contact"),
+    path("agencies/", views.agencies, name="agencies"),
 
     # AI Invest — new canonical paths. The URL `name` stays "simulator" so
     # every existing {% url 'web:simulator' %} call continues to work.

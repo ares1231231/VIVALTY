@@ -1,0 +1,186 @@
+{% extends "web/base.html" %}
+{% load web_extras %}
+
+{% block seo_head %}
+{% include "web/components/seo_meta.html" with title="Vivalty for agencies — reach international buyers" description="List your portfolio on Vivalty and put it in front of international buyers and investors across 7 countries. Free to start, lead inbox included, featured placement available." %}
+{% endblock %}
+
+{% block content %}
+
+{# ── Hero ─────────────────────────────────────────────────────────── #}
+<section class="relative overflow-hidden bg-[#0c1117] text-white">
+  <div class="pointer-events-none absolute -left-32 -top-24 h-96 w-96 rounded-full bg-brand-500/20 blur-3xl"></div>
+  <div class="pointer-events-none absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl"></div>
+  <div class="relative z-10 mx-auto max-w-7xl px-6 py-20 md:px-8 md:py-28">
+    <p class="text-[11px] font-bold uppercase tracking-[0.28em] text-brand-300">For real-estate agencies</p>
+    <h1 class="mt-4 max-w-3xl font-display text-4xl font-black tracking-tight leading-[1.08] md:text-6xl">
+      Put your portfolio in front of international buyers
+    </h1>
+    <p class="mt-5 max-w-2xl text-lg leading-relaxed text-ink-300">
+      Vivalty is a curated marketplace for buyers and investors searching across
+      Portugal, Spain, France, Italy, the UK, Switzerland and the UAE.
+      List your properties, receive qualified enquiries directly in your inbox,
+      and boost your best mandates to the top of the search.
+    </p>
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+      <a href="{% url 'web:register' %}?next=/list/" class="btn-primary justify-center px-8 py-3.5 text-base">
+        Create your free agency account
+      </a>
+      <a href="{% url 'billing:pricing' %}" class="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/5 px-8 py-3.5 text-base font-semibold text-white transition hover:border-white/40 hover:bg-white/10">
+        See plans &amp; pricing
+      </a>
+    </div>
+    <p class="mt-4 text-sm text-ink-400">
+      Free to start — no credit card required.
+      {% if trial_days %}Paid plans include a {{ trial_days }}-day free trial.{% endif %}
+    </p>
+  </div>
+</section>
+
+{# ── Stats band ───────────────────────────────────────────────────── #}
+<section class="border-b border-ink-200 bg-white">
+  <div class="mx-auto grid max-w-7xl grid-cols-3 gap-4 px-6 py-8 text-center md:px-8">
+    <div>
+      <div class="font-display text-3xl font-black text-ink-900 md:text-4xl">{{ stats.countries }}</div>
+      <div class="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-500">Countries covered</div>
+    </div>
+    <div>
+      <div class="font-display text-3xl font-black text-ink-900 md:text-4xl">{{ stats.cities }}+</div>
+      <div class="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-500">Destination cities</div>
+    </div>
+    <div>
+      <div class="font-display text-3xl font-black text-ink-900 md:text-4xl">{{ stats.active_listings }}</div>
+      <div class="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-500">Live listings</div>
+    </div>
+  </div>
+</section>
+
+{# ── Value props ──────────────────────────────────────────────────── #}
+<section class="mx-auto max-w-7xl px-6 py-16 md:px-8 md:py-24">
+  <h2 class="text-center font-display text-3xl font-black tracking-tight text-ink-900 md:text-4xl">
+    Why agencies list on Vivalty
+  </h2>
+  <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="card p-6">
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-xl ring-1 ring-brand-100">🌍</div>
+      <h3 class="mt-4 font-display text-lg font-black text-ink-900">International demand</h3>
+      <p class="mt-2 text-sm leading-relaxed text-ink-600">
+        Buyers and investors browsing across borders — the audience your local portal doesn't reach.
+      </p>
+    </div>
+    <div class="card p-6">
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-xl ring-1 ring-brand-100">📬</div>
+      <h3 class="mt-4 font-display text-lg font-black text-ink-900">Direct leads, no middleman</h3>
+      <p class="mt-2 text-sm leading-relaxed text-ink-600">
+        Enquiries land in your lead inbox with instant email alerts. The buyer contacts you — we never resell your leads.
+      </p>
+    </div>
+    <div class="card p-6">
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-xl ring-1 ring-brand-100">🤖</div>
+      <h3 class="mt-4 font-display text-lg font-black text-ink-900">AI-assisted listings</h3>
+      <p class="mt-2 text-sm leading-relaxed text-ink-600">
+        AI rewriting, price suggestions and an investment score that helps serious buyers shortlist your mandates.
+      </p>
+    </div>
+    <div class="card p-6">
+      <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-xl ring-1 ring-brand-100">⚡</div>
+      <h3 class="mt-4 font-display text-lg font-black text-ink-900">Premium placement</h3>
+      <p class="mt-2 text-sm leading-relaxed text-ink-600">
+        Always-on featured slots on the Agency plan, plus one-off boosts to push a hot mandate to the top of the marketplace.
+      </p>
+    </div>
+  </div>
+</section>
+
+{# ── How it works ─────────────────────────────────────────────────── #}
+<section class="bg-white">
+  <div class="mx-auto max-w-7xl px-6 py-16 md:px-8 md:py-24">
+    <h2 class="text-center font-display text-3xl font-black tracking-tight text-ink-900 md:text-4xl">
+      Live in under 10 minutes
+    </h2>
+    <div class="mx-auto mt-12 grid max-w-4xl gap-8 md:grid-cols-3">
+      <div class="text-center">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 font-display text-lg font-black text-white">1</div>
+        <h3 class="mt-4 font-display text-lg font-black text-ink-900">Create your account</h3>
+        <p class="mt-2 text-sm leading-relaxed text-ink-600">Free registration with your agency name and contact details.</p>
+      </div>
+      <div class="text-center">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 font-display text-lg font-black text-white">2</div>
+        <h3 class="mt-4 font-display text-lg font-black text-ink-900">Publish your listings</h3>
+        <p class="mt-2 text-sm leading-relaxed text-ink-600">Guided wizard with photo upload, AI description help and price guidance.</p>
+      </div>
+      <div class="text-center">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 font-display text-lg font-black text-white">3</div>
+        <h3 class="mt-4 font-display text-lg font-black text-ink-900">Receive enquiries</h3>
+        <p class="mt-2 text-sm leading-relaxed text-ink-600">Qualified buyer messages by email and in your dashboard lead inbox.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ── Agency plan ──────────────────────────────────────────────────── #}
+{% if agency_plan %}
+<section class="mx-auto max-w-7xl px-6 py-16 md:px-8 md:py-24">
+  <div class="card mx-auto flex max-w-3xl flex-col items-center gap-8 p-8 md:flex-row md:p-10">
+    <div class="min-w-0 flex-1">
+      <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-700">Built for portfolios</p>
+      <h2 class="mt-2 font-display text-2xl font-black text-ink-900 md:text-3xl">The {{ agency_plan.name }} plan</h2>
+      <ul class="mt-4 space-y-2 text-sm text-ink-700">
+        <li class="flex items-start gap-2">
+          <svg class="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          Up to <strong class="mx-1">{{ agency_plan.listing_quota }}</strong> active listings
+        </li>
+        {% if agency_plan.featured_quota %}
+        <li class="flex items-start gap-2">
+          <svg class="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          {{ agency_plan.featured_quota }} always-on featured slot{{ agency_plan.featured_quota|pluralize }}
+        </li>
+        {% endif %}
+        <li class="flex items-start gap-2">
+          <svg class="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          Premium badge on every listing + priority review
+        </li>
+        <li class="flex items-start gap-2">
+          <svg class="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          Lead inbox with instant email alerts
+        </li>
+      </ul>
+    </div>
+    <div class="text-center">
+      <div class="font-display text-4xl font-black tracking-tight text-ink-900">€{{ agency_plan.monthly_price|floatformat:0 }}<span class="text-base font-semibold text-ink-500">/mo</span></div>
+      {% if agency_plan.yearly_price %}<div class="mt-1 text-xs text-ink-500">or €{{ agency_plan.yearly_price|floatformat:0 }}/year</div>{% endif %}
+      {% if trial_days %}
+        <div class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">
+          {{ trial_days }}-day free trial
+        </div>
+      {% endif %}
+      <a href="{% url 'billing:pricing' %}" class="btn-primary mt-4 w-full justify-center">Start free trial</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{# ── Final CTA ────────────────────────────────────────────────────── #}
+<section class="bg-[#0c1117] text-white">
+  <div class="mx-auto max-w-7xl px-6 py-16 text-center md:px-8 md:py-20">
+    <h2 class="font-display text-3xl font-black tracking-tight md:text-4xl">Ready to reach international buyers?</h2>
+    <p class="mx-auto mt-3 max-w-xl text-ink-300">
+      Start free with your first listings today, or talk to us — we'll help you get your portfolio online.
+    </p>
+    <div class="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+      <a href="{% url 'web:register' %}?next=/list/" class="btn-primary justify-center px-8 py-3.5 text-base">Create free account</a>
+      {% if COMPANY_WHATSAPP %}
+      <a href="https://wa.me/{{ COMPANY_WHATSAPP|digits }}" target="_blank" rel="noopener noreferrer"
+         class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-8 py-3.5 text-base font-bold text-white transition hover:bg-[#1ebe57]">
+        WhatsApp us
+      </a>
+      {% endif %}
+      <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}"
+         class="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/5 px-8 py-3.5 text-base font-semibold text-white transition hover:border-white/40 hover:bg-white/10">
+        {{ COMPANY_SUPPORT_EMAIL }}
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

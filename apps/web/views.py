@@ -38,6 +38,7 @@ logger = logging.getLogger("vivalty.web")
 
 from apps.ai_advisor.models import AIConversationSession, ChatMessage, Role as ChatRole
 from apps.ai_advisor.services.advisor import generate, stream as advisor_stream
+from apps.billing.models import Plan
 from apps.billing.services import quotas
 from apps.geo.models import City, Country
 from apps.properties.models import Favorite, Lead, LeadStatus, Property, PropertyType, Status
@@ -1115,6 +1116,25 @@ def contact(request: HttpRequest) -> HttpResponse:
         page_title="Contact",
         page_subtitle="Get in touch with the Vivalty team.",
         breadcrumb_label="Contact",
+    )
+
+
+def agencies(request: HttpRequest) -> HttpResponse:
+    """Landing page pitching Vivalty to real-estate agencies (outreach target)."""
+    agency_plan = Plan.objects.filter(code="agency", is_active=True).first()
+    stats = {
+        "active_listings": Property.objects.filter(status=Status.ACTIVE).count(),
+        "countries": Country.objects.count(),
+        "cities": City.objects.count(),
+    }
+    return render(
+        request,
+        "web/agencies.html",
+        {
+            "agency_plan": agency_plan,
+            "stats": stats,
+            "trial_days": getattr(settings, "PLAN_TRIAL_DAYS", 0),
+        },
     )
 
 
