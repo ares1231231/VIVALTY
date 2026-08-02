@@ -1,4 +1,4 @@
-{# Step 2 — country / city / address (with Nominatim autocomplete). #}
+{# Step 2 — country / searchable city / address (with Nominatim autocomplete). #}
 <form method="post" novalidate class="space-y-6">
   {% csrf_token %}
 
@@ -12,12 +12,29 @@
           <p class="mt-1 text-xs text-rose-700">{{ form.country.errors|join:", " }}</p>
         {% endif %}
       </div>
-      <div>
-        <label for="id_city" class="label">City</label>
-        {{ form.city }}
-        {% if form.city.errors %}
-          <p class="mt-1 text-xs text-rose-700">{{ form.city.errors|join:", " }}</p>
+      <div class="relative">
+        <label for="id_city_name" class="label">City</label>
+        {{ form.city_id }}
+        <input type="text"
+               name="city_name"
+               id="id_city_name"
+               value="{{ form.city_name.value|default_if_none:draft.city_name|default:'' }}"
+               class="input"
+               placeholder="Start typing a city…"
+               autocomplete="off"
+               required
+               hx-get="{% url 'web:listing_city_search' %}"
+               hx-trigger="keyup changed delay:250ms, focus"
+               hx-include="#id_country, #id_city_name"
+               hx-target="#city-suggestions"
+               hx-swap="innerHTML">
+        <div id="city-suggestions" class="absolute z-30 left-0 right-0 mt-1"></div>
+        {% if form.city_name.errors %}
+          <p class="mt-1 text-xs text-rose-700">{{ form.city_name.errors|join:", " }}</p>
         {% endif %}
+        <p class="mt-1.5 text-[11px] text-ink-500">
+          Type to search any city in the selected country — not limited to a short list.
+        </p>
       </div>
     </div>
 
@@ -27,12 +44,10 @@
       {{ form.latitude }}
       {{ form.longitude }}
 
-      {# Autocomplete dropdown — populated by HTMX from Nominatim #}
       <div id="address-suggestions"
            hx-get="{% url 'web:listing_address_search' %}"
            hx-trigger="keyup changed delay:350ms from:#id_address"
            hx-include="[name='address'], [name='country']"
-           hx-vals='js:{cc: (document.getElementById("id_country")?.selectedOptions[0]?.textContent || "").trim()}'
            hx-target="#address-suggestions"
            hx-swap="innerHTML"
            class="absolute z-20 left-0 right-0 mt-1"></div>
@@ -51,18 +66,37 @@
   {% include "web/listing/_step_actions.html" %}
 </form>
 
-{# Preferred city for cascade restore (read by vivalty.js initListingCityCascade). #}
 <script>
   (function () {
-    var citySelect = document.getElementById('id_city');
-    if (citySelect) {
-      citySelect.dataset.preferredCity = "{{ form.city.value|default_if_none:draft.city_id|default:'' }}";
-    }
-    if (typeof initListingCityCascade === 'function') {
-      initListingCityCascade();
+    var countrySelect = document.getElementById('id_country');
+    var cityName = document.getElementById('id_city_name');
+    var cityId = document.getElementById('id_city_id');
+
+    if (countrySelect) {
+      countrySelect.addEventListener('change', function () {
+        if (cityName) cityName.value = '';
+        if (cityId) cityId.value = '';
+        var box = document.getElementById('city-suggestions');
+        if (box) box.innerHTML = '';
+      });
     }
 
     document.addEventListener('click', function (e) {
+      var cityBtn = e.target.closest('[data-city-suggestion]');
+      if (cityBtn) {
+        e.preventDefault();
+        if (cityName) cityName.value = cityBtn.dataset.cityName || '';
+        if (cityId) cityId.value = cityBtn.dataset.cityId || '';
+        var box = document.getElementById('city-suggestions');
+        if (box) box.innerHTML = '';
+        // Optional: seed lat/lng from a remote city hit when address is empty.
+        if (cityBtn.dataset.lat && document.getElementById('id_latitude') && !document.getElementById('id_latitude').value) {
+          document.getElementById('id_latitude').value = cityBtn.dataset.lat || '';
+          document.getElementById('id_longitude').value = cityBtn.dataset.lng || '';
+        }
+        return;
+      }
+
       var btn = e.target.closest('[data-suggestion]');
       if (!btn) return;
       e.preventDefault();
@@ -71,15 +105,28 @@
       document.getElementById('id_longitude').value = btn.dataset.lng || '';
       document.getElementById('address-suggestions').innerHTML = '';
       var readout = document.getElementById('lat-lng-readout');
-      readout.classList.remove('hidden');
-      readout.querySelector('span').textContent = (btn.dataset.lat || '?') + ', ' + (btn.dataset.lng || '?');
+      if (readout) {
+        readout.classList.remove('hidden');
+        readout.querySelector('span').textContent = (btn.dataset.lat || '?') + ', ' + (btn.dataset.lng || '?');
+      }
     });
 
     document.addEventListener('click', function (e) {
+      if (!e.target.closest('#id_city_name') && !e.target.closest('#city-suggestions')) {
+        var cityBox = document.getElementById('city-suggestions');
+        if (cityBox) cityBox.innerHTML = '';
+      }
       if (!e.target.closest('#id_address') && !e.target.closest('#address-suggestions')) {
-        var box = document.getElementById('address-suggestions');
-        if (box) box.innerHTML = '';
+        var addrBox = document.getElementById('address-suggestions');
+        if (addrBox) addrBox.innerHTML = '';
       }
     });
+
+    // Typing a new city name clears a previously selected city id.
+    if (cityName && cityId) {
+      cityName.addEventListener('input', function () {
+        cityId.value = '';
+      });
+    }
   })();
 </script>

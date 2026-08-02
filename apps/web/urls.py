@@ -127,6 +127,7 @@ urlpatterns = [
     path("htmx/list/image-url/",       views.listing_image_url,      name="listing_image_url"),
     path("htmx/list/image/<str:image_id>/delete/", views.listing_image_delete, name="listing_image_delete"),
     path("htmx/list/address-search/",  views.listing_address_search, name="listing_address_search"),
+    path("htmx/list/city-search/",     views.listing_city_search,    name="listing_city_search"),
 
     # AI advisor
     path("chat/", views.chat, name="chat"),

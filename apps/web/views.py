@@ -1755,7 +1755,8 @@ def _initial_for_step(step: str, draft: dict) -> dict:
     if step == "location":
         return {
             "country": draft.get("country_id"),
-            "city": draft.get("city_id"),
+            "city_id": draft.get("city_id"),
+            "city_name": draft.get("city_name") or "",
             "address": draft.get("address"),
             "latitude": draft.get("latitude") or None,
             "longitude": draft.get("longitude") or None,
@@ -2122,10 +2123,72 @@ def listing_image_delete(request: HttpRequest, image_id: str) -> HttpResponse:
 @login_required
 def listing_address_search(request: HttpRequest) -> HttpResponse:
     """Address autocomplete via Nominatim. Used by the location step."""
-    query = (request.GET.get("q") or "").strip()
+    query = (request.GET.get("q") or request.GET.get("address") or "").strip()
     country_code = (request.GET.get("cc") or "").strip().upper() or None
+    if not country_code:
+        country_id = request.GET.get("country")
+        if country_id:
+            country = Country.objects.filter(pk=country_id).only("code").first()
+            country_code = country.code if country else None
     suggestions = geocoding.search(query, country_code=country_code, limit=6) if len(query) >= 3 else []
     return render(request, "web/listing/_address_suggestions.html", {"suggestions": suggestions})
+
+
+@login_required
+def listing_city_search(request: HttpRequest) -> HttpResponse:
+    """City autocomplete: local DB first, then Nominatim for any other city."""
+    query = (request.GET.get("city_name") or request.GET.get("q") or "").strip()
+    country_id = request.GET.get("country")
+    country = Country.objects.filter(pk=country_id).first() if country_id else None
+
+    local: list[dict] = []
+    if country and len(query) >= 1:
+        local = [
+            {
+                "id": c.id,
+                "name": c.name,
+                "label": f"{c.name}, {country.name}",
+                "source": "local",
+            }
+            for c in City.objects.filter(country=country, name__icontains=query).order_by("name")[:12]
+        ]
+    elif country and not query:
+        # Show a starter list when the field is focused with an empty query.
+        local = [
+            {
+                "id": c.id,
+                "name": c.name,
+                "label": f"{c.name}, {country.name}",
+                "source": "local",
+            }
+            for c in City.objects.filter(country=country).order_by("name")[:40]
+        ]
+
+    remote: list[dict] = []
+    if country and len(query) >= 2:
+        known = {row["name"].casefold() for row in local}
+        try:
+            hits = geocoding.search_cities(query, country_code=country.code, limit=8)
+        except Exception:
+            logger.warning("City remote search failed for %r", query, exc_info=True)
+            hits = []
+        for hit in hits:
+            if hit["name"].casefold() in known:
+                continue
+            remote.append({
+                "id": "",
+                "name": hit["name"],
+                "label": hit["label"],
+                "source": "remote",
+                "latitude": hit.get("latitude") or "",
+                "longitude": hit.get("longitude") or "",
+            })
+
+    return render(
+        request,
+        "web/listing/_city_suggestions.html",
+        {"suggestions": local + remote, "query": query, "has_country": bool(country)},
+    )
 
 
 @login_required

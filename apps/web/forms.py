@@ -318,15 +318,30 @@ class ListingTypeForm(_WizardForm):
 
 
 class ListingLocationForm(_WizardForm):
-    """Step 2 — where it is."""
+    """Step 2 — where it is.
+
+    City is a searchable free-text field (not a short curated dropdown). The
+    user picks any city in the selected country; we resolve it to a ``City``
+    row (create on the fly when needed) so the rest of the product keeps a
+    proper foreign key.
+    """
 
     country = forms.ModelChoiceField(
         queryset=Country.objects.order_by("name"),
         widget=forms.Select(attrs={"class": "input", "id": "id_country"}),
     )
-    city = forms.ModelChoiceField(
-        queryset=City.objects.select_related("country").order_by("name"),
-        widget=forms.Select(attrs={"class": "input", "id": "id_city"}),
+    city_name = forms.CharField(
+        max_length=120,
+        widget=forms.TextInput(attrs={
+            "class": "input",
+            "id": "id_city_name",
+            "placeholder": "Start typing a city…",
+            "autocomplete": "off",
+        }),
+    )
+    city_id = forms.IntegerField(
+        required=False,
+        widget=forms.HiddenInput(attrs={"id": "id_city_id"}),
     )
     address = forms.CharField(
         required=False,
@@ -352,21 +367,46 @@ class ListingLocationForm(_WizardForm):
     )
 
     def clean(self):
+        from django.utils.text import slugify
+
         cleaned = super().clean()
         country = cleaned.get("country")
-        city = cleaned.get("city")
-        if country and city and city.country_id != country.id:
-            self.add_error("city", "Selected city is not in the selected country.")
+        city_name = (cleaned.get("city_name") or "").strip()
+        city_id = cleaned.get("city_id")
+        city = None
+
+        if city_id and country:
+            city = City.objects.filter(pk=city_id, country=country).first()
+            if city is None:
+                self.add_error("city_name", "Selected city is not in the selected country.")
+                return cleaned
+            cleaned["city_name"] = city.name
+        elif city_name and country:
+            slug = slugify(city_name) or city_name.lower().replace(" ", "-")[:140]
+            city, _ = City.objects.get_or_create(
+                country=country,
+                slug=slug,
+                defaults={"name": city_name},
+            )
+            # Prefer the canonical stored name if the city already existed.
+            cleaned["city_name"] = city.name
+        elif not city_name:
+            self.add_error("city_name", "Please choose a city.")
+            return cleaned
+
+        cleaned["city"] = city
+        cleaned["city_id"] = city.pk if city else None
         return cleaned
 
     def to_draft(self) -> dict:
         data = self.cleaned_data
+        city = data["city"]
         return {
             "country_id": data["country"].id,
             "country_code": data["country"].code,
             "country_name": data["country"].name,
-            "city_id": data["city"].id,
-            "city_name": data["city"].name,
+            "city_id": city.id,
+            "city_name": city.name,
             "address": data.get("address") or "",
             "latitude": str(data["latitude"]) if data.get("latitude") else "",
             "longitude": str(data["longitude"]) if data.get("longitude") else "",

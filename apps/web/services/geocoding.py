@@ -26,6 +26,21 @@ _ENDPOINT = "https://nominatim.openstreetmap.org/search"
 _CACHE_TTL = 60 * 60 * 24  # 24h — addresses don't move
 
 
+def _cache_get(key: str):
+    try:
+        return cache.get(key)
+    except Exception:
+        logger.debug("Cache get failed for %s", key, exc_info=True)
+        return None
+
+
+def _cache_set(key: str, value: Any, ttl: int = _CACHE_TTL) -> None:
+    try:
+        cache.set(key, value, ttl)
+    except Exception:
+        logger.debug("Cache set failed for %s", key, exc_info=True)
+
+
 def search(query: str, *, country_code: str | None = None, limit: int = 6) -> list[dict[str, Any]]:
     """Return a list of normalized suggestions for the given query.
 
@@ -42,7 +57,7 @@ def search(query: str, *, country_code: str | None = None, limit: int = 6) -> li
         return []
 
     cache_key = f"geo:nominatim:{country_code or '-'}:{q.lower()}"
-    cached = cache.get(cache_key)
+    cached = _cache_get(cache_key)
     if cached is not None:
         return cached
 
@@ -81,8 +96,77 @@ def search(query: str, *, country_code: str | None = None, limit: int = 6) -> li
             "longitude": item.get("lon") or "",
         })
 
-    cache.set(cache_key, suggestions, _CACHE_TTL)
+    _cache_set(cache_key, suggestions)
     return suggestions
 
 
-__all__ = ["search"]
+def search_cities(
+    query: str, *, country_code: str | None = None, limit: int = 10
+) -> list[dict[str, Any]]:
+    """Return city/town suggestions for a country (Nominatim settlement search).
+
+    Shape::
+        {"name": "Marbella", "label": "Marbella, Andalusia, Spain",
+         "latitude": "...", "longitude": "..."}
+    """
+    q = (query or "").strip()
+    if len(q) < 2:
+        return []
+
+    cache_key = f"geo:nominatim:city:{country_code or '-'}:{q.lower()}"
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
+
+    params = {
+        "q": q,
+        "format": "jsonv2",
+        "addressdetails": 1,
+        "limit": limit,
+        "featureType": "city",
+    }
+    if country_code:
+        params["countrycodes"] = country_code.lower()
+
+    url = f"{_ENDPOINT}?{urllib.parse.urlencode(params)}"
+    req = urllib.request.Request(url, headers={"User-Agent": _USER_AGENT, "Accept-Language": "en"})
+    try:
+        with urllib.request.urlopen(req, timeout=4) as resp:  # noqa: S310
+            raw = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        logger.warning("Nominatim city lookup failed for %r", q, exc_info=True)
+        return []
+
+    seen: set[str] = set()
+    suggestions: list[dict[str, Any]] = []
+    for item in raw:
+        addr = item.get("address") or {}
+        name = (
+            addr.get("city")
+            or addr.get("town")
+            or addr.get("village")
+            or addr.get("municipality")
+            or item.get("name")
+            or ""
+        ).strip()
+        if not name:
+            continue
+        key = name.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        state = addr.get("state") or addr.get("county") or ""
+        country = addr.get("country") or ""
+        label = ", ".join(p for p in [name, state, country] if p)
+        suggestions.append({
+            "name": name,
+            "label": label or name,
+            "latitude": item.get("lat") or "",
+            "longitude": item.get("lon") or "",
+        })
+
+    _cache_set(cache_key, suggestions)
+    return suggestions
+
+
+__all__ = ["search", "search_cities"]
