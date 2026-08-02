@@ -37,13 +37,13 @@ Two visual variants based on context:
             <span class="vv-nav-item-title">Apartments</span>
             <span class="vv-nav-item-desc">City pied-à-terres &amp; flats</span>
           </a>
-          <a href="{% url 'web:marketplace' %}?type=villa" class="vv-nav-item">
-            <span class="vv-nav-item-title">Villas</span>
-            <span class="vv-nav-item-desc">Coastal &amp; private estates</span>
+          <a href="{% url 'web:marketplace' %}?type=studio" class="vv-nav-item">
+            <span class="vv-nav-item-title">Studios</span>
+            <span class="vv-nav-item-desc">Compact city living</span>
           </a>
-          <a href="{% url 'web:marketplace' %}?type=house" class="vv-nav-item">
-            <span class="vv-nav-item-title">Houses</span>
-            <span class="vv-nav-item-desc">Family homes worldwide</span>
+          <a href="{% url 'web:marketplace' %}?type=villa_house" class="vv-nav-item">
+            <span class="vv-nav-item-title">Villas &amp; houses</span>
+            <span class="vv-nav-item-desc">Family homes &amp; estates</span>
           </a>
           <a href="{% url 'web:marketplace' %}?type=commercial" class="vv-nav-item">
             <span class="vv-nav-item-title">Commercial</span>
@@ -65,13 +65,13 @@ Two visual variants based on context:
             <span class="vv-nav-item-title">Apartments</span>
             <span class="vv-nav-item-desc">Urban rentals</span>
           </a>
-          <a href="{% url 'web:marketplace' %}?type=villa" class="vv-nav-item">
-            <span class="vv-nav-item-title">Villas</span>
-            <span class="vv-nav-item-desc">Seasonal &amp; long lets</span>
+          <a href="{% url 'web:marketplace' %}?type=studio" class="vv-nav-item">
+            <span class="vv-nav-item-title">Studios</span>
+            <span class="vv-nav-item-desc">Compact rentals</span>
           </a>
-          <a href="{% url 'web:marketplace' %}?type=house" class="vv-nav-item">
-            <span class="vv-nav-item-title">Houses</span>
-            <span class="vv-nav-item-desc">Family residences</span>
+          <a href="{% url 'web:marketplace' %}?type=villa_house" class="vv-nav-item">
+            <span class="vv-nav-item-title">Villas &amp; houses</span>
+            <span class="vv-nav-item-desc">Seasonal &amp; family homes</span>
           </a>
         </div>
       </div>
@@ -85,8 +85,8 @@ Two visual variants based on context:
             <span class="vv-nav-item-title">Prestige picks</span>
             <span class="vv-nav-item-desc">Hand-picked premium homes</span>
           </a>
-          <a href="{% url 'web:marketplace' %}?ordering=-price&type=villa" class="vv-nav-item">
-            <span class="vv-nav-item-title">Signature villas</span>
+          <a href="{% url 'web:marketplace' %}?ordering=-price&type=villa_house" class="vv-nav-item">
+            <span class="vv-nav-item-title">Signature villas &amp; houses</span>
             <span class="vv-nav-item-desc">Iconic private estates</span>
           </a>
           <a href="{% url 'web:marketplace' %}?ordering=-price&type=apartment" class="vv-nav-item">

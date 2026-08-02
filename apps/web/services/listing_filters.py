@@ -39,6 +39,9 @@ def apply_filters(qs: QuerySet, params) -> QuerySet:
     if city := get("city"):
         qs = qs.filter(city__slug=city)
     if ptype := get("type"):
+        # Legacy URLs used type=villa / type=house — both map to villa_house.
+        if ptype in ("villa", "house"):
+            ptype = "villa_house"
         qs = qs.filter(property_type=ptype)
     if price_min := get("price_min"):
         try:
@@ -91,8 +94,10 @@ def resolve_ordering(params) -> list[str]:
 # Human-readable labels for filter params (used to name saved searches).
 _TYPE_LABELS = {
     "apartment": "Apartments",
-    "villa": "Villas",
-    "house": "Houses",
+    "studio": "Studios",
+    "villa_house": "Villas & houses",
+    "villa": "Villas & houses",
+    "house": "Villas & houses",
     "commercial": "Commercial",
     "land": "Land",
     "office": "Offices",

@@ -23,11 +23,16 @@ _COUNTRY_FROM_PATH = {
 }
 
 _TYPE_KEYWORDS = {
-    "villa": "villa",
-    "house": "house",
+    "villa": "villa_house",
+    "house": "villa_house",
+    "moradia": "villa_house",
+    "chalet": "villa_house",
+    "townhouse": "villa_house",
     "apartment": "apartment",
     "flat": "apartment",
     "penthouse": "apartment",
+    "studio": "studio",
+    "t0": "studio",
     "commercial": "commercial",
     "office": "office",
     "land": "land",

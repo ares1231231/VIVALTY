@@ -1,0 +1,150 @@
+{# Soft 3D / isometric property-type icons (no emoji). Expects `value`. #}
+{% if value == "apartment" %}
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <linearGradient id="apt-a" x1="12" y1="8" x2="52" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5B8DEF"/><stop offset="1" stop-color="#2F5FBF"/>
+    </linearGradient>
+    <linearGradient id="apt-b" x1="32" y1="8" x2="52" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3D6FD1"/><stop offset="1" stop-color="#1E3F8A"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="32" cy="56" rx="18" ry="3.5" fill="#0F172A" opacity=".12"/>
+  <path d="M12 54V18l20-10 20 10v36H12Z" fill="url(#apt-a)"/>
+  <path d="M32 8l20 10v36H32V8Z" fill="url(#apt-b)"/>
+  <rect x="18" y="22" width="6" height="6" rx="1" fill="#E8F0FF" opacity=".9"/>
+  <rect x="27" y="22" width="6" height="6" rx="1" fill="#E8F0FF" opacity=".75"/>
+  <rect x="18" y="32" width="6" height="6" rx="1" fill="#E8F0FF" opacity=".9"/>
+  <rect x="27" y="32" width="6" height="6" rx="1" fill="#E8F0FF" opacity=".75"/>
+  <rect x="18" y="42" width="6" height="6" rx="1" fill="#E8F0FF" opacity=".9"/>
+  <rect x="27" y="42" width="6" height="6" rx="1" fill="#E8F0FF" opacity=".75"/>
+  <rect x="40" y="22" width="6" height="6" rx="1" fill="#C7D7F5" opacity=".85"/>
+  <rect x="40" y="32" width="6" height="6" rx="1" fill="#C7D7F5" opacity=".85"/>
+  <rect x="40" y="42" width="6" height="6" rx="1" fill="#C7D7F5" opacity=".85"/>
+  <path d="M28 54V44h8v10" fill="#1E3A6E"/>
+</svg>
+
+{% elif value == "studio" %}
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <linearGradient id="stu-a" x1="14" y1="16" x2="50" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="stu-b" x1="32" y1="16" x2="50" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10B981"/><stop offset="1" stop-color="#047857"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="32" cy="56" rx="16" ry="3" fill="#0F172A" opacity=".12"/>
+  <path d="M14 50V24l18-10 18 10v26H14Z" fill="url(#stu-a)"/>
+  <path d="M32 14l18 10v26H32V14Z" fill="url(#stu-b)"/>
+  <rect x="20" y="28" width="10" height="8" rx="1.5" fill="#ECFDF5" opacity=".92"/>
+  <rect x="38" y="28" width="8" height="8" rx="1.5" fill="#A7F3D0" opacity=".85"/>
+  <path d="M24 50V40h8v10" fill="#065F46"/>
+  <circle cx="42" cy="42" r="3" fill="#D1FAE5" opacity=".9"/>
+</svg>
+
+{% elif value == "villa_house" %}
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <linearGradient id="vh-roof" x1="10" y1="12" x2="54" y2="30" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F59E0B"/><stop offset="1" stop-color="#B45309"/>
+    </linearGradient>
+    <linearGradient id="vh-wall" x1="14" y1="28" x2="50" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FEF3C7"/><stop offset="1" stop-color="#F5D0A9"/>
+    </linearGradient>
+    <linearGradient id="vh-side" x1="32" y1="28" x2="52" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8C48A"/><stop offset="1" stop-color="#C9955A"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="32" cy="57" rx="20" ry="3.5" fill="#0F172A" opacity=".12"/>
+  <path d="M8 28L32 10l24 18-6 4L32 18 14 32 8 28Z" fill="url(#vh-roof)"/>
+  <path d="M14 32v20h24V32L32 18 14 32Z" fill="url(#vh-wall)"/>
+  <path d="M38 32l12 8v12H38V32Z" fill="url(#vh-side)"/>
+  <rect x="22" y="38" width="8" height="14" rx="1" fill="#92400E"/>
+  <rect x="40" y="40" width="6" height="6" rx="1" fill="#FEF9C3" opacity=".9"/>
+  <path d="M48 28c0-4 3-7 3-7s3 3 3 7a3 3 0 11-6 0Z" fill="#22C55E"/>
+</svg>
+
+{% elif value == "commercial" %}
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <linearGradient id="com-a" x1="16" y1="8" x2="48" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#94A3B8"/><stop offset="1" stop-color="#475569"/>
+    </linearGradient>
+    <linearGradient id="com-b" x1="32" y1="8" x2="48" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#64748B"/><stop offset="1" stop-color="#334155"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="32" cy="57" rx="18" ry="3" fill="#0F172A" opacity=".12"/>
+  <path d="M16 54V14l16-8 16 8v40H16Z" fill="url(#com-a)"/>
+  <path d="M32 6l16 8v40H32V6Z" fill="url(#com-b)"/>
+  <g fill="#E2E8F0" opacity=".85">
+    <rect x="20" y="18" width="5" height="5" rx="0.8"/><rect x="27" y="18" width="5" height="5" rx="0.8"/>
+    <rect x="20" y="26" width="5" height="5" rx="0.8"/><rect x="27" y="26" width="5" height="5" rx="0.8"/>
+    <rect x="20" y="34" width="5" height="5" rx="0.8"/><rect x="27" y="34" width="5" height="5" rx="0.8"/>
+    <rect x="20" y="42" width="5" height="5" rx="0.8"/><rect x="27" y="42" width="5" height="5" rx="0.8"/>
+  </g>
+  <g fill="#CBD5E1" opacity=".8">
+    <rect x="38" y="18" width="5" height="5" rx="0.8"/><rect x="38" y="26" width="5" height="5" rx="0.8"/>
+    <rect x="38" y="34" width="5" height="5" rx="0.8"/><rect x="38" y="42" width="5" height="5" rx="0.8"/>
+  </g>
+</svg>
+
+{% elif value == "land" %}
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <linearGradient id="land-a" x1="10" y1="20" x2="54" y2="52" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#86EFAC"/><stop offset="1" stop-color="#15803D"/>
+    </linearGradient>
+    <linearGradient id="land-b" x1="20" y1="14" x2="50" y2="40" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FDE68A"/><stop offset="1" stop-color="#CA8A04"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="32" cy="56" rx="20" ry="3.5" fill="#0F172A" opacity=".12"/>
+  <path d="M8 42c6-8 14-14 24-14s18 6 24 14c-4 6-14 10-24 10S12 48 8 42Z" fill="url(#land-a)"/>
+  <path d="M18 28c4-8 10-12 16-12 4 0 8 2 12 6-6 2-14 4-20 8-3-1-6-1-8-2Z" fill="url(#land-b)" opacity=".85"/>
+  <path d="M40 24c2-6 6-10 10-10 1 4-1 9-4 12-2-1-4-1-6-2Z" fill="#4ADE80"/>
+  <circle cx="22" cy="36" r="2" fill="#166534" opacity=".5"/>
+  <circle cx="36" cy="40" r="1.5" fill="#166534" opacity=".4"/>
+</svg>
+
+{% elif value == "office" %}
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <linearGradient id="off-a" x1="14" y1="18" x2="50" y2="52" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A78BFA"/><stop offset="1" stop-color="#5B21B6"/>
+    </linearGradient>
+    <linearGradient id="off-b" x1="20" y1="12" x2="44" y2="28" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C4B5FD"/><stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="32" cy="56" rx="16" ry="3" fill="#0F172A" opacity=".12"/>
+  <path d="M16 50V28h32v22H16Z" fill="url(#off-a)"/>
+  <path d="M22 28V18h20v10H22Z" fill="url(#off-b)"/>
+  <rect x="28" y="20" width="8" height="4" rx="1" fill="#EDE9FE"/>
+  <rect x="22" y="34" width="20" height="2.5" rx="1" fill="#DDD6FE" opacity=".9"/>
+  <rect x="22" y="40" width="20" height="2.5" rx="1" fill="#DDD6FE" opacity=".75"/>
+  <path d="M12 50h40v4H12v-4Z" fill="#4C1D95"/>
+</svg>
+
+{% elif value == "retail" %}
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <linearGradient id="ret-a" x1="14" y1="16" x2="50" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FB7185"/><stop offset="1" stop-color="#BE123C"/>
+    </linearGradient>
+    <linearGradient id="ret-b" x1="20" y1="12" x2="44" y2="28" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FDA4AF"/><stop offset="1" stop-color="#E11D48"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="32" cy="56" rx="16" ry="3" fill="#0F172A" opacity=".12"/>
+  <path d="M14 50V30l4-12h28l4 12v20H14Z" fill="url(#ret-a)"/>
+  <path d="M18 18h28l4 12H14l4-12Z" fill="url(#ret-b)"/>
+  <path d="M26 50V40h12v10" fill="#881337"/>
+  <rect x="22" y="34" width="8" height="6" rx="1" fill="#FFE4E6" opacity=".9"/>
+  <rect x="34" y="34" width="8" height="6" rx="1" fill="#FFE4E6" opacity=".75"/>
+  <circle cx="24" cy="22" r="1.5" fill="#FFF1F2"/>
+  <circle cx="32" cy="22" r="1.5" fill="#FFF1F2"/>
+  <circle cx="40" cy="22" r="1.5" fill="#FFF1F2"/>
+</svg>
+{% endif %}

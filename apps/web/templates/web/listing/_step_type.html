@@ -33,13 +33,7 @@
                      class="sr-only vv-listing-type-input"
                      required>
               <span class="vv-listing-type-icon" aria-hidden="true">
-                {% if value == "apartment" %}🏙️{% endif %}
-                {% if value == "villa"     %}🏖️{% endif %}
-                {% if value == "house"     %}🏡{% endif %}
-                {% if value == "commercial"%}🏢{% endif %}
-                {% if value == "land"      %}🗺️{% endif %}
-                {% if value == "office"    %}💼{% endif %}
-                {% if value == "retail"    %}🛍️{% endif %}
+                {% include "web/listing/_property_type_icon.html" with value=value %}
               </span>
               <span class="vv-listing-type-label">{{ label }}</span>
             </label>

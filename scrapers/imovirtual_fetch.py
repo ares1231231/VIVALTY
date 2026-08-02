@@ -50,8 +50,11 @@ PROVINCE_TO_CITY = {
 PROPERTY_TYPE_MAP = {
     "flat": "apartment",
     "apartamento": "apartment",
-    "house": "house",
-    "moradia": "house",
+    "studio": "studio",
+    "t0": "studio",
+    "house": "villa_house",
+    "moradia": "villa_house",
+    "villa": "villa_house",
     "terrain": "land",
     "terreno": "land",
     "commercial_property": "commercial",

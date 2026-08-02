@@ -19,8 +19,8 @@ from apps.geo.models import City, Country, DemandChoices, RiskChoices, TrendChoi
 
 class PropertyType(models.TextChoices):
     APARTMENT = "apartment", "Apartment"
-    VILLA = "villa", "Villa"
-    HOUSE = "house", "House"
+    STUDIO = "studio", "Studio"
+    VILLA_HOUSE = "villa_house", "Villa / House"
     COMMERCIAL = "commercial", "Commercial"
     LAND = "land", "Land"
     OFFICE = "office", "Office"

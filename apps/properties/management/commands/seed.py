@@ -136,19 +136,19 @@ IMAGES = {
         "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1400",
         "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=1400",
     ],
-    "villa": [
+    "studio": [
+        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1400",
+        "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1400",
+        "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1400",
+    ],
+    "villa_house": [
         "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1400",
         "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1400",
         "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1400",
         "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400",
-        "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1400",
-        "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=1400",
-    ],
-    "house": [
         "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=1400",
         "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1400",
         "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1400",
-        "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1400",
         "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=1400",
     ],
     "commercial": [
@@ -311,13 +311,16 @@ TITLE_TEMPLATES = {
         "Boutique residence in {neighbourhood}",
         "Penthouse-style apartment, {neighbourhood}",
     ],
-    "villa": [
+    "studio": [
+        "Bright studio apartment, {neighbourhood}",
+        "Compact studio in {neighbourhood}",
+        "City-centre studio, {neighbourhood}",
+    ],
+    "villa_house": [
         "Private villa with garden, {neighbourhood}",
         "Architect-designed villa in {neighbourhood}",
         "Sea-facing villa in {neighbourhood}",
         "Family villa with pool, {neighbourhood}",
-    ],
-    "house": [
         "Townhouse in {neighbourhood}",
         "Family home, {neighbourhood}",
         "Period house in {neighbourhood}",
@@ -354,12 +357,14 @@ DESCRIPTION_PARTS = {
         "Light-filled south-facing aspect with double-glazed windows throughout.",
         "Full short-let permission in place — strong Airbnb / corporate-let track record.",
     ],
-    "villa": [
+    "studio": [
+        "Efficient open-plan layout with built-in storage and a fitted kitchenette.",
+        "Ideal pied-à-terre or first investment — low carrying costs, strong tenant demand.",
+    ],
+    "villa_house": [
         "Generous outdoor terraces, mature gardens and a heated pool.",
         "Bespoke kitchen, en-suite bedrooms and a dedicated home-office.",
         "Walled grounds with secure gated access and EV charging.",
-    ],
-    "house": [
         "Period features, fireplaces and high ceilings paired with a contemporary fit-out.",
         "Family-friendly layout with separate utility room and rear garden.",
     ],
@@ -383,13 +388,13 @@ DESCRIPTION_PARTS = {
 
 
 PROPERTY_TYPES_BY_COUNTRY = {
-    "FR": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.VILLA, PropertyType.HOUSE],
-    "GB": [PropertyType.APARTMENT, PropertyType.HOUSE, PropertyType.HOUSE, PropertyType.COMMERCIAL],
-    "ES": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.VILLA, PropertyType.RETAIL],
-    "CH": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.OFFICE],
-    "IT": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.HOUSE, PropertyType.COMMERCIAL],
-    "AE": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.VILLA, PropertyType.OFFICE],
-    "PT": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.VILLA, PropertyType.HOUSE],
+    "FR": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.STUDIO, PropertyType.VILLA_HOUSE],
+    "GB": [PropertyType.APARTMENT, PropertyType.VILLA_HOUSE, PropertyType.VILLA_HOUSE, PropertyType.COMMERCIAL],
+    "ES": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.VILLA_HOUSE, PropertyType.RETAIL],
+    "CH": [PropertyType.APARTMENT, PropertyType.STUDIO, PropertyType.OFFICE],
+    "IT": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.VILLA_HOUSE, PropertyType.COMMERCIAL],
+    "AE": [PropertyType.APARTMENT, PropertyType.APARTMENT, PropertyType.VILLA_HOUSE, PropertyType.OFFICE],
+    "PT": [PropertyType.APARTMENT, PropertyType.STUDIO, PropertyType.VILLA_HOUSE, PropertyType.VILLA_HOUSE],
 }
 
 
@@ -484,7 +489,12 @@ class Command(BaseCommand):
             type_pool = PROPERTY_TYPES_BY_COUNTRY.get(country.code, [PropertyType.APARTMENT])
             for i in range(per_city):
                 ptype = random.choice(type_pool)
-                br = random.choice([1, 2, 3, 4]) if ptype not in (PropertyType.COMMERCIAL, PropertyType.OFFICE, PropertyType.LAND, PropertyType.RETAIL) else None
+                if ptype == PropertyType.STUDIO:
+                    br = 0
+                elif ptype not in (PropertyType.COMMERCIAL, PropertyType.OFFICE, PropertyType.LAND, PropertyType.RETAIL):
+                    br = random.choice([1, 2, 3, 4])
+                else:
+                    br = None
                 area = round(random.uniform(48, 320), 1)
                 psqm = float(city.avg_price_sqm or 3000)
                 price = round(area * psqm * random.uniform(0.85, 1.30), -2)

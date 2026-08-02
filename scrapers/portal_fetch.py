@@ -139,7 +139,7 @@ def fetch_propertyfinder(args) -> list[dict]:
             "listing_ref": f"PF-AE-{prop.get('id')}",
             "title": (prop.get("title") or "").strip()[:200],
             "description": description[:5000],
-            "property_type": "apartment" if prop.get("property_type_id") in (1, None) else "house",
+            "property_type": "apartment" if prop.get("property_type_id") in (1, None) else "villa_house",
             "price": float(price),
             "currency": (prop.get("price") or {}).get("currency") or "AED",
             "country_code": "AE",
@@ -217,7 +217,7 @@ def fetch_bienici(args) -> list[dict]:
             "listing_ref": f"BI-FR-{ad.get('id')}",
             "title": (ad.get("title") or "").strip()[:200] or f"{type_fr.title()} à {city}",
             "description": description[:5000],
-            "property_type": "house" if ad.get("propertyType") == "house" else "apartment",
+            "property_type": "villa_house" if ad.get("propertyType") == "house" else "apartment",
             "price": float(price),
             "currency": "EUR",
             "country_code": "FR",
@@ -298,7 +298,7 @@ def fetch_pisos(args) -> list[dict]:
         baths_match = re.search(r"(\d+)\s*baño", dhtml)
 
         slug = path.split("/")[2]
-        ptype = "house" if slug.startswith(("casa", "chalet", "finca")) else "apartment"
+        ptype = "villa_house" if slug.startswith(("casa", "chalet", "finca")) else "apartment"
 
         description = meta(dhtml, "og:description").strip()
         description += f"\n\nSource: pisos.com — {url}"
@@ -384,7 +384,7 @@ def fetch_onthemarket(args) -> list[dict]:
 
         images = list(dict.fromkeys(re.findall(r'(https://media\.onthemarket\.com/properties/\d+/[^"\s\\]+\.(?:jpg|jpeg|webp))', dhtml)))
 
-        ptype = "house" if re.search(r"\b(house|cottage|bungalow|villa)\b", og_title, re.I) else "apartment"
+        ptype = "villa_house" if re.search(r"\b(house|cottage|bungalow|villa)\b", og_title, re.I) else "apartment"
 
         description = meta(dhtml, "og:description").strip()
         description += f"\n\nSource: onthemarket.com — {url}"

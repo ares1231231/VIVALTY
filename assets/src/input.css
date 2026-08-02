@@ -2326,7 +2326,10 @@
     @apply border-brand-600 bg-brand-50 shadow-lg shadow-brand-500/15;
   }
   .vv-listing-type-icon {
-    @apply text-3xl sm:text-4xl leading-none;
+    @apply flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center leading-none;
+  }
+  .vv-listing-type-icon svg {
+    @apply h-full w-full drop-shadow-sm;
   }
   .vv-listing-type-label {
     @apply text-xs sm:text-sm font-semibold text-ink-900;
