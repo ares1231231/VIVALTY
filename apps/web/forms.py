@@ -343,28 +343,6 @@ class ListingLocationForm(_WizardForm):
         required=False,
         widget=forms.HiddenInput(attrs={"id": "id_city_id"}),
     )
-    address = forms.CharField(
-        required=False,
-        max_length=255,
-        widget=forms.TextInput(attrs={
-            "class": "input",
-            "placeholder": "Start typing an address…",
-            "autocomplete": "off",
-            "id": "id_address",
-        }),
-    )
-    latitude = forms.DecimalField(
-        required=False,
-        max_digits=9,
-        decimal_places=6,
-        widget=forms.HiddenInput(attrs={"id": "id_latitude"}),
-    )
-    longitude = forms.DecimalField(
-        required=False,
-        max_digits=9,
-        decimal_places=6,
-        widget=forms.HiddenInput(attrs={"id": "id_longitude"}),
-    )
 
     def clean(self):
         from django.utils.text import slugify
@@ -407,9 +385,10 @@ class ListingLocationForm(_WizardForm):
             "country_name": data["country"].name,
             "city_id": city.id,
             "city_name": city.name,
-            "address": data.get("address") or "",
-            "latitude": str(data["latitude"]) if data.get("latitude") else "",
-            "longitude": str(data["longitude"]) if data.get("longitude") else "",
+            # Street address is intentionally not collected in the public wizard.
+            "address": "",
+            "latitude": "",
+            "longitude": "",
         }
 
 

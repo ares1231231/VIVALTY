@@ -1757,9 +1757,6 @@ def _initial_for_step(step: str, draft: dict) -> dict:
             "country": draft.get("country_id"),
             "city_id": draft.get("city_id"),
             "city_name": draft.get("city_name") or "",
-            "address": draft.get("address"),
-            "latitude": draft.get("latitude") or None,
-            "longitude": draft.get("longitude") or None,
         }
     if step == "specs":
         return {

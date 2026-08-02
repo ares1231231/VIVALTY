@@ -1,4 +1,4 @@
-{# Step 2 — country / searchable city / address (with Nominatim autocomplete). #}
+{# Step 2 — country + searchable city only (no street address). #}
 <form method="post" novalidate class="space-y-6">
   {% csrf_token %}
 
@@ -33,33 +33,9 @@
           <p class="mt-1 text-xs text-rose-700">{{ form.city_name.errors|join:", " }}</p>
         {% endif %}
         <p class="mt-1.5 text-[11px] text-ink-500">
-          Type to search any city in the selected country — not limited to a short list.
+          Type to search any city in the selected country.
         </p>
       </div>
-    </div>
-
-    <div class="relative">
-      <label for="id_address" class="label">Address <span class="font-normal normal-case text-ink-400">(optional, helps buyers find it on the map)</span></label>
-      {{ form.address }}
-      {{ form.latitude }}
-      {{ form.longitude }}
-
-      <div id="address-suggestions"
-           hx-get="{% url 'web:listing_address_search' %}"
-           hx-trigger="keyup changed delay:350ms from:#id_address"
-           hx-include="[name='address'], [name='country']"
-           hx-target="#address-suggestions"
-           hx-swap="innerHTML"
-           class="absolute z-20 left-0 right-0 mt-1"></div>
-
-      <p id="lat-lng-readout" class="mt-2 text-[11px] text-ink-500 hidden">
-        <span class="font-mono">{{ form.latitude.value|default:"" }}, {{ form.longitude.value|default:"" }}</span>
-      </p>
-    </div>
-
-    <div class="rounded-xl bg-ink-50 border border-ink-200 p-4 text-[12px] text-ink-600 leading-relaxed">
-      <span class="font-semibold text-ink-900">Privacy:</span>
-      We display the city + neighbourhood on public listings. Your exact address is only revealed to verified buyers after a lead form submission.
     </div>
   </div>
 
@@ -89,40 +65,14 @@
         if (cityId) cityId.value = cityBtn.dataset.cityId || '';
         var box = document.getElementById('city-suggestions');
         if (box) box.innerHTML = '';
-        // Optional: seed lat/lng from a remote city hit when address is empty.
-        if (cityBtn.dataset.lat && document.getElementById('id_latitude') && !document.getElementById('id_latitude').value) {
-          document.getElementById('id_latitude').value = cityBtn.dataset.lat || '';
-          document.getElementById('id_longitude').value = cityBtn.dataset.lng || '';
-        }
         return;
       }
-
-      var btn = e.target.closest('[data-suggestion]');
-      if (!btn) return;
-      e.preventDefault();
-      document.getElementById('id_address').value = btn.dataset.address || '';
-      document.getElementById('id_latitude').value = btn.dataset.lat || '';
-      document.getElementById('id_longitude').value = btn.dataset.lng || '';
-      document.getElementById('address-suggestions').innerHTML = '';
-      var readout = document.getElementById('lat-lng-readout');
-      if (readout) {
-        readout.classList.remove('hidden');
-        readout.querySelector('span').textContent = (btn.dataset.lat || '?') + ', ' + (btn.dataset.lng || '?');
-      }
-    });
-
-    document.addEventListener('click', function (e) {
       if (!e.target.closest('#id_city_name') && !e.target.closest('#city-suggestions')) {
         var cityBox = document.getElementById('city-suggestions');
         if (cityBox) cityBox.innerHTML = '';
       }
-      if (!e.target.closest('#id_address') && !e.target.closest('#address-suggestions')) {
-        var addrBox = document.getElementById('address-suggestions');
-        if (addrBox) addrBox.innerHTML = '';
-      }
     });
 
-    // Typing a new city name clears a previously selected city id.
     if (cityName && cityId) {
       cityName.addEventListener('input', function () {
         cityId.value = '';
