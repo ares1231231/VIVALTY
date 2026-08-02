@@ -396,6 +396,54 @@ function initCookieConsent() {
   document.getElementById("cookie-decline")?.addEventListener("click", () => persist("essential"));
 }
 
+// ── Listing wizard: cascade cities when country changes ─────────────────────
+function initListingCityCascade(root = document) {
+  const payload = root.querySelector
+    ? root.querySelector("#vv-cities-by-country") || document.getElementById("vv-cities-by-country")
+    : document.getElementById("vv-cities-by-country");
+  const countrySelect = document.getElementById("id_country");
+  const citySelect = document.getElementById("id_city");
+  if (!payload || !countrySelect || !citySelect) return;
+
+  let citiesByCountry = {};
+  try {
+    citiesByCountry = JSON.parse(payload.textContent || "{}");
+  } catch (_) {
+    citiesByCountry = {};
+  }
+
+  function refill(preserve) {
+    const countryId = String(countrySelect.value || "");
+    const preferred = citySelect.dataset.preferredCity || "";
+    const keep = preserve ? (citySelect.value || preferred) : "";
+    const cities = citiesByCountry[countryId] || [];
+
+    citySelect.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = countryId ? "— Select city —" : "— Select country first —";
+    citySelect.appendChild(placeholder);
+
+    cities.forEach((c) => {
+      const opt = document.createElement("option");
+      opt.value = String(c.id);
+      opt.textContent = c.name;
+      if (keep && String(c.id) === String(keep)) opt.selected = true;
+      citySelect.appendChild(opt);
+    });
+    citySelect.disabled = !countryId;
+  }
+
+  if (countrySelect.dataset.cityCascadeBound !== "1") {
+    countrySelect.dataset.cityCascadeBound = "1";
+    countrySelect.addEventListener("change", () => {
+      citySelect.dataset.preferredCity = "";
+      refill(false);
+    });
+  }
+  refill(true);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initCounters();
   initRotatingWords();
@@ -406,10 +454,12 @@ document.addEventListener("DOMContentLoaded", () => {
   initHeroCountryCoverflow();
   initLocaleSwitcher();
   initCookieConsent();
+  initListingCityCascade();
 });
 
 // Re-init counters after HTMX swaps (e.g. boosted navigation back to home).
 document.addEventListener("htmx:afterSettle", (e) => {
   initCounters();
   initLocaleSwitcher(e.detail.elt || document);
+  initListingCityCascade(e.detail.elt || document);
 });

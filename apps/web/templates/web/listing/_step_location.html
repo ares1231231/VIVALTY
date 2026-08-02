@@ -51,36 +51,15 @@
   {% include "web/listing/_step_actions.html" %}
 </form>
 
-{# Cascade cities by country, fill lat/lng from a suggestion click. #}
+{# Preferred city for cascade restore (read by vivalty.js initListingCityCascade). #}
 <script>
   (function () {
-    var citiesByCountry = JSON.parse(document.getElementById('vv-cities-by-country').textContent || '{}');
-    var countrySelect = document.getElementById('id_country');
     var citySelect = document.getElementById('id_city');
-    var currentCity = "{{ draft.city_id|default:'' }}";
-
-    function refillCities() {
-      if (!countrySelect || !citySelect) return;
-      var code = (countrySelect.selectedOptions[0]?.textContent || '').match(/\b[A-Z]{2}\b/);
-      // We don't have the code as the option's text — fall back: rebuild from the data attribute lookup
-      // by matching ALL cities to the picked country FK id.
-      var countryId = countrySelect.value;
-      var preserved = citySelect.value;
-      citySelect.innerHTML = '<option value="">— Select city —</option>';
-      Object.values(citiesByCountry).forEach(function (list) {
-        list.forEach(function (c) {
-          // We don't have country FK in the JSON payload; fall through and let
-          // the server-side validation catch country/city mismatches.
-        });
-      });
-      // Simpler: keep the full list. The form validator will reject mismatches.
-      Array.from(citySelect.options).forEach(function (opt) {
-        if (opt.value === preserved) opt.selected = true;
-      });
+    if (citySelect) {
+      citySelect.dataset.preferredCity = "{{ form.city.value|default_if_none:draft.city_id|default:'' }}";
     }
-
-    if (countrySelect) {
-      countrySelect.addEventListener('change', refillCities);
+    if (typeof initListingCityCascade === 'function') {
+      initListingCityCascade();
     }
 
     document.addEventListener('click', function (e) {
@@ -96,10 +75,10 @@
       readout.querySelector('span').textContent = (btn.dataset.lat || '?') + ', ' + (btn.dataset.lng || '?');
     });
 
-    // Hide suggestions on outside click.
     document.addEventListener('click', function (e) {
       if (!e.target.closest('#id_address') && !e.target.closest('#address-suggestions')) {
-        document.getElementById('address-suggestions').innerHTML = '';
+        var box = document.getElementById('address-suggestions');
+        if (box) box.innerHTML = '';
       }
     });
   })();

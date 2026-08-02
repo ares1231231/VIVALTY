@@ -1790,10 +1790,12 @@ def _render_step(request: HttpRequest, step: str, form=None) -> HttpResponse:
         form = form_cls(initial=_initial_for_step(step, draft))
 
     countries = Country.objects.order_by("name")
-    cities_by_country = {}
+    # Keyed by country PK (string) so the location-step JS can cascade cities
+    # from the selected <option value="…"> without parsing country codes.
+    cities_by_country: dict[str, list[dict]] = {}
     for city in City.objects.select_related("country").order_by("country__name", "name"):
-        cities_by_country.setdefault(city.country.code, []).append(
-            {"id": city.id, "name": city.name, "slug": city.slug}
+        cities_by_country.setdefault(str(city.country_id), []).append(
+            {"id": city.id, "name": city.name}
         )
 
     ctx = {

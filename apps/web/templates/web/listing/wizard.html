@@ -6,7 +6,8 @@
 {% endblock %}
 
 {% block content %}
-<div class="bg-ink-50 min-h-[calc(100vh-84px)]">
+{# Disable hx-boost so step scripts (city cascade, photo upload) always run. #}
+<div class="bg-ink-50 min-h-[calc(100vh-84px)]" hx-boost="false">
 
   {# ── Sticky progress bar ─────────────────────────────────────────── #}
   <div class="sticky top-0 z-30 border-b border-ink-200 bg-white/95 backdrop-blur-sm">
@@ -36,6 +37,9 @@
       </p>
     </header>
 
+    {# Country → city cascade payload (must exist before the location step script). #}
+    <script id="vv-cities-by-country" type="application/json">{{ cities_by_country_json|safe }}</script>
+
     {# Step body #}
     <div class="grid lg:grid-cols-[1fr_320px] gap-8 lg:gap-12 items-start">
 
@@ -51,6 +55,4 @@
   </div>
 </div>
 
-{# Country → city cascading dropdown payload for the location step. #}
-<script id="vv-cities-by-country" type="application/json">{{ cities_by_country_json|safe }}</script>
 {% endblock %}
