@@ -1,6 +1,5 @@
-{# 3D realistic property-type icons. Expects `value` (PropertyType code).
-   Each path goes through {% static %} so ManifestStaticFilesStorage hashing works. #}
 {% load static %}
+{% comment %}3D property-type icons. Expects value = PropertyType code.{% endcomment %}
 {% if value == "apartment" %}
 <img src="{% static 'img/property-types/apartment.webp' %}" alt="" width="112" height="112" decoding="async" class="vv-listing-type-img" />
 {% elif value == "studio" %}
