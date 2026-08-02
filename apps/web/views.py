@@ -59,7 +59,6 @@ from apps.web.services.emails import (
     send_welcome_email,
 )
 from .forms import (
-    BecomeOwnerForm,
     EmailLoginForm,
     ForgotPasswordForm,
     InvestorInquiryForm,
@@ -1737,6 +1736,18 @@ def _is_owner_or_admin(user) -> bool:
     return user.is_staff or getattr(user, "role", None) in {Role.OWNER, Role.ADMIN}
 
 
+def _ensure_owner(user) -> None:
+    """Silently promote an authenticated user to owner when they start listing.
+
+    Phone / agency / contact details are collected inside the listing wizard
+    itself, so the old intermediate "become owner" form is no longer needed.
+    """
+    if _is_owner_or_admin(user):
+        return
+    user.role = Role.OWNER
+    user.save(update_fields=["role"])
+
+
 def _initial_for_step(step: str, draft: dict) -> dict:
     """Map the session draft back onto the per-step form's `initial=` kwarg."""
     if step == "type":
@@ -1803,12 +1814,8 @@ def _render_step(request: HttpRequest, step: str, form=None) -> HttpResponse:
 
 @login_required
 def listing_start(request: HttpRequest) -> HttpResponse:
-    """Entry point: /list/. Routes investors through the upgrade form,
-    owners straight to step 1.
-    """
-    user = request.user
-    if not _is_owner_or_admin(user):
-        return redirect("web:become_owner")
+    """Entry point: /list/. Sends the user straight into the listing wizard."""
+    _ensure_owner(request.user)
     return redirect("web:listing_step", step=listing_wizard.STEPS[0])
 
 
@@ -1817,8 +1824,7 @@ def listing_step(request: HttpRequest, step: str) -> HttpResponse:
     """Render or process a single wizard step."""
     if step not in listing_wizard.STEPS:
         return redirect("web:listing_start")
-    if not _is_owner_or_admin(request.user):
-        return redirect("web:become_owner")
+    _ensure_owner(request.user)
 
     if request.method == "POST":
         return _handle_step_post(request, step)
@@ -1852,8 +1858,7 @@ def _handle_step_post(request: HttpRequest, step: str) -> HttpResponse:
 
 @login_required
 def listing_review(request: HttpRequest) -> HttpResponse:
-    if not _is_owner_or_admin(request.user):
-        return redirect("web:become_owner")
+    _ensure_owner(request.user)
     draft = listing_wizard.get_draft(request)
     if not listing_wizard.can_review(draft):
         messages.info(request, "A few details are still missing — let's finish them first.")
@@ -1878,8 +1883,7 @@ def listing_review(request: HttpRequest) -> HttpResponse:
 @login_required
 @require_POST
 def listing_publish(request: HttpRequest) -> HttpResponse:
-    if not _is_owner_or_admin(request.user):
-        return redirect("web:become_owner")
+    _ensure_owner(request.user)
     try:
         prop = listing_wizard.publish_draft(request)
     except ValueError as exc:
@@ -1925,18 +1929,8 @@ def listing_cancel(request: HttpRequest) -> HttpResponse:
 
 @login_required
 def become_owner(request: HttpRequest) -> HttpResponse:
-    """Investors who hit the listing flow land here for a one-screen role
-    upgrade before continuing into the wizard. Owners / admins bypass.
-    """
-    if _is_owner_or_admin(request.user):
-        return redirect("web:listing_start")
-
-    form = BecomeOwnerForm(request.POST or None)
-    if request.method == "POST" and form.is_valid():
-        form.apply(request.user)
-        messages.success(request, "You're set up as an owner. Let's list your first property.")
-        return redirect("web:listing_start")
-    return render(request, "web/listing/become_owner.html", {"form": form})
+    """Legacy URL — role upgrade is automatic now; send straight to /list/."""
+    return redirect("web:listing_start")
 
 
 # ─── Edit / delete (post-publish, single page) ─────────────────────────────
