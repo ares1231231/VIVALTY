@@ -35,6 +35,23 @@ _REWRITE_SYSTEM_PROMPT = (
     "investment returns."
 )
 
+_TITLE_SYSTEM_PROMPT = (
+    "You write short, elegant real-estate listing titles for an international marketplace. "
+    "Return ONLY one title, max 70 characters, no quotes, no emojis, no hashtags. "
+    "Make it specific and attractive (location or standout feature when known). "
+    "Never invent amenities that are not in the context."
+)
+
+_FULL_POLISH_SYSTEM_PROMPT = (
+    "You are Vivalty's senior real-estate copywriter. Polish this listing for "
+    "international buyers. Return valid JSON only, no markdown fences, with keys:\n"
+    '  "title": string (max 70 chars, elegant, specific),\n'
+    '  "description": string (hook + 2-3 short paragraphs, under 180 words, '
+    "editorial tone, no bullets, no emojis, no markdown, never invent facts, "
+    "no ROI/yield talk).\n"
+    "Keep every factual detail the owner provided (beds, size, city, type)."
+)
+
 
 def rewrite_description(raw: str, *, context: dict[str, Any] | None = None) -> str:
     """Polish a draft description. Returns the rewritten text or the input
@@ -154,4 +171,135 @@ def suggest_price(
     }
 
 
-__all__ = ["rewrite_description", "suggest_price"]
+def polish_listing(draft: dict[str, Any]) -> dict[str, str]:
+    """Rewrite title + description for the pre-publish preview.
+
+    Returns ``{"title", "description"}``. Falls back to local polish when the
+    LLM is unavailable. Never invents facts beyond the draft context.
+    """
+    raw_title = (draft.get("title") or "").strip()
+    raw_desc = (draft.get("description") or "").strip()
+    context = {
+        "title": raw_title,
+        "property_type": draft.get("property_type_display") or draft.get("property_type"),
+        "city_name": draft.get("city_name"),
+        "country_name": draft.get("country_name"),
+        "area_sqm": draft.get("area_sqm"),
+        "bedrooms": draft.get("bedrooms"),
+        "bathrooms": draft.get("bathrooms"),
+        "price": draft.get("price"),
+        "currency": draft.get("currency"),
+    }
+
+    if not settings.OPENAI_API_KEY:
+        return {
+            "title": _local_title(raw_title, context),
+            "description": _local_polish(raw_desc, context) if raw_desc else _local_desc_from_specs(context),
+        }
+
+    seed_desc = raw_desc or _local_desc_from_specs(context)
+    try:
+        from openai import OpenAI
+
+        client_kwargs: dict = {"api_key": settings.OPENAI_API_KEY}
+        if settings.OPENAI_BASE_URL:
+            client_kwargs["base_url"] = settings.OPENAI_BASE_URL
+        client = OpenAI(**client_kwargs)
+        ctx_block = _format_context(context)
+        resp = client.chat.completions.create(
+            model=settings.OPENAI_MODEL,
+            messages=[
+                {"role": "system", "content": _FULL_POLISH_SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": (
+                        f"Listing context:\n{ctx_block}\n\n"
+                        f"Current title:\n{raw_title or '(none)'}\n\n"
+                        f"Current description:\n{seed_desc}"
+                    ),
+                },
+            ],
+            temperature=0.55,
+        )
+        text = (resp.choices[0].message.content or "").strip()
+        parsed = _parse_polish_json(text)
+        if parsed:
+            title = (parsed.get("title") or raw_title or _local_title(raw_title, context)).strip()
+            desc = (parsed.get("description") or seed_desc).strip()
+            return {"title": title[:90], "description": desc}
+    except Exception:
+        logger.exception("polish_listing() failed; using local fallback")
+
+    return {
+        "title": _local_title(raw_title, context),
+        "description": _local_polish(seed_desc, context),
+    }
+
+
+def _parse_polish_json(text: str) -> dict[str, Any] | None:
+    import json
+    import re
+
+    if not text:
+        return None
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
+        cleaned = re.sub(r"\s*```$", "", cleaned)
+    try:
+        data = json.loads(cleaned)
+    except json.JSONDecodeError:
+        match = re.search(r"\{.*\}", cleaned, re.S)
+        if not match:
+            return None
+        try:
+            data = json.loads(match.group(0))
+        except json.JSONDecodeError:
+            return None
+    if not isinstance(data, dict):
+        return None
+    return data
+
+
+def _local_title(raw: str, context: dict[str, Any]) -> str:
+    if raw and len(raw) >= 8:
+        return raw[:1].upper() + raw[1:]
+    ptype = (context.get("property_type") or "Home").replace("_", " ").title()
+    city = context.get("city_name") or ""
+    beds = context.get("bedrooms")
+    bits = []
+    if beds not in (None, "",):
+        try:
+            bits.append(f"{int(beds)}-bed")
+        except (TypeError, ValueError):
+            pass
+    bits.append(ptype)
+    if city:
+        bits.append(f"in {city}")
+    return " ".join(bits)[:70] or "Beautiful home"
+
+
+def _local_desc_from_specs(context: dict[str, Any]) -> str:
+    ptype = (context.get("property_type") or "property").replace("_", " ")
+    city = context.get("city_name") or "a sought-after destination"
+    country = context.get("country_name") or ""
+    where = f"{city}, {country}".strip(", ") if country else city
+    area = context.get("area_sqm")
+    beds = context.get("bedrooms")
+    baths = context.get("bathrooms")
+    details = []
+    if beds not in (None, ""):
+        details.append(f"{beds} bedroom{'s' if str(beds) != '1' else ''}")
+    if baths not in (None, ""):
+        details.append(f"{baths} bathroom{'s' if str(baths) != '1' else ''}")
+    if area:
+        details.append(f"{area} m²")
+    detail_line = ", ".join(details) if details else "thoughtfully proportioned living space"
+    return (
+        f"A distinctive {ptype} in {where}, ready for its next chapter. "
+        f"With {detail_line}, it offers an inviting base for everyday living and weekends away. "
+        f"Ideal for buyers seeking character, comfort and a strong sense of place."
+    )
+
+
+__all__ = ["rewrite_description", "suggest_price", "polish_listing"]

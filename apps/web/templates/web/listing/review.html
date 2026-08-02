@@ -2,13 +2,12 @@
 {% load web_extras %}
 
 {% block seo_head %}
-{% include "web/components/seo_meta.html" with title="Review listing · Vivalty" description="Review your property listing before publishing on Vivalty." robots="noindex, follow" %}
+{% include "web/components/seo_meta.html" with title="Preview your listing · Vivalty" description="AI-polished preview of your property listing before publishing on Vivalty." robots="noindex, follow" %}
 {% endblock %}
 
 {% block content %}
-<div class="bg-ink-50 min-h-[calc(100vh-84px)]">
+<div class="bg-ink-50 min-h-[calc(100vh-84px)]" hx-boost="false">
 
-  {# Progress shows all 5 steps complete, ready to publish #}
   <div class="sticky top-0 z-30 border-b border-ink-200 bg-white/95 backdrop-blur-sm">
     <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
       {% include "web/listing/_progress.html" with rows=progress_rows %}
@@ -18,161 +17,176 @@
   <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
 
     <header class="mb-8">
-      <div class="text-[11px] font-bold uppercase tracking-[0.22em] text-brand-700">Review</div>
+      <div class="text-[11px] font-bold uppercase tracking-[0.22em] text-brand-700">Preview before publish</div>
       <h1 class="mt-2 font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-ink-900 leading-[1.05]">
-        One last look before we send it to the editorial desk.
+        Here’s how buyers will see your listing
       </h1>
       <p class="mt-3 text-sm sm:text-base text-ink-600 max-w-prose leading-relaxed">
-        Owner-submitted listings are reviewed by Vivalty's editorial team and typically go live within 24 hours.
+        {% if just_polished %}
+          Our AI rewrote your title and description in a more attractive editorial style.
+          Review everything below, tweak if you want, then publish.
+        {% else %}
+          This is your full announcement preview. Edit the copy, restore your original text, or publish as-is.
+        {% endif %}
       </p>
     </header>
 
-    <div class="grid lg:grid-cols-[1fr_320px] gap-8 items-start">
-
-      {# ── Listing dossier ─────────────────────────────────────── #}
-      <div class="space-y-5">
-
-        {# Cover image strip #}
-        {% if draft.images %}
-          <div class="grid grid-cols-3 gap-2">
-            {% for img in draft.images|slice:":3" %}
-              <div class="aspect-[4/3] overflow-hidden rounded-xl bg-ink-100">
-                <img src="{{ img.url }}" alt="" class="h-full w-full object-cover">
-              </div>
-            {% endfor %}
-          </div>
-          {% if draft.images|length > 3 %}
-            <div class="text-xs text-ink-500">+{{ draft.images|length|add:"-3" }} more photo{{ draft.images|length|add:"-3"|pluralize }}</div>
+    {% if just_polished or draft.ai_polished %}
+      <div class="mb-6 flex flex-col gap-3 rounded-2xl border border-brand-200 bg-brand-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="text-sm text-brand-900">
+          <span class="font-bold">✨ AI polish applied</span>
+          — title &amp; description rewritten for international buyers.
+        </div>
+        <div class="flex flex-wrap gap-2">
+          {% if has_original %}
+          <form method="post" action="{% url 'web:listing_review' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="restore_original">
+            <button type="submit" class="rounded-lg border border-brand-300 bg-white px-3 py-1.5 text-xs font-semibold text-brand-800 hover:bg-brand-50">
+              Use my original text
+            </button>
+          </form>
           {% endif %}
-        {% else %}
-          <div class="rounded-xl border border-dashed border-amber-300 bg-amber-50 p-4 text-xs text-amber-800">
-            No photos uploaded. Listings with photos receive ~6× more buyer inquiries.
-            <a href="{% url 'web:listing_step' step='photos' %}" class="font-bold underline">Add some →</a>
-          </div>
-        {% endif %}
+          <form method="post" action="{% url 'web:listing_review' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="repolish">
+            <button type="submit" class="rounded-lg bg-brand-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-800">
+              Rewrite with AI again
+            </button>
+          </form>
+        </div>
+      </div>
+    {% endif %}
 
-        {# Title + type #}
-        <section class="card p-6">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400">Listing</div>
-              <h2 class="mt-1 font-display text-2xl font-bold text-ink-900">{{ draft.title }}</h2>
-              <div class="mt-1 text-sm text-ink-600">
-                {{ draft.property_type_display|default:draft.property_type|title }} ·
-                {{ draft.city_name }}, {{ draft.country_name }}
-              </div>
-            </div>
-            <a href="{% url 'web:listing_step' step='type' %}" class="text-xs font-semibold text-brand-700 hover:text-brand-900">Edit</a>
-          </div>
-        </section>
+    <div class="grid lg:grid-cols-[1fr_300px] gap-8 items-start">
 
-        {# Location #}
-        <section class="card p-6">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400">Location</div>
-              <div class="mt-1 text-sm text-ink-900 font-semibold">{{ draft.city_name }}, {{ draft.country_name }}</div>
-              {% if draft.address %}
-                <div class="text-sm text-ink-600">{{ draft.address }}</div>
-              {% endif %}
-              {% if draft.latitude and draft.longitude %}
-                <div class="mt-1 text-[11px] text-ink-400 font-mono">
-                  {{ draft.latitude }}, {{ draft.longitude }}
-                </div>
-              {% endif %}
-            </div>
-            <a href="{% url 'web:listing_step' step='location' %}" class="text-xs font-semibold text-brand-700 hover:text-brand-900">Edit</a>
-          </div>
-        </section>
+      {# ── Buyer-facing announcement preview ───────────────────── #}
+      <article class="overflow-hidden rounded-3xl border border-ink-200 bg-white shadow-xl shadow-ink-900/5">
 
-        {# Specs #}
-        <section class="card p-6">
-          <div class="flex items-start justify-between gap-4">
-            <div class="flex-1">
-              <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400">Specs</div>
-              <div class="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                <div><span class="block text-[10px] uppercase tracking-widest text-ink-400">Bedrooms</span>{{ draft.bedrooms|default:"—" }}</div>
-                <div><span class="block text-[10px] uppercase tracking-widest text-ink-400">Bathrooms</span>{{ draft.bathrooms|default:"—" }}</div>
-                <div><span class="block text-[10px] uppercase tracking-widest text-ink-400">Area</span>{{ draft.area_sqm }} m²</div>
-                <div><span class="block text-[10px] uppercase tracking-widest text-ink-400">Year built</span>{{ draft.year_built|default:"—" }}</div>
-              </div>
-              {% if draft.description %}
-                <p class="mt-4 text-sm text-ink-700 leading-relaxed whitespace-pre-line">{{ draft.description }}</p>
-              {% endif %}
-            </div>
-            <a href="{% url 'web:listing_step' step='specs' %}" class="text-xs font-semibold text-brand-700 hover:text-brand-900 shrink-0">Edit</a>
-          </div>
-        </section>
-
-        {# Price + contact #}
-        <section class="card p-6">
-          <div class="flex items-start justify-between gap-4">
-            <div class="flex-1">
-              <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400">Price &amp; contact</div>
-              <div class="mt-1 font-display text-3xl font-extrabold text-ink-900 tabular-nums">
+        {% if draft.images %}
+          <div class="relative aspect-[16/10] bg-ink-100">
+            <img src="{{ draft.images.0.url }}" alt="" class="h-full w-full object-cover">
+            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-950/70 to-transparent p-5 pt-16">
+              <div class="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight drop-shadow">
                 {{ draft.price|money:draft.currency }}
               </div>
-              <div class="mt-3 grid sm:grid-cols-2 gap-3 text-sm">
-                <div><span class="block text-[10px] uppercase tracking-widest text-ink-400">Contact</span>{{ draft.contact_name }}</div>
-                <div><span class="block text-[10px] uppercase tracking-widest text-ink-400">Email</span>{{ draft.contact_email }}</div>
-                {% if draft.contact_phone %}
-                  <div><span class="block text-[10px] uppercase tracking-widest text-ink-400">Phone</span>{{ draft.contact_phone }}</div>
-                {% endif %}
-                {% if draft.listing_agency %}
-                  <div><span class="block text-[10px] uppercase tracking-widest text-ink-400">Agency</span>{{ draft.listing_agency }}</div>
-                {% endif %}
-                {% if draft.listing_ref %}
-                  <div><span class="block text-[10px] uppercase tracking-widest text-ink-400">Reference</span><span class="font-mono">{{ draft.listing_ref }}</span></div>
-                {% endif %}
-              </div>
             </div>
-            <a href="{% url 'web:listing_step' step='price' %}" class="text-xs font-semibold text-brand-700 hover:text-brand-900 shrink-0">Edit</a>
           </div>
-        </section>
+          {% if draft.images|length > 1 %}
+            <div class="grid grid-cols-4 gap-1 p-1 bg-ink-100">
+              {% for img in draft.images|slice:"1:5" %}
+                <div class="aspect-[4/3] overflow-hidden">
+                  <img src="{{ img.url }}" alt="" class="h-full w-full object-cover">
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% else %}
+          <div class="border-b border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+            No photos yet —
+            <a href="{% url 'web:listing_step' step='photos' %}" class="font-bold underline">add photos</a>
+            for a stronger listing.
+          </div>
+        {% endif %}
 
-        {# Publish bar (sticky on mobile via the inline form) #}
-        <form method="post" action="{% url 'web:listing_publish' %}" class="vv-listing-actions">
-          {% csrf_token %}
-          <a href="{% url 'web:listing_cancel' %}"
-             class="text-xs font-semibold text-ink-500 hover:text-rose-600"
-             onclick="return confirm('Discard this draft? Uploaded photos will be removed.');">
-            Cancel
-          </a>
-          <button type="submit" class="btn-primary rounded-xl px-8 py-3 text-base">
-            Publish listing →
-          </button>
-        </form>
-      </div>
+        <div class="space-y-6 p-6 sm:p-8">
+          <div>
+            <div class="text-[11px] font-bold uppercase tracking-[0.18em] text-brand-700">
+              {{ draft.property_type_display|default:draft.property_type|title }}
+              · {{ draft.city_name }}, {{ draft.country_name }}
+            </div>
+            <h2 class="mt-2 font-display text-2xl sm:text-3xl font-bold tracking-tight text-ink-900 leading-tight">
+              {{ draft.title }}
+            </h2>
+            {% if not draft.images %}
+              <div class="mt-2 font-display text-2xl font-extrabold text-ink-900 tabular-nums">
+                {{ draft.price|money:draft.currency }}
+              </div>
+            {% endif %}
+          </div>
 
-      {# ── Final score + transparency rail ─────────────────────── #}
+          <div class="flex flex-wrap gap-2">
+            {% if draft.bedrooms != '' and draft.bedrooms != None %}
+              <span class="rounded-full bg-ink-100 px-3 py-1 text-xs font-semibold text-ink-800">{{ draft.bedrooms }} bed{{ draft.bedrooms|pluralize }}</span>
+            {% endif %}
+            {% if draft.bathrooms != '' and draft.bathrooms != None %}
+              <span class="rounded-full bg-ink-100 px-3 py-1 text-xs font-semibold text-ink-800">{{ draft.bathrooms }} bath{{ draft.bathrooms|pluralize }}</span>
+            {% endif %}
+            {% if draft.area_sqm %}
+              <span class="rounded-full bg-ink-100 px-3 py-1 text-xs font-semibold text-ink-800">{{ draft.area_sqm }} m²</span>
+            {% endif %}
+            {% if draft.year_built %}
+              <span class="rounded-full bg-ink-100 px-3 py-1 text-xs font-semibold text-ink-800">Built {{ draft.year_built }}</span>
+            {% endif %}
+          </div>
+
+          {% if draft.description %}
+            <div class="prose prose-ink max-w-none text-[15px] leading-relaxed text-ink-700 whitespace-pre-line">
+              {{ draft.description }}
+            </div>
+          {% else %}
+            <p class="text-sm text-ink-500 italic">No description yet — add one in Details or let AI generate it.</p>
+          {% endif %}
+
+          <div class="border-t border-ink-100 pt-5">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400 mb-2">Contact (private to enquiries)</div>
+            <div class="grid sm:grid-cols-2 gap-2 text-sm text-ink-700">
+              <div>{{ draft.contact_name }}</div>
+              <div>{{ draft.contact_email }}</div>
+              {% if draft.contact_phone %}<div>{{ draft.contact_phone }}</div>{% endif %}
+              {% if draft.listing_agency %}<div>{{ draft.listing_agency }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+      </article>
+
+      {# ── Edit + publish rail ─────────────────────────────────── #}
       <aside class="lg:sticky lg:top-28 space-y-4">
+        <details class="card overflow-hidden" {% if not just_polished %}open{% endif %}>
+          <summary class="cursor-pointer list-none px-5 py-4 text-sm font-bold text-ink-900 hover:bg-ink-50">
+            Edit title &amp; description
+          </summary>
+          <form method="post" action="{% url 'web:listing_review' %}" class="border-t border-ink-100 px-5 py-4 space-y-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_edits">
+            <div>
+              <label class="label" for="preview-title">Title</label>
+              <input id="preview-title" name="title" type="text" maxlength="200" class="input"
+                     value="{{ draft.title }}">
+            </div>
+            <div>
+              <label class="label" for="preview-description">Description</label>
+              <textarea id="preview-description" name="description" rows="8" class="input">{{ draft.description }}</textarea>
+            </div>
+            <button type="submit" class="btn-secondary w-full justify-center text-sm">Save edits</button>
+          </form>
+        </details>
+
         {% include "web/listing/_score_preview.html" with score=score draft=draft %}
 
-        {% if score and score.breakdown.strengths %}
-          <div class="card p-4 space-y-2">
-            <div class="text-[10px] font-bold uppercase tracking-widest text-emerald-700">Strengths</div>
-            <ul class="space-y-1.5 text-[12px] text-ink-700">
-              {% for s in score.breakdown.strengths|slice:":4" %}
-                <li class="flex gap-1.5"><span class="text-emerald-500 shrink-0">✓</span><span>{{ s }}</span></li>
-              {% endfor %}
-            </ul>
-          </div>
-        {% endif %}
+        <div class="flex flex-wrap gap-2 text-xs">
+          <a href="{% url 'web:listing_step' step='type' %}" class="rounded-lg border border-ink-200 bg-white px-2.5 py-1.5 font-semibold text-ink-600 hover:border-brand-300 hover:text-brand-700">Type</a>
+          <a href="{% url 'web:listing_step' step='location' %}" class="rounded-lg border border-ink-200 bg-white px-2.5 py-1.5 font-semibold text-ink-600 hover:border-brand-300 hover:text-brand-700">Location</a>
+          <a href="{% url 'web:listing_step' step='specs' %}" class="rounded-lg border border-ink-200 bg-white px-2.5 py-1.5 font-semibold text-ink-600 hover:border-brand-300 hover:text-brand-700">Details</a>
+          <a href="{% url 'web:listing_step' step='photos' %}" class="rounded-lg border border-ink-200 bg-white px-2.5 py-1.5 font-semibold text-ink-600 hover:border-brand-300 hover:text-brand-700">Photos</a>
+          <a href="{% url 'web:listing_step' step='price' %}" class="rounded-lg border border-ink-200 bg-white px-2.5 py-1.5 font-semibold text-ink-600 hover:border-brand-300 hover:text-brand-700">Price</a>
+        </div>
 
-        {% if score and score.breakdown.risks %}
-          <div class="card p-4 space-y-2">
-            <div class="text-[10px] font-bold uppercase tracking-widest text-amber-700">Watch outs</div>
-            <ul class="space-y-1.5 text-[12px] text-ink-700">
-              {% for r in score.breakdown.risks|slice:":4" %}
-                <li class="flex gap-1.5"><span class="text-amber-500 shrink-0">⚠</span><span>{{ r }}</span></li>
-              {% endfor %}
-            </ul>
-          </div>
-        {% endif %}
+        <form method="post" action="{% url 'web:listing_publish' %}" class="space-y-3">
+          {% csrf_token %}
+          <button type="submit" class="btn-primary w-full justify-center rounded-xl px-6 py-3.5 text-base">
+            Publish listing →
+          </button>
+          <a href="{% url 'web:listing_cancel' %}"
+             class="block text-center text-xs font-semibold text-ink-500 hover:text-rose-600"
+             onclick="return confirm('Discard this draft? Uploaded photos will be removed.');">
+            Cancel draft
+          </a>
+        </form>
 
         <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-[12px] text-amber-900 leading-relaxed">
           <div class="font-bold mb-1">What happens next?</div>
-          We review every owner-submitted listing for accuracy and quality. You'll get an email when it's live to buyers — usually within 24h.
+          We review every listing for accuracy and quality. You’ll get an email when it’s live — usually within 24h.
         </div>
       </aside>
     </div>

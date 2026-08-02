@@ -1850,6 +1850,17 @@ def _handle_step_post(request: HttpRequest, step: str) -> HttpResponse:
             request, {"property_type_display": dict(PropertyType.choices).get(ptype, ptype)}
         )
 
+    # Title / description edits invalidate AI polish so review rewrites again.
+    if step in {"type", "specs"}:
+        listing_wizard.update_draft(
+            request,
+            {
+                "ai_polished": False,
+                "title_original": "",
+                "description_original": "",
+            },
+        )
+
     nxt = listing_wizard.next_step(step)
     if nxt is None:
         return redirect("web:listing_review")
@@ -1868,6 +1879,70 @@ def listing_review(request: HttpRequest) -> HttpResponse:
                 return redirect("web:listing_step", step=s)
         return redirect("web:listing_start")
 
+    # Manual actions on the preview (restore original / re-polish / save edits).
+    if request.method == "POST":
+        action = (request.POST.get("action") or "").strip()
+        if action == "restore_original":
+            updates: dict = {}
+            if draft.get("title_original"):
+                updates["title"] = draft["title_original"]
+            if draft.get("description_original") is not None:
+                updates["description"] = draft["description_original"]
+            updates["ai_polished"] = False
+            listing_wizard.update_draft(request, updates)
+            messages.info(request, "Restored your original wording.")
+            return redirect("web:listing_review")
+        if action == "repolish":
+            seed = {
+                **draft,
+                "title": draft.get("title_original") or draft.get("title") or "",
+                "description": (
+                    draft["description_original"]
+                    if "description_original" in draft
+                    else (draft.get("description") or "")
+                ),
+            }
+            polished = listing_ai.polish_listing(seed)
+            listing_wizard.update_draft(
+                request,
+                {
+                    "title": polished["title"] or seed["title"],
+                    "description": polished["description"] or seed["description"],
+                    "ai_polished": True,
+                },
+            )
+            messages.success(request, "AI rewrote your listing again.")
+            return redirect("web:listing_review")
+        if action == "save_edits":
+            title = (request.POST.get("title") or "").strip()
+            description = (request.POST.get("description") or "").strip()
+            updates = {}
+            if title:
+                updates["title"] = title[:200]
+            updates["description"] = description
+            listing_wizard.update_draft(request, updates)
+            messages.success(request, "Preview updated.")
+            return redirect("web:listing_review")
+
+    # Auto AI polish once when the owner reaches the pre-publish preview.
+    just_polished = False
+    if not draft.get("ai_polished"):
+        original_title = draft.get("title") or ""
+        original_desc = draft.get("description") or ""
+        polished = listing_ai.polish_listing(draft)
+        listing_wizard.update_draft(
+            request,
+            {
+                "title_original": original_title,
+                "description_original": original_desc,
+                "title": polished["title"] or original_title,
+                "description": polished["description"] or original_desc,
+                "ai_polished": True,
+            },
+        )
+        draft = listing_wizard.get_draft(request)
+        just_polished = True
+
     return render(
         request,
         "web/listing/review.html",
@@ -1876,6 +1951,10 @@ def listing_review(request: HttpRequest) -> HttpResponse:
             "score": listing_wizard.score_preview(draft),
             "progress_rows": listing_wizard.progress(draft, "price"),
             "step_labels": listing_wizard.STEP_LABELS,
+            "just_polished": just_polished,
+            "has_original": bool(
+                draft.get("title_original") or draft.get("description_original")
+            ),
         },
     )
 
