@@ -1,25 +1,41 @@
-{# High-visibility company identity — inside footer (or standalone on minimal layouts). #}
+{# High-visibility company identity — first block in footer so it sits right below page CTAs. #}
 {% load web_extras %}
 <section
-  class="border-t border-amber-200/40 bg-gradient-to-b from-amber-50 to-[#f5f0e6] text-amber-950"
+  class="border-b border-amber-200 bg-amber-50 text-amber-900"
+  style="background: linear-gradient(180deg, #fffbeb 0%, #f5f0e6 100%); color: #451a03;"
   aria-labelledby="footer-trust-heading"
 >
   <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
-    <p id="footer-trust-heading" class="text-center text-[11px] font-bold uppercase tracking-[0.28em] text-amber-800/90">
+    <p id="footer-trust-heading" class="text-center text-[11px] font-bold uppercase tracking-[0.28em] text-amber-800">
       Verified operator
     </p>
-    <p class="mt-3 text-center font-display text-2xl font-semibold tracking-tight text-amber-950 sm:text-3xl">
+    <p class="mt-3 text-center font-display text-2xl font-semibold tracking-tight text-amber-900 sm:text-3xl">
       {{ COMPANY_LEGAL_NAME }}
     </p>
-    <p class="mx-auto mt-3 max-w-3xl text-center text-sm font-medium leading-relaxed text-amber-900/90 sm:text-base">
+    <p class="mx-auto mt-3 max-w-3xl text-center text-sm font-medium leading-relaxed text-amber-900 sm:text-base">
       Wyoming limited liability company · United States
-      {% if COMPANY_EIN %}<span class="text-amber-800/80"> · EIN {{ COMPANY_EIN }}</span>{% endif %}
+      {% if COMPANY_EIN %}<span class="text-amber-700"> · EIN {{ COMPANY_EIN }}</span>{% endif %}
+    </p>
+    <p class="mx-auto mt-4 max-w-5xl text-center text-xs font-semibold leading-relaxed sm:text-sm lg:hidden">
+      {{ COMPANY_REGISTERED_ADDRESS }}
+      <span class="mx-1.5 text-amber-600">·</span>
+      {% if COMPANY_WHATSAPP %}
+      <a href="https://wa.me/{{ COMPANY_WHATSAPP|digits }}" class="font-bold text-emerald-800 underline underline-offset-2" rel="noopener noreferrer" target="_blank">WhatsApp +{{ COMPANY_WHATSAPP|digits }}</a>
+      <span class="mx-1.5 text-amber-600">·</span>
+      {% endif %}
+      {% if COMPANY_PHONE %}
+      <a href="tel:{{ COMPANY_PHONE|digits }}" class="underline underline-offset-2">{{ COMPANY_PHONE }}</a>
+      <span class="mx-1.5 text-amber-600">·</span>
+      {% endif %}
+      <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}" class="underline underline-offset-2">{{ COMPANY_SUPPORT_EMAIL }}</a>
+      <span class="mx-1.5 text-amber-600">·</span>
+      <a href="{% url 'web:legal_notice' %}" class="underline underline-offset-2">Legal notice</a>
     </p>
 
-    <div class="mx-auto mt-8 grid max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="mx-auto mt-8 hidden max-w-4xl gap-6 lg:grid lg:grid-cols-3">
       <div class="rounded-2xl border border-amber-200/80 bg-white/60 px-5 py-4 text-center shadow-sm sm:text-left">
         <p class="text-[10px] font-bold uppercase tracking-widest text-amber-700">Registered address</p>
-        <p class="mt-2 text-sm font-semibold leading-relaxed text-amber-950 sm:text-base">{{ COMPANY_REGISTERED_ADDRESS }}</p>
+        <p class="mt-2 text-sm font-semibold leading-relaxed text-amber-900 sm:text-base">{{ COMPANY_REGISTERED_ADDRESS }}</p>
       </div>
 
       <div class="flex flex-col gap-3 rounded-2xl border border-amber-200/80 bg-white/60 px-5 py-4 shadow-sm">
@@ -33,20 +49,20 @@
         {% endif %}
         {% if COMPANY_PHONE %}
         <a href="tel:{{ COMPANY_PHONE|digits }}"
-           class="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-300 bg-white px-4 py-3 text-sm font-bold text-amber-950 transition hover:border-amber-400 sm:justify-start">
+           class="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-300 bg-white px-4 py-3 text-sm font-bold text-amber-900 transition hover:border-amber-400 sm:justify-start">
           {{ COMPANY_PHONE }}
         </a>
         {% endif %}
         <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}"
-           class="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-300 bg-white px-4 py-3 text-sm font-bold text-amber-950 transition hover:border-amber-400 sm:justify-start">
+           class="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-300 bg-white px-4 py-3 text-sm font-bold text-amber-900 transition hover:border-amber-400 sm:justify-start">
           {{ COMPANY_SUPPORT_EMAIL }}
         </a>
       </div>
 
-      <div class="flex flex-col items-center justify-center gap-3 rounded-2xl border border-amber-200/80 bg-white/60 px-5 py-4 text-center shadow-sm sm:col-span-2 lg:col-span-1">
+      <div class="flex flex-col items-center justify-center gap-3 rounded-2xl border border-amber-200/80 bg-white/60 px-5 py-4 text-center shadow-sm">
         <p class="text-[10px] font-bold uppercase tracking-widest text-amber-700">Legal</p>
         <a href="{% url 'web:legal_notice' %}"
-           class="text-base font-bold text-amber-950 underline underline-offset-4 transition hover:text-amber-800">
+           class="text-base font-bold text-amber-900 underline underline-offset-4 transition hover:text-amber-700">
           Legal notice
         </a>
         <a href="{% url 'web:contact' %}" class="text-sm font-semibold text-amber-800 underline underline-offset-2 hover:text-amber-950">
