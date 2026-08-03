@@ -1,5 +1,5 @@
 {% load web_extras %}
-<a href="{% url 'web:property_detail' p.id %}"
+<a href="{{ p.get_absolute_url }}"
    class="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-card border border-ink-200/60
           transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-brand-200">
 

@@ -1536,9 +1536,9 @@
 
   .vv-hero {
     @apply relative isolate;
-    background-color: #eef7fb;
-    min-height: clamp(620px, 68vw, 820px);
-    overflow: visible;
+    background-color: #0f172a;
+    min-height: clamp(640px, 72vw, 860px);
+    overflow: hidden;
   }
   .vv-hero-bg {
     @apply absolute inset-0 overflow-hidden;
@@ -1556,28 +1556,61 @@
     display: none;
     background: transparent;
   }
-  /* Soft radial scrim sitting only behind the headline area
-     so the hero photo edges stay bright but text contrast is safe. */
+  /* Deep center vignette so brand + headline stay readable on bright sunsets */
   .vv-hero-vignette {
     @apply absolute inset-0 pointer-events-none;
     background:
-      radial-gradient(ellipse 70% 55% at 50% 38%, rgba(8, 14, 30, 0.42) 0%, rgba(8, 14, 30, 0.18) 35%, transparent 70%),
-      linear-gradient(to bottom, rgba(8, 14, 30, 0.28) 0%, transparent 32%);
+      radial-gradient(ellipse 78% 62% at 50% 36%, rgba(8, 14, 30, 0.55) 0%, rgba(8, 14, 30, 0.28) 42%, transparent 72%),
+      linear-gradient(to bottom, rgba(8, 14, 30, 0.55) 0%, rgba(8, 14, 30, 0.18) 38%, transparent 58%),
+      linear-gradient(to top, rgba(8, 14, 30, 0.45) 0%, transparent 28%);
+  }
+
+  .vv-hero-brand {
+    margin: 0 0 0.85rem;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: clamp(1.65rem, 3.2vw, 2.15rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: #f8fafc;
+    text-shadow: 0 4px 24px rgba(8, 14, 30, 0.65);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .vv-hero-brand {
+      animation: vvHeroFadeUp 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .vv-hero-title {
+      animation: vvHeroFadeUp 780ms cubic-bezier(0.16, 1, 0.3, 1) 80ms both;
+    }
+    .vv-hero-lede {
+      animation: vvHeroFadeUp 780ms cubic-bezier(0.16, 1, 0.3, 1) 140ms both;
+    }
+    .vv-filter-stack {
+      animation: vvHeroFadeUp 820ms cubic-bezier(0.16, 1, 0.3, 1) 200ms both;
+    }
+    .vv-coverflow {
+      animation: vvHeroFadeUp 860ms cubic-bezier(0.16, 1, 0.3, 1) 280ms both;
+    }
+  }
+  @keyframes vvHeroFadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   /* Headline (elegant serif, mixed italic accent) */
   .vv-hero-title {
     @apply font-medium tracking-tight text-white;
     font-family: "Playfair Display", "Cormorant Garamond", Georgia, serif;
-    font-size: clamp(2.5rem, 6vw, 5rem);
-    line-height: 1.04;
-    letter-spacing: -0.005em;
-    text-shadow: 0 6px 28px rgba(8, 14, 30, 0.7), 0 2px 8px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(0, 0, 0, 0.2);
+    font-size: clamp(2.35rem, 5.4vw, 4.35rem);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    max-width: 16ch;
+    text-shadow: 0 8px 32px rgba(8, 14, 30, 0.75), 0 2px 8px rgba(0, 0, 0, 0.45);
   }
   .vv-hero-title-em {
     font-style: italic;
     font-weight: 500;
-    color: #f5d486; /* warm champagne */
+    color: #f5d486;
     font-family: inherit;
   }
   .vv-hero-subtitle {
@@ -1597,21 +1630,17 @@
     letter-spacing: 0.32em;
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
   }
-  /* Proptech value-prop line under the headline — short, single-line
-     pitch (AI + 7 markets + 60s). Kept tight so it doesn't crowd the hero. */
   .vv-hero-lede {
-    @apply mt-4 sm:mt-5 max-w-2xl text-white/90;
+    @apply mt-3 sm:mt-4 max-w-xl text-white/90;
     font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
-    font-size: clamp(0.95rem, 1.15vw, 1.05rem);
+    font-size: clamp(0.95rem, 1.1vw, 1.05rem);
     font-weight: 400;
-    line-height: 1.5;
-    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.3);
+    line-height: 1.55;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55);
   }
   .vv-hero-lede strong {
     @apply font-semibold text-white;
   }
-  /* Secondary CTA row pointing at methodology + simulator (the real
-     differentiators). Quiet styling so the primary Search CTA still wins. */
   .vv-hero-meta {
     @apply mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[12px] text-white/75;
     text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
@@ -1625,80 +1654,76 @@
 
   /* Filter stack — Buy/Rent tabs + white bar */
   .vv-filter-stack {
-    @apply relative z-[80] mx-auto w-full max-w-[44.8rem];
+    @apply relative z-[80] mx-auto mt-7 w-full max-w-[46rem] sm:mt-9;
   }
   .vv-filter-purpose {
-    @apply mb-3 flex items-center justify-center gap-2 sm:gap-2.5;
+    @apply mb-3.5 flex items-center justify-center gap-2;
   }
   .vv-purpose-btn {
-    @apply relative inline-flex items-center gap-2 rounded-full px-4 py-2 sm:px-5 sm:py-2.5
-           text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[0.14em]
-           border border-white/30 text-white/80 backdrop-blur-xl
-           shadow-[0_8px_28px_-8px_rgba(0,0,0,0.45)]
-           transition-all duration-300 ease-out
+    @apply relative inline-flex items-center gap-2 rounded-full px-5 py-2.5
+           text-[11px] font-bold uppercase tracking-[0.16em]
+           border border-white/25 text-white/85 backdrop-blur-xl
+           transition-all duration-200 ease-out
            focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/80 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent;
-    background: rgba(255, 255, 255, 0.14);
-    transform: translateY(0) scale(1);
+    background: rgba(15, 23, 42, 0.28);
   }
   .vv-purpose-icon {
-    @apply h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 opacity-90;
-    transition: transform 0.3s ease;
+    @apply h-3.5 w-3.5 shrink-0 opacity-90;
   }
   .vv-purpose-btn.is-active {
-    @apply border-white bg-white text-ink-900;
+    @apply border-white/90 bg-white text-ink-900;
     box-shadow:
-      0 14px 36px -10px rgba(0, 0, 0, 0.5),
-      0 0 0 1px rgba(245, 212, 134, 0.45),
-      inset 0 1px 0 rgba(255, 255, 255, 0.9);
-    transform: translateY(-3px) scale(1.05);
+      0 12px 28px -10px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(245, 212, 134, 0.35);
   }
   .vv-purpose-btn.is-active .vv-purpose-icon {
-    @apply text-sky-700 opacity-100;
-    transform: scale(1.08);
+    @apply text-sky-800 opacity-100;
   }
   @media (prefers-reduced-motion: no-preference) {
     .vv-purpose-btn:not(.is-active):hover {
       @apply border-white/40 text-white;
-      background: rgba(255, 255, 255, 0.22);
-      transform: translateY(-4px) scale(1.04);
-      box-shadow:
-        0 16px 40px -10px rgba(0, 0, 0, 0.55),
-        0 0 24px -6px rgba(245, 212, 134, 0.2);
+      background: rgba(255, 255, 255, 0.14);
+      transform: translateY(-1px);
     }
-    .vv-purpose-btn:not(.is-active):active {
-      transform: translateY(-1px) scale(1.02);
+    .vv-purpose-btn:not(.is-active):active,
+    .vv-purpose-btn.is-active:active {
+      transform: translateY(0) scale(0.98);
     }
     .vv-purpose-btn.is-active:hover {
-      transform: translateY(-4px) scale(1.06);
+      transform: translateY(-1px);
     }
   }
 
-  /* Filter bar — compact (~30% smaller than original) */
+  /* Search bar — crisp, editorial, trusted */
   .vv-filter {
-    @apply relative w-full rounded-lg bg-white shadow-[0_12px_30px_-10px_rgba(15,23,42,0.5)];
-    border: 1px solid rgba(226, 232, 240, 0.9);
-    padding: 0.4rem;
+    @apply relative w-full rounded-2xl bg-white;
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    padding: 0.45rem;
+    box-shadow:
+      0 24px 50px -18px rgba(8, 14, 30, 0.55),
+      0 0 0 1px rgba(15, 23, 42, 0.04);
   }
   .vv-filter-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 0.35rem;
+    gap: 0.25rem;
   }
   @media (min-width: 640px) {
     .vv-filter-grid {
-      /* 3 filters (Country / Property type / Price range) + Search CTA */
       grid-template-columns: 1.2fr 1.05fr 1.05fr auto;
       gap: 0;
       align-items: stretch;
     }
   }
   .vv-filter-field {
-    @apply relative block cursor-pointer px-2 py-1.5;
+    @apply relative block cursor-pointer px-3 py-2;
     transition: background-color 150ms ease;
+    border-radius: 0.85rem;
   }
   @media (min-width: 640px) {
     .vv-filter-field {
-      @apply px-2.5;
+      @apply px-3.5 py-2.5;
+      border-radius: 0;
       border-right: 1px solid rgb(226, 232, 240);
     }
     .vv-filter-field:last-of-type {
@@ -1708,22 +1733,20 @@
   .vv-filter-field:hover {
     background-color: rgb(248, 250, 252);
   }
-  /* Muted grey labels — gold is reserved for the italic "Global" word
-     in the headline so the accent stays expensive and singular. */
   .vv-filter-label {
-    @apply block text-[8px] font-bold uppercase tracking-[0.14em] text-ink-500;
+    @apply block text-[9px] font-bold uppercase tracking-[0.16em] text-ink-500;
   }
   .vv-filter-control {
     @apply mt-0.5 flex items-center gap-1.5;
   }
   .vv-filter-icon {
-    @apply h-3 w-3 shrink-0 text-ink-500;
+    @apply h-3.5 w-3.5 shrink-0 text-ink-500;
   }
   .vv-filter-trigger {
     @apply mt-0.5 flex w-full items-center gap-1.5 rounded-md text-left
-           text-[11px] font-semibold text-ink-900 transition-colors duration-150
-           focus:outline-none focus:ring-2 focus:ring-sky-500/15;
-    min-height: 1.25rem;
+           text-[13px] font-semibold text-ink-900 transition-colors duration-150
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/20;
+    min-height: 1.35rem;
   }
   .vv-filter-value {
     @apply min-w-0 flex-1 truncate;
@@ -1732,7 +1755,7 @@
     @apply h-2.5 w-2.5 shrink-0 text-ink-500 transition-transform duration-150;
   }
   .vv-filter-choice.is-open {
-    @apply bg-sky-50/70;
+    @apply bg-sky-50/80;
     z-index: 90;
   }
   .vv-filter-choice.is-open .vv-filter-caret {
@@ -1788,22 +1811,38 @@
     box-shadow: none;
   }
   .vv-filter-cta {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg
-           bg-gradient-to-br from-sky-700 to-sky-900 hover:from-sky-800 hover:to-sky-950
-           px-3.5 py-2 text-[9px] font-extrabold tracking-[0.1em] uppercase text-white
-           shadow-md shadow-sky-900/30 hover:shadow-lg
-           transition-all duration-150;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl
+           bg-gradient-to-br from-sky-800 to-slate-900 hover:from-sky-900 hover:to-slate-950
+           px-5 py-3 text-[11px] font-bold tracking-[0.12em] uppercase text-white
+           shadow-[0_10px_24px_-8px_rgba(15,23,42,0.55)]
+           transition-all duration-150
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2;
+  }
+  .vv-filter-cta:hover {
+    transform: translateY(-1px);
+  }
+  .vv-filter-cta:active {
+    transform: translateY(0) scale(0.98);
   }
   .vv-filter-cta svg {
-    @apply h-3 w-3;
+    @apply h-3.5 w-3.5;
   }
   @media (min-width: 640px) {
     .vv-filter-cta {
-      @apply m-0.5;
+      @apply m-0.5 self-stretch px-6;
     }
   }
 
-  /* Trust strip under the filter */
+  .vv-hero-trustline {
+    @apply mt-3.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1
+           text-[11px] font-medium tracking-wide text-white/75 sm:text-xs;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+  }
+  .vv-hero-trustline-sep {
+    @apply text-white/35;
+  }
+
+  /* Legacy trust pill */
   .vv-hero-trust {
     @apply mx-auto mt-6 sm:mt-7 inline-flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-5 gap-y-1
            rounded-full border border-white/25 bg-white/10 px-5 py-2 text-[12px] sm:text-sm font-medium text-white/90 backdrop-blur-md;
@@ -1965,209 +2004,60 @@
     line-height: 1.1;
   }
 
-  /* ── Hero country coverflow (3D fan like reference mockup) ─ */
+  /* ── Hero market rail (Three.js circular coverflow) ─ */
   .vv-coverflow {
-    @apply relative mx-auto w-full max-w-6xl px-8 sm:px-14;
+    @apply relative mx-auto mt-8 w-full max-w-5xl px-10 sm:mt-10 sm:px-14;
+    outline: none;
+  }
+  .vv-coverflow:focus-visible {
+    box-shadow: 0 0 0 2px rgba(245, 212, 134, 0.55);
+    border-radius: 1rem;
+  }
+  .vv-coverflow-label {
+    @apply mb-4 text-[10px] font-bold uppercase tracking-[0.28em] text-white/70;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
   }
   .vv-coverflow-stage {
     position: relative;
-    height: clamp(9.5rem, 22vw, 13.5rem);
-    perspective: 1600px;
-    perspective-origin: 50% 42%;
+    height: clamp(13rem, 34vw, 19rem);
     overflow: visible;
   }
-  .vv-coverflow-track {
-    position: absolute;
-    inset: 0;
-    transform-style: preserve-3d;
+  .vv-coverflow-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: pan-y;
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 0.55s ease;
   }
-  .vv-coverflow-item {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: clamp(5.25rem, 11vw, 7.75rem);
-    height: clamp(6.75rem, 14vw, 9.75rem);
-    margin-left: calc(clamp(5.25rem, 11vw, 7.75rem) / -2);
-    margin-top: calc(clamp(6.75rem, 14vw, 9.75rem) / -2);
-    transform-style: preserve-3d;
-    transition:
-      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-      opacity 0.45s ease,
-      filter 0.45s ease;
-    will-change: transform, opacity;
-    pointer-events: none;
-  }
-  .vv-coverflow-item[data-offset="hidden"] {
-    opacity: 0 !important;
-    pointer-events: none !important;
-    transform: translateX(0) translateZ(-120px) rotateY(0deg) scale(0.4) !important;
-  }
-
-  /* Cover-flow positions */
-  .vv-coverflow-item[data-offset="0"] {
-    transform: translateX(0) translateZ(100px) rotateY(0deg) scale(1.08);
-    z-index: 10;
-    pointer-events: auto;
-    filter: brightness(1);
-  }
-  .vv-coverflow-item[data-offset="-1"] {
-    transform: translateX(-5.75rem) translateZ(45px) rotateY(32deg) scale(0.9);
-    z-index: 9;
-    pointer-events: auto;
-    filter: brightness(0.92);
-  }
-  .vv-coverflow-item[data-offset="1"] {
-    transform: translateX(5.75rem) translateZ(45px) rotateY(-32deg) scale(0.9);
-    z-index: 9;
-    pointer-events: auto;
-    filter: brightness(0.92);
-  }
-  .vv-coverflow-item[data-offset="-2"] {
-    transform: translateX(-10.5rem) translateZ(10px) rotateY(48deg) scale(0.78);
-    z-index: 8;
-    pointer-events: auto;
-    filter: brightness(0.85);
-  }
-  .vv-coverflow-item[data-offset="2"] {
-    transform: translateX(10.5rem) translateZ(10px) rotateY(-48deg) scale(0.78);
-    z-index: 8;
-    pointer-events: auto;
-    filter: brightness(0.85);
-  }
-  .vv-coverflow-item[data-offset="-3"] {
-    transform: translateX(-14.5rem) translateZ(-30px) rotateY(58deg) scale(0.66);
-    z-index: 7;
-    pointer-events: auto;
-    filter: brightness(0.78);
-  }
-  .vv-coverflow-item[data-offset="3"] {
-    transform: translateX(14.5rem) translateZ(-30px) rotateY(-58deg) scale(0.66);
-    z-index: 7;
-    pointer-events: auto;
-    filter: brightness(0.78);
-  }
-
-  @media (min-width: 640px) {
-    .vv-coverflow-item[data-offset="-1"] { transform: translateX(-6.75rem) translateZ(45px) rotateY(32deg) scale(0.9); }
-    .vv-coverflow-item[data-offset="1"]  { transform: translateX(6.75rem) translateZ(45px) rotateY(-32deg) scale(0.9); }
-    .vv-coverflow-item[data-offset="-2"] { transform: translateX(-12.25rem) translateZ(10px) rotateY(48deg) scale(0.78); }
-    .vv-coverflow-item[data-offset="2"]  { transform: translateX(12.25rem) translateZ(10px) rotateY(-48deg) scale(0.78); }
-    .vv-coverflow-item[data-offset="-3"] { transform: translateX(-17rem) translateZ(-30px) rotateY(58deg) scale(0.66); }
-    .vv-coverflow-item[data-offset="3"]  { transform: translateX(17rem) translateZ(-30px) rotateY(-58deg) scale(0.66); }
-  }
-
-  /* Peek toward center on hover */
-  @media (prefers-reduced-motion: no-preference) {
-    .vv-coverflow-item.is-peek[data-offset="-1"] {
-      transform: translateX(-4.25rem) translateZ(70px) rotateY(16deg) scale(0.96);
-      filter: brightness(1);
-    }
-    .vv-coverflow-item.is-peek[data-offset="1"] {
-      transform: translateX(4.25rem) translateZ(70px) rotateY(-16deg) scale(0.96);
-      filter: brightness(1);
-    }
-    .vv-coverflow-item.is-peek[data-offset="-2"] {
-      transform: translateX(-8.5rem) translateZ(35px) rotateY(30deg) scale(0.84);
-      filter: brightness(0.95);
-    }
-    .vv-coverflow-item.is-peek[data-offset="2"] {
-      transform: translateX(8.5rem) translateZ(35px) rotateY(-30deg) scale(0.84);
-      filter: brightness(0.95);
-    }
-    .vv-coverflow-item.is-peek[data-offset="-3"] {
-      transform: translateX(-12rem) translateZ(0px) rotateY(42deg) scale(0.74);
-      filter: brightness(0.9);
-    }
-    .vv-coverflow-item.is-peek[data-offset="3"] {
-      transform: translateX(12rem) translateZ(0px) rotateY(-42deg) scale(0.74);
-      filter: brightness(0.9);
-    }
-    .vv-coverflow-item.is-peek .vv-coverflow-card {
-      box-shadow:
-        0 28px 55px -14px rgba(0, 0, 0, 0.7),
-        0 0 0 1px rgba(255, 255, 255, 0.15);
-    }
-    .vv-coverflow-item[data-offset="0"] .vv-coverflow-card:hover {
-      transform: translateZ(12px) scale(1.02);
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .vv-coverflow-item { transition: opacity 0.2s ease; }
-  }
-
-  .vv-coverflow-card {
-    @apply relative block h-full w-full overflow-hidden rounded-2xl ring-1 ring-white/20;
-    transform-style: preserve-3d;
-    box-shadow: 0 22px 50px -18px rgba(0, 0, 0, 0.65);
-    transition:
-      box-shadow 0.4s ease,
-      transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .vv-coverflow-card .vv-dest-bg {
+  .vv-coverflow.is-ready .vv-coverflow-canvas {
     opacity: 1;
-    transform: scale(1);
   }
-  .vv-coverflow-card:hover .vv-dest-bg.is-loaded {
-    transform: scale(1.06);
+  .vv-coverflow.is-dragging .vv-coverflow-canvas {
+    cursor: grabbing;
   }
-
-  .vv-coverflow-chip {
-    @apply absolute left-1/2 bottom-2.5 z-10 flex -translate-x-1/2 items-center gap-1
-           rounded-full bg-white px-2.5 py-1 shadow-md;
-    max-width: calc(100% - 0.75rem);
-  }
-  .vv-coverflow-flag {
-    @apply text-[11px] leading-none shrink-0;
-  }
-  .vv-coverflow-code {
-    @apply text-[9px] font-extrabold uppercase tracking-wide text-ink-500 shrink-0;
-    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
-  }
-  .vv-coverflow-name {
-    @apply truncate text-[9px] font-extrabold uppercase tracking-wide text-ink-900;
-    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
-    max-width: 4.5rem;
-  }
-  @media (min-width: 640px) {
-    .vv-coverflow-chip { @apply bottom-3 px-3 py-1.5 gap-1.5; }
-    .vv-coverflow-flag { @apply text-xs; }
-    .vv-coverflow-code,
-    .vv-coverflow-name { @apply text-[10px]; }
-    .vv-coverflow-name { max-width: 5.5rem; }
-  }
-
   .vv-coverflow-nav {
-    @apply absolute top-1/2 z-20 -translate-y-1/2 flex items-center justify-center
-           border-0 bg-transparent p-2 text-white/90
+    @apply absolute top-1/2 z-20 -translate-y-1/2 flex h-10 w-10 items-center justify-center
+           rounded-full border border-white/25 bg-black/25 text-white/90 backdrop-blur-md
            transition-all duration-200
-           hover:text-white hover:scale-110
+           hover:border-white/45 hover:bg-black/40 hover:text-white hover:scale-105
+           active:scale-95
            focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent;
   }
   .vv-coverflow-nav svg {
-    width: clamp(1.75rem, 4vw, 2.5rem);
-    height: clamp(1.75rem, 4vw, 2.5rem);
-    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.45));
+    width: 1.25rem;
+    height: 1.25rem;
   }
   .vv-coverflow-nav--prev { left: 0; }
   .vv-coverflow-nav--next { right: 0; }
 
-  /* Tighter fan on small phones — show center + 1 each side */
   @media (max-width: 479px) {
-    .vv-coverflow { @apply px-6; }
-    .vv-coverflow-item[data-offset="-2"],
-    .vv-coverflow-item[data-offset="2"],
-    .vv-coverflow-item[data-offset="-3"],
-    .vv-coverflow-item[data-offset="3"] {
-      opacity: 0 !important;
-      pointer-events: none !important;
-    }
-    .vv-coverflow-item[data-offset="-1"] {
-      transform: translateX(-4.5rem) translateZ(35px) rotateY(34deg) scale(0.82);
-    }
-    .vv-coverflow-item[data-offset="1"] {
-      transform: translateX(4.5rem) translateZ(35px) rotateY(-34deg) scale(0.82);
-    }
+    .vv-coverflow { @apply px-8; }
+    .vv-coverflow-stage { height: clamp(11.5rem, 52vw, 15rem); }
   }
+
+
 }
 
 /* ──────────────────────────────────────────────────────────────

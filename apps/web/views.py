@@ -20,6 +20,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg, Count, F, Max, Min, Q
 from django.http import (
+    Http404,
     HttpRequest,
     HttpResponse,
     HttpResponseBadRequest,
@@ -150,6 +151,7 @@ def robots_txt(request: HttpRequest) -> HttpResponse:
         "Disallow: /list/",
         "Allow: /list/become-owner/",
         "Disallow: /chat/",
+        "Disallow: /*/story/",
     ]
     if not settings.SHOW_INVESTMENT_FEATURES:
         lines += [
@@ -225,6 +227,16 @@ def home(request: HttpRequest) -> HttpResponse:
         hero_countries.extend(c for c in countries if c.code not in seen)
         hero_countries = hero_countries[:7]
 
+    marketplace_url = reverse("web:marketplace")
+    hero_coverflow_data = [
+        {
+            "code": c.code,
+            "label": "UAE" if c.code == "AE" else ("UK" if c.code == "GB" else c.name),
+            "href": f"{marketplace_url}?country={c.code}",
+        }
+        for c in hero_countries
+    ]
+
     # Cities grouped by country code — JSON-serialised for the hero search bar
     # so clicking a country card can repopulate the city dropdown client-side.
     cities_by_country: dict[str, list[dict[str, str]]] = {}
@@ -293,6 +305,7 @@ def home(request: HttpRequest) -> HttpResponse:
             "hero_gallery": hero_gallery,
             "countries": countries,
             "hero_countries": hero_countries,
+            "hero_coverflow_data": hero_coverflow_data,
             "cities_by_country": cities_by_country,
             "stats": stats,
             "investor_form": investor_form,
@@ -331,10 +344,24 @@ def _default_testimonials():
     ]
 
 
-def marketplace(request: HttpRequest) -> HttpResponse:
+def marketplace(request: HttpRequest, country_code: str | None = None) -> HttpResponse:
     from apps.web.services import listing_filters
+    from apps.web.seo_helpers import (
+        breadcrumbs_script,
+        marketplace_item_list_json_ld,
+        marketplace_seo,
+    )
 
-    p = request.GET
+    # Country path landing (/marketplace/pt/) wins over ?country=
+    get_params = request.GET.copy()
+    country_obj = None
+    if country_code:
+        country_obj = Country.objects.filter(code__iexact=country_code).first()
+        if country_obj is None:
+            raise Http404("Unknown market")
+        get_params["country"] = country_obj.code
+
+    p = get_params
     qs = listing_filters.apply_filters(listing_filters.base_active_queryset(), p)
 
     ordering = p.get("ordering") or "-is_featured,-created_at"
@@ -391,14 +418,13 @@ def marketplace(request: HttpRequest) -> HttpResponse:
             "type": prop.get_property_type_display(),
             "beds": prop.bedrooms,
             "area": int(prop.area_sqm) if prop.area_sqm else None,
-            # Investment fields are nulled out in ads-safe mode so the map popup
-            # never surfaces ROI / yield / score.
             "score": (m.investment_score if m else None) if show_invest else None,
             "roi_min": (_dec(m.estimated_roi_min) if m else 0) if show_invest else None,
             "roi_max": (_dec(m.estimated_roi_max) if m else 0) if show_invest else None,
             "yield": (_dec(m.rental_yield) if m else 0) if show_invest else None,
             "lat": lat,
             "lon": lon,
+            "url": prop.get_absolute_url(),
         }
 
     _hx_target = (request.headers.get("HX-Target") or "").strip()
@@ -408,6 +434,45 @@ def marketplace(request: HttpRequest) -> HttpResponse:
     map_props_json = (
         json.dumps([_map_pin(i) for i in items]) if not is_results_partial else "[]"
     )
+
+    # Resolve type label for SEO
+    type_label = None
+    type_code = (p.get("type") or "").strip()
+    if type_code:
+        type_label = dict(PropertyType.choices).get(type_code)
+
+    if country_obj is None and p.get("country"):
+        country_obj = Country.objects.filter(code__iexact=p.get("country")).first()
+
+    city_name = None
+    city_slug = (p.get("city") or "").strip()
+    if city_slug and country_obj:
+        city = City.objects.filter(country=country_obj, slug=city_slug).first()
+        if city:
+            city_name = city.name
+
+    seo_title, seo_description, seo_h1 = marketplace_seo(
+        country_name=country_obj.name if country_obj else None,
+        country_code=country_obj.code if country_obj else None,
+        city_name=city_name,
+        property_type_label=type_label,
+        total=total,
+    )
+
+    if country_obj:
+        canonical_path = reverse(
+            "web:marketplace_country",
+            kwargs={"country_code": country_obj.code.lower()},
+        )
+    else:
+        canonical_path = reverse("web:marketplace")
+
+    site = settings.SITE_URL.rstrip("/")
+    crumb_items = [("Home", "/"), ("Marketplace", reverse("web:marketplace"))]
+    if country_obj:
+        crumb_items.append((country_obj.name, canonical_path))
+    marketplace_json_ld = marketplace_item_list_json_ld(items, f"{site}{canonical_path}")
+    breadcrumb_json_ld = breadcrumbs_script(crumb_items)
 
     ctx = {
         "items": items,
@@ -423,17 +488,41 @@ def marketplace(request: HttpRequest) -> HttpResponse:
         "prev_page": page - 1,
         "map_props_json": map_props_json,
         "show_compare": True,
+        "seo_title": seo_title,
+        "seo_description": seo_description,
+        "seo_h1": seo_h1,
+        "seo_canonical": f"{site}{canonical_path}",
+        "marketplace_json_ld": marketplace_json_ld,
+        "breadcrumb_json_ld": breadcrumb_json_ld,
+        "market_country": country_obj,
     }
     template = "web/_marketplace_grid.html" if is_results_partial else "web/marketplace.html"
     return render(request, template, ctx)
 
 
-def property_detail(request: HttpRequest, pk: int) -> HttpResponse:
+def marketplace_country(request: HttpRequest, country_code: str) -> HttpResponse:
+    """SEO landing for /marketplace/<country>/ — unique title, H1 and canonical."""
+    return marketplace(request, country_code=country_code)
+
+
+def property_detail(
+    request: HttpRequest, pk: int, slug: str | None = None
+) -> HttpResponse:
     prop = get_object_or_404(
         Property.objects.select_related("country", "city", "metric", "owner")
         .prefetch_related("images", "tags"),
         pk=pk,
     )
+
+    # Prefer slug URL as canonical — 301 from /properties/<pk>/ when slug exists.
+    from apps.web.seo_helpers import property_absolute_url
+
+    canonical_path = property_absolute_url(prop)
+    if prop.slug and slug != prop.slug:
+        qs = request.META.get("QUERY_STRING")
+        target = canonical_path + (f"?{qs}" if qs else "")
+        return redirect(target, permanent=True)
+
     Property.objects.filter(pk=prop.pk).update(views_count=F("views_count") + 1)
 
     # Track recently-viewed listings in the session (most-recent first, capped).
@@ -476,13 +565,15 @@ def property_detail(request: HttpRequest, pk: int) -> HttpResponse:
     }
 
     from apps.web.seo_helpers import property_json_ld, property_meta_description
-
     from apps.web.services.og_image import absolute_og_url
 
+    site = settings.SITE_URL.rstrip("/")
     seo_title = f"{prop.title} · {prop.city.name} · Vivalty"
     seo_description = property_meta_description(prop)
-    # Dynamic, branded share card (photo + price + location overlay).
     seo_image = absolute_og_url(prop)
+    seo_robots = None
+    if prop.status != Status.ACTIVE:
+        seo_robots = "noindex, follow"
 
     return render(
         request,
@@ -497,6 +588,8 @@ def property_detail(request: HttpRequest, pk: int) -> HttpResponse:
             "seo_title": seo_title,
             "seo_description": seo_description,
             "seo_image": seo_image,
+            "seo_canonical": f"{site}{canonical_path}",
+            "seo_robots": seo_robots,
             "property_json_ld": property_json_ld(prop),
         },
     )

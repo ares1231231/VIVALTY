@@ -258,10 +258,10 @@ function initHeroVideo() {
   else video.addEventListener("loadeddata", play, { once: true });
 }
 
-// ── Hero country coverflow (3D fan) ───────────────────────────────────────────
+// ── Hero country coverflow (legacy DOM fan — skipped when Three.js owns it) ──
 function initHeroCountryCoverflow() {
   const root = document.querySelector("[data-coverflow]");
-  if (!root) return;
+  if (!root || root.hasAttribute("data-coverflow-3d")) return;
 
   const items = [...root.querySelectorAll("[data-coverflow-item]")];
   const prevBtn = root.querySelector("[data-coverflow-prev]");
@@ -273,10 +273,18 @@ function initHeroCountryCoverflow() {
   let active = aeIdx >= 0 ? aeIdx : Math.floor(items.length / 2);
   let timer = null;
 
+  function circularOffset(i, center, n) {
+    let d = i - center;
+    while (d > n / 2) d -= n;
+    while (d < -n / 2) d += n;
+    return d;
+  }
+
   function update() {
     const limit = maxOffset();
+    const n = items.length;
     items.forEach((item, i) => {
-      const offset = i - active;
+      const offset = circularOffset(i, active, n);
       item.classList.remove("is-peek");
       if (Math.abs(offset) > limit) {
         item.setAttribute("data-offset", "hidden");

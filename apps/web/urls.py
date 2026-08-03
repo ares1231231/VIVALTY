@@ -28,6 +28,16 @@ urlpatterns = [
 
     path("", views.home, name="home"),
     path("marketplace/", views.marketplace, name="marketplace"),
+    path(
+        "marketplace/<str:country_code>/",
+        views.marketplace_country,
+        name="marketplace_country",
+    ),
+    path(
+        "properties/<slug:slug>/<int:pk>/",
+        views.property_detail,
+        name="property_detail_seo",
+    ),
     path("properties/<int:pk>/", views.property_detail, name="property_detail"),
     path("properties/<int:pk>/og.png", views.property_og_image, name="property_og"),
     path("properties/<int:pk>/story/", views.property_story, name="property_story"),

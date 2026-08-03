@@ -1,9 +1,10 @@
 {% load static web_extras %}<!doctype html>
-<html lang="{{ UI_LANGUAGE|default:'en' }}" class="h-full scroll-smooth"{% if UI_RTL %} dir="rtl"{% endif %}>
+<html lang="en" class="h-full scroll-smooth"{% if UI_RTL %} dir="rtl"{% endif %}>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#059669" />
+  <meta http-equiv="content-language" content="en" />
 
   {% block seo_head %}
   {% include "web/components/seo_meta.html" with title=SEO_PAGE_TITLE description=SEO_PAGE_DESCRIPTION canonical=SEO_CANONICAL_URL og_image=SEO_OG_IMAGE %}

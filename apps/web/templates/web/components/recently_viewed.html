@@ -14,7 +14,7 @@ Pass `exclude_id` to omit the listing currently being viewed.
         <div class="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
           {% for p in items %}
             {% if p.id != exclude_id %}
-              <a href="{% url 'web:property_detail' p.id %}"
+              <a href="{{ p.get_absolute_url }}"
                  class="group w-56 flex-shrink-0 snap-start overflow-hidden rounded-2xl border border-ink-200 bg-white transition-all hover:shadow-md">
                 <div class="aspect-[16/10] overflow-hidden bg-ink-100">
                   <img src="{{ p.primary_image_url|default:'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500' }}"

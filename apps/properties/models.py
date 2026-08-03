@@ -136,11 +136,21 @@ class Property(models.Model):
     def __str__(self) -> str:
         return f"{self.title} ({self.city.name})"
 
+    def get_absolute_url(self) -> str:
+        from apps.web.seo_helpers import property_absolute_url
+
+        return property_absolute_url(self)
+
     def save(self, *args, **kwargs):
-        if not self.slug:
-            base = slugify(f"{self.title}-{self.city.name}")[:230]
-            self.slug = f"{base}-{self.pk or ''}".strip("-") or base
-        return super().save(*args, **kwargs)
+        creating = self.pk is None
+        super().save(*args, **kwargs)
+        if creating or not self.slug:
+            base = slugify(f"{self.title}-{self.city.name}")[:220]
+            new_slug = f"{base}-{self.pk}".strip("-") or base
+            if self.slug != new_slug:
+                Property.objects.filter(pk=self.pk).update(slug=new_slug)
+                self.slug = new_slug
+        return self
 
     @property
     def primary_image_url(self) -> str | None:

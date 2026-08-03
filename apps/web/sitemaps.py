@@ -8,7 +8,9 @@ from django.conf import settings
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
 
+from apps.geo.models import Country
 from apps.properties.models import Property, Status
+from apps.web.seo_helpers import property_absolute_url
 from apps.web.services import city_guides as _city_guides
 from apps.web.services import destinations as _destinations
 
@@ -41,6 +43,8 @@ class StaticViewSitemap(_SiteUrlSitemap):
             "web:price_explorer",
             "web:sell",
             "web:become_owner",
+            "web:agencies",
+            "billing:pricing",
             "web:privacy",
             "web:terms",
             "web:cookies",
@@ -91,10 +95,29 @@ class CityGuideSitemap(_SiteUrlSitemap):
         )
 
 
+class MarketplaceCountrySitemap(_SiteUrlSitemap):
+    """Country-filtered marketplace landings for inventory SEO."""
+
+    priority = 0.85
+    changefreq = "daily"
+
+    def items(self):
+        return list(
+            Country.objects.filter(properties__status=Status.ACTIVE)
+            .distinct()
+            .order_by("name")
+            .values_list("code", flat=True)
+        )
+
+    def location(self, code):
+        return reverse("web:marketplace_country", kwargs={"country_code": code.lower()})
+
+
 class PropertySitemap(_SiteUrlSitemap):
     """Active property detail pages."""
 
     priority = 0.7
+    changefreq = "daily"
 
     def items(self):
         return Property.objects.filter(status=Status.ACTIVE).order_by("-updated_at")
@@ -103,4 +126,4 @@ class PropertySitemap(_SiteUrlSitemap):
         return obj.updated_at
 
     def location(self, obj):
-        return reverse("web:property_detail", kwargs={"pk": obj.pk})
+        return property_absolute_url(obj)

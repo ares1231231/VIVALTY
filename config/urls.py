@@ -10,6 +10,7 @@ from django.urls import include, path
 from apps.web.sitemaps import (
     CityGuideSitemap,
     DestinationSitemap,
+    MarketplaceCountrySitemap,
     PropertySitemap,
     StaticViewSitemap,
 )
@@ -29,6 +30,7 @@ sitemaps = {
     "static": StaticViewSitemap,
     "destinations": DestinationSitemap,
     "city_guides": CityGuideSitemap,
+    "marketplace_countries": MarketplaceCountrySitemap,
     "properties": PropertySitemap,
 }
 

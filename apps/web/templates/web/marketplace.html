@@ -1,6 +1,10 @@
 {% extends "web/base.html" %}
 {% load static web_extras %}
 
+{% block seo_head %}
+{% include "web/components/seo_meta.html" with title=seo_title description=seo_description canonical=seo_canonical og_image=SEO_OG_IMAGE json_ld=marketplace_json_ld json_ld_extra=breadcrumb_json_ld %}
+{% endblock %}
+
 {% block content %}
 
 {# ═══ PAGE HEADER ══════════════════════════════════════════════════ #}
@@ -11,16 +15,27 @@
         <div class="flex items-center gap-2 text-xs text-ink-500 mb-1">
           <a href="{% url 'web:home' %}" class="hover:text-brand-600 transition-colors">Home</a>
           <span>›</span>
-          <span class="text-ink-700 font-medium">Marketplace</span>
+          {% if market_country %}
+            <a href="{% url 'web:marketplace' %}" class="hover:text-brand-600 transition-colors">Marketplace</a>
+            <span>›</span>
+            <span class="text-ink-700 font-medium">{{ market_country.name }}</span>
+          {% else %}
+            <span class="text-ink-700 font-medium">Marketplace</span>
+          {% endif %}
         </div>
         <h1 class="text-2xl font-extrabold text-ink-900 tracking-tight">
-          Property Listings
+          {{ seo_h1|default:"Property Listings" }}
         </h1>
         <p class="mt-1 text-sm text-ink-500">
           <span class="font-semibold text-ink-700" data-total>{{ total }}</span>
-          active listings across
-          <span class="font-semibold text-ink-700">{{ countries|length }}</span> countries
-          {% if params.country or params.type or params.search %}
+          active listings
+          {% if market_country %}
+            in <span class="font-semibold text-ink-700">{{ market_country.name }}</span>
+          {% else %}
+            across
+            <span class="font-semibold text-ink-700">{{ countries|length }}</span> countries
+          {% endif %}
+          {% if params.type or params.search %}
             · <span class="text-brand-600 font-medium">Filters active</span>
           {% endif %}
         </p>
@@ -44,12 +59,12 @@
 
     {# ── Country quick-pills ───────────────────────────────────────── #}
     <div class="mt-4 flex flex-wrap gap-2">
-      <a href="{% url 'web:marketplace' %}{% if params.type or params.ordering != '-is_featured,-created_at' %}?{% if params.type %}type={{ params.type }}&{% endif %}{% if params.ordering and params.ordering != '-is_featured,-created_at' %}ordering={{ params.ordering }}{% endif %}{% endif %}"
+      <a href="{% url 'web:marketplace' %}{% if params.type %}?type={{ params.type }}{% endif %}"
          class="country-pill {% if not params.country %}country-pill-active{% endif %}">
         🌍 All countries
       </a>
       {% for c in countries %}
-        <a href="?country={{ c.code }}{% if params.type %}&type={{ params.type }}{% endif %}{% if params.ordering and params.ordering != '-is_featured,-created_at' %}&ordering={{ params.ordering }}{% endif %}"
+        <a href="{% url 'web:marketplace_country' c.code|lower %}{% if params.type %}?type={{ params.type }}{% endif %}"
            class="country-pill {% if params.country == c.code %}country-pill-active{% endif %}">
           {{ c.flag_emoji }} {{ c.name }}
         </a>
@@ -66,8 +81,8 @@
     <aside class="hidden lg:block w-72 shrink-0 sticky top-20 self-start">
       <form id="filter-form"
             method="get"
-            action="{% url 'web:marketplace' %}"
-            hx-get="{% url 'web:marketplace' %}"
+            action="{% if market_country %}{% url 'web:marketplace_country' market_country.code|lower %}{% else %}{% url 'web:marketplace' %}{% endif %}"
+            hx-get="{% if market_country %}{% url 'web:marketplace_country' market_country.code|lower %}{% else %}{% url 'web:marketplace' %}{% endif %}"
             hx-target="#results"
             hx-swap="innerHTML"
             hx-push-url="true"

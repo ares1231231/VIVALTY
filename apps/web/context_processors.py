@@ -107,9 +107,27 @@ _PAGE_SEO: dict[str, tuple[str, str]] = {
         "City guide · Vivalty",
         "Living and buying a home abroad — neighbourhoods, lifestyle and practical tips.",
     ),
+    "destination_detail": (
+        "Buy property abroad · Destination guide · Vivalty",
+        "Practical buyer's guides for international property — lifestyle, neighbourhoods and next steps.",
+    ),
+    "agencies": (
+        "Vivalty for agencies — reach international buyers",
+        "List your portfolio on Vivalty and put it in front of international buyers across "
+        "7 countries. Free to start, lead inbox included, featured placement available.",
+    ),
+    "pricing": (
+        "Pricing — sell faster on Vivalty",
+        "Choose Free, Pro or Agency plans on Vivalty. Publish listings, unlock featured "
+        "placement and reach international buyers with transparent pricing.",
+    ),
     "property_story": (
         "Property story · Vivalty",
         "Vertical property slideshow — share on TikTok, Reels or WhatsApp.",
+    ),
+    "marketplace_country": (
+        "Homes for sale abroad · Vivalty",
+        "Browse verified international property listings by country on Vivalty.",
     ),
 }
 

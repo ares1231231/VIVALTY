@@ -53,9 +53,8 @@ so the primary search + key links stay one tap away on every section.
 </div>
 
 {% comment %}
-HERO - full-bleed image, overlaid headline + filter bar, and
-a right-side stack of "FEATURED LISTINGS" + "TOP DESTINATIONS".
-The navbar overlays this section (see vv-nav--overlay variant).
+HERO — full-bleed lifestyle video, brand + headline, search, market rail.
+Navbar overlays this section (vv-nav--overlay).
 {% endcomment %}
 <section class="vv-hero">
 
@@ -76,56 +75,30 @@ The navbar overlays this section (see vv-nav--overlay variant).
   </div>
   <div class="vv-hero-vignette" aria-hidden="true"></div>
 
-  <div class="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 lg:pt-36 pb-14 lg:pb-20">
+  <div class="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center px-4 pb-12 pt-28 text-center sm:px-6 sm:pb-16 sm:pt-32 lg:px-8 lg:pb-20 lg:pt-36">
 
-    <div class="flex flex-col items-center text-center">
+      {# Brand as a hero-level signal — not only in the nav #}
+      <p class="vv-hero-brand" aria-label="Vivalty">Vivalty</p>
 
-      {# ── Headline (elegant serif, italic emphasis, rotating market) ── #}
       <h1 class="vv-hero-title">
         Discover Your
         <em class="vv-hero-title-em" data-rotate-words='["Global", "Lisbon", "Dubai", "London", "Porto", "Madrid"]'>Global</em>
         Home
       </h1>
 
-      {# ── Value prop kept above the fold ───────────────────────── #}
       <p class="vv-hero-lede">
-        Apartments, villas and houses across <strong>7 international destinations</strong> — buy or rent with <strong>verified listings</strong>.
+        Verified apartments, villas and houses across
+        <strong>7 international destinations</strong>.
       </p>
 
-        {# ── Buy / Rent + white filter bar ─────────────────────── #}
-        <div class="vv-filter-stack mt-8 sm:mt-10">
-          <div class="vv-filter-purpose" role="tablist" aria-label="I want to">
-            <button type="button"
-                    class="vv-purpose-btn is-active"
-                    data-purpose-tab="buy"
-                    role="tab"
-                    aria-selected="true"
-                    aria-controls="hero-search">
-              <svg class="vv-purpose-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1V10"/>
-              </svg>
-              <span>Buy</span>
-            </button>
-            <button type="button"
-                    class="vv-purpose-btn"
-                    data-purpose-tab="rent"
-                    role="tab"
-                    aria-selected="false"
-                    aria-controls="hero-search">
-              <svg class="vv-purpose-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-              <span>Rent</span>
-            </button>
-          </div>
-
+      {# ── Search bar ─────────────────────────────────────────── #}
+      <div class="vv-filter-stack">
         <form id="hero-search" method="get" action="{% url 'web:marketplace' %}"
               class="vv-filter">
           <input type="hidden" name="purpose" value="buy" data-purpose-input>
 
           <div class="vv-filter-grid">
 
-            {# Country filter #}
             <div class="vv-filter-field vv-filter-choice" data-filter="country">
               <span class="vv-filter-label">Country</span>
               <input type="hidden" name="country" value="" data-filter-input>
@@ -147,7 +120,6 @@ The navbar overlays this section (see vv-nav--overlay variant).
               </div>
             </div>
 
-            {# Property type #}
             <div class="vv-filter-field vv-filter-choice" data-filter="type">
               <span class="vv-filter-label">Property type</span>
               <input type="hidden" name="type" value="" data-filter-input>
@@ -172,7 +144,6 @@ The navbar overlays this section (see vv-nav--overlay variant).
               </div>
             </div>
 
-            {# Price — buy uses max_budget, rent uses max_rent (monthly) #}
             <div class="vv-filter-field vv-filter-choice" data-filter="price" data-price-filter>
               <span class="vv-filter-label" data-price-label>Price range</span>
               <input type="hidden" name="max_budget" value="" data-filter-input data-price-input>
@@ -189,61 +160,61 @@ The navbar overlays this section (see vv-nav--overlay variant).
             </div>
 
             <button type="submit" class="vv-filter-cta">
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
-              <span>Search&nbsp;Properties</span>
+              <span>Search</span>
             </button>
           </div>
         </form>
+      </div>
+
+      {# Market rail — Three.js circular 3D coverflow #}
+      {% if hero_countries %}
+      <div class="vv-coverflow"
+           id="hero-country-coverflow"
+           data-coverflow
+           data-coverflow-3d
+           tabindex="0"
+           role="region"
+           aria-roledescription="carousel"
+           aria-label="Destination markets">
+        <button type="button"
+                class="vv-coverflow-nav vv-coverflow-nav--prev"
+                data-coverflow-prev
+                aria-label="Previous market">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+
+        <div class="vv-coverflow-stage" data-coverflow-stage>
+          <canvas id="coverflow-canvas" class="vv-coverflow-canvas" aria-hidden="true"></canvas>
+          <p class="sr-only" id="coverflow-live" aria-live="polite"></p>
+          <ul class="sr-only">
+            {% for c in hero_countries %}
+              <li>
+                <a href="{% url 'web:marketplace' %}?country={{ c.code }}">
+                  Browse {% if c.code == "AE" %}UAE{% elif c.code == "GB" %}UK{% else %}{{ c.name }}{% endif %}
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
         </div>
 
-        {# ── Country coverflow — 3D fan, center card featured ── #}
-        {% if hero_countries %}
-        <div class="vv-coverflow mt-8 sm:mt-10 w-full" id="hero-country-coverflow" data-coverflow>
-          <button type="button"
-                  class="vv-coverflow-nav vv-coverflow-nav--prev"
-                  data-coverflow-prev
-                  aria-label="Previous market">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-            </svg>
-          </button>
+        <button type="button"
+                class="vv-coverflow-nav vv-coverflow-nav--next"
+                data-coverflow-next
+                aria-label="Next market">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
 
-          <div class="vv-coverflow-stage" data-coverflow-stage>
-            <div class="vv-coverflow-track" data-coverflow-track>
-              {% for c in hero_countries %}
-                <div class="vv-coverflow-item" data-coverflow-item>
-                  <a href="{% url 'web:marketplace' %}?country={{ c.code }}"
-                     class="vv-coverflow-card group"
-                     data-code="{{ c.code }}"
-                     data-hero-country
-                     aria-label="Browse {% if c.code == 'AE' %}UAE{% elif c.code == 'GB' %}UK{% else %}{{ c.name }}{% endif %}">
-                    <div class="vv-dest-bg" data-code="{{ c.code }}"></div>
-                    <div class="vv-dest-scrim"></div>
-                    <div class="vv-coverflow-chip">
-                      <span class="vv-coverflow-flag" aria-hidden="true">{{ c.flag_emoji }}</span>
-                      <span class="vv-coverflow-code">{{ c.code }}</span>
-                      <span class="vv-coverflow-name">{% if c.code == "AE" %}UAE{% elif c.code == "GB" %}UK{% else %}{{ c.name }}{% endif %}</span>
-                    </div>
-                  </a>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
+        {{ hero_coverflow_data|json_script:"coverflow-data" }}
+      </div>
+      {% endif %}
 
-          <button type="button"
-                  class="vv-coverflow-nav vv-coverflow-nav--next"
-                  data-coverflow-next
-                  aria-label="Next market">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-            </svg>
-          </button>
-        </div>
-        {% endif %}
-
-    </div>
   </div>
 </section>
 
@@ -1234,5 +1205,9 @@ AI ADVISOR CTA
 })();
 </script>
 
+{% endblock %}
+
+{% block body_extra %}
+  <script type="module" src="{% static 'js/coverflow3d.js' %}"></script>
 {% endblock %}
 

@@ -31,7 +31,7 @@
         <div class="mb-3 text-sm font-bold text-ink-900">Homes you might love in {{ guide.name }}</div>
         <div class="grid gap-4 sm:grid-cols-3">
           {% for p in listings %}
-            <a href="{% url 'web:property_detail' p.id %}" class="group block overflow-hidden rounded-2xl border border-ink-200 bg-white transition-all hover:shadow-md">
+            <a href="{{ p.get_absolute_url }}" class="group block overflow-hidden rounded-2xl border border-ink-200 bg-white transition-all hover:shadow-md">
               <div class="aspect-[4/3] overflow-hidden bg-ink-100">
                 <img src="{{ p.primary_image_url|default:'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600' }}"
                      alt="{{ p.title }}" loading="lazy"

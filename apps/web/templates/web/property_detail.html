@@ -2,7 +2,7 @@
 {% load static web_extras %}
 
 {% block seo_head %}
-{% include "web/components/seo_meta.html" with title=seo_title description=seo_description canonical=SEO_CANONICAL_URL og_image=seo_image og_type="product" json_ld=property_json_ld %}
+{% include "web/components/seo_meta.html" with title=seo_title description=seo_description canonical=seo_canonical og_image=seo_image og_type="article" robots=seo_robots json_ld=property_json_ld og_image_alt=seo_title %}
 {% endblock %}
 
 {% block content %}
@@ -18,7 +18,7 @@
         <span>›</span>
         <a href="{% url 'web:marketplace' %}" class="hover:text-brand-600">Marketplace</a>
         <span>›</span>
-        <a href="{% url 'web:marketplace' %}?country={{ p.country.code }}" class="hover:text-brand-600">{{ p.country.name }}</a>
+        <a href="{% url 'web:marketplace_country' p.country.code|lower %}" class="hover:text-brand-600">{{ p.country.name }}</a>
         <span>›</span>
         <span class="text-ink-700 truncate">{{ p.city.name }}</span>
       </div>
