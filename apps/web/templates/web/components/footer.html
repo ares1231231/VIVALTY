@@ -1,111 +1,105 @@
 {% load web_extras %}
-{% with url_name=request.resolver_match.url_name %}
 
-{# Hide footer on full-bleed app screens (chat, login, register, 404) where it would intrude. #}
-{% if url_name != 'chat' and url_name != 'chat_session' and url_name != 'login' and url_name != 'register' and url_name != 'logout' %}
-
-<footer class="relative mt-auto overflow-hidden bg-[#0c1117] text-ink-300">
+<footer id="site-footer" class="relative mt-auto">
+  {# Trust band first — always visible, same on every page #}
   {% include "web/components/footer_trust_band.html" %}
 
-  <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-400/50 to-transparent"></div>
-  <div class="pointer-events-none absolute -left-32 top-0 h-72 w-72 rounded-full bg-brand-500/10 blur-3xl"></div>
-  <div class="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full bg-sky-500/10 blur-3xl"></div>
+  <div class="relative overflow-hidden bg-[#0c1117] text-ink-300">
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-400/50 to-transparent"></div>
+    <div class="pointer-events-none absolute -left-32 top-0 h-72 w-72 rounded-full bg-brand-500/10 blur-3xl"></div>
+    <div class="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full bg-sky-500/10 blur-3xl"></div>
 
-  <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-    {# ── Brand + links ──────────────────────────────────────────── #}
-    <div class="grid gap-12 py-12 lg:grid-cols-[1.1fr_2fr]">
-      <div>
-        <a href="{% url 'web:home' %}" class="inline-flex items-center gap-3 group">
-          <span class="flex h-11 w-11 items-center justify-center rounded-xl
-                       bg-gradient-to-br from-brand-400 to-brand-700 text-white font-black text-lg
-                       shadow-lg shadow-brand-500/25 transition group-hover:scale-105">V</span>
-          <span class="font-display text-xl font-semibold tracking-[0.12em] text-white">VIVALTY</span>
-        </a>
-        <p class="mt-5 max-w-sm text-sm leading-relaxed text-ink-400">
-          International real estate, beautifully curated. Browse verified homes across
-          Portugal, Spain, France, Italy, the UK, Switzerland and the UAE.
+      <div class="grid gap-12 py-12 lg:grid-cols-[1.1fr_2fr]">
+        <div>
+          <a href="{% url 'web:home' %}" class="inline-flex items-center gap-3 group">
+            <span class="flex h-11 w-11 items-center justify-center rounded-xl
+                         bg-gradient-to-br from-brand-400 to-brand-700 text-white font-black text-lg
+                         shadow-lg shadow-brand-500/25 transition group-hover:scale-105">V</span>
+            <span class="font-display text-xl font-semibold tracking-[0.12em] text-white">VIVALTY</span>
+          </a>
+          <p class="mt-5 max-w-sm text-sm leading-relaxed text-ink-400">
+            International real estate, beautifully curated. Browse verified homes across
+            Portugal, Spain, France, Italy, the UK, Switzerland and the UAE.
+          </p>
+          <form class="mt-6 flex max-w-md flex-col gap-2 sm:flex-row"
+                hx-post="{% url 'web:newsletter_subscribe' %}"
+                hx-target="this"
+                hx-swap="outerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="source" value="footer" />
+            <label class="sr-only" for="footer-newsletter-email">Email</label>
+            <input id="footer-newsletter-email" type="email" name="email" required placeholder="Email for monthly homes"
+                   class="flex-1 rounded-xl border border-white/10 bg-[#121820] px-4 py-2.5 text-sm text-white
+                          placeholder:text-ink-500 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30" />
+            <button type="submit"
+                    class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white
+                           transition hover:bg-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400">
+              Subscribe
+            </button>
+          </form>
+        </div>
+
+        <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <div class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/90 mb-4">Marketplace</div>
+            <ul class="space-y-2.5 text-sm">
+              <li><a href="{% url 'web:marketplace' %}" class="text-ink-400 transition hover:text-white">All listings</a></li>
+              <li><a href="{% url 'web:marketplace' %}?type=apartment" class="text-ink-400 transition hover:text-white">Apartments</a></li>
+              <li><a href="{% url 'web:marketplace' %}?type=studio" class="text-ink-400 transition hover:text-white">Studios</a></li>
+              <li><a href="{% url 'web:marketplace' %}?type=villa_house" class="text-ink-400 transition hover:text-white">Villas &amp; houses</a></li>
+              <li><a href="{% url 'web:marketplace' %}?ordering=-price" class="text-ink-400 transition hover:text-white">Luxury</a></li>
+              <li><a href="{% url 'web:sell' %}" class="text-ink-400 transition hover:text-white">List a property</a></li>
+              <li><a href="{% url 'web:agencies' %}" class="text-ink-400 transition hover:text-white">For agencies</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/90 mb-4">Destinations</div>
+            <ul class="space-y-2.5 text-sm">
+              <li><a href="{% url 'web:destination_detail' 'portugal' %}" class="text-ink-400 transition hover:text-white">Portugal</a></li>
+              <li><a href="{% url 'web:destination_detail' 'spain' %}" class="text-ink-400 transition hover:text-white">Spain</a></li>
+              <li><a href="{% url 'web:destination_detail' 'france' %}" class="text-ink-400 transition hover:text-white">France</a></li>
+              <li><a href="{% url 'web:destination_detail' 'uae' %}" class="text-ink-400 transition hover:text-white">Dubai &amp; UAE</a></li>
+              <li><a href="{% url 'web:destinations' %}" class="font-semibold text-brand-300 transition hover:text-brand-200">All destinations →</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/90 mb-4">Explore</div>
+            <ul class="space-y-2.5 text-sm">
+              <li><a href="{% url 'web:quiz' %}" class="text-ink-400 transition hover:text-white">Dream-home quiz</a></li>
+              <li><a href="{% url 'web:price_explorer' %}" class="text-ink-400 transition hover:text-white">Price explorer</a></li>
+              <li><a href="{% url 'web:chat' %}" class="text-ink-400 transition hover:text-white">AI Assistant</a></li>
+              <li><a href="{% url 'web:contact' %}" class="text-ink-400 transition hover:text-white">Contact</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/90 mb-4">Legal</div>
+            <ul class="space-y-2.5 text-sm">
+              <li><a href="{% url 'web:legal_notice' %}" class="text-ink-400 transition hover:text-white">Legal notice</a></li>
+              <li><a href="{% url 'web:privacy' %}" class="text-ink-400 transition hover:text-white">Privacy Policy</a></li>
+              <li><a href="{% url 'web:terms' %}" class="text-ink-400 transition hover:text-white">Terms of Service</a></li>
+              <li><a href="{% url 'web:cookies' %}" class="text-ink-400 transition hover:text-white">Cookie Policy</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-4 border-t border-white/10 py-8 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-sm text-ink-500">
+          &copy; {% now "Y" %} <span class="font-semibold text-ink-300">{{ COMPANY_LEGAL_NAME }}</span>
+          · Vivalty marketplace · All rights reserved
         </p>
-        <form class="mt-6 flex max-w-md flex-col gap-2 sm:flex-row"
-              hx-post="{% url 'web:newsletter_subscribe' %}"
-              hx-target="this"
-              hx-swap="outerHTML">
-          {% csrf_token %}
-          <input type="hidden" name="source" value="footer" />
-          <label class="sr-only" for="footer-newsletter-email">Email</label>
-          <input id="footer-newsletter-email" type="email" name="email" required placeholder="Email for monthly homes"
-                 class="flex-1 rounded-xl border border-white/10 bg-[#121820] px-4 py-2.5 text-sm text-white
-                        placeholder:text-ink-500 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30" />
-          <button type="submit"
-                  class="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white
-                         transition hover:bg-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400">
-            Subscribe
-          </button>
-        </form>
-      </div>
-
-      <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        <div>
-          <div class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/90 mb-4">Marketplace</div>
-          <ul class="space-y-2.5 text-sm">
-            <li><a href="{% url 'web:marketplace' %}" class="text-ink-400 transition hover:text-white">All listings</a></li>
-            <li><a href="{% url 'web:marketplace' %}?type=apartment" class="text-ink-400 transition hover:text-white">Apartments</a></li>
-            <li><a href="{% url 'web:marketplace' %}?type=studio" class="text-ink-400 transition hover:text-white">Studios</a></li>
-            <li><a href="{% url 'web:marketplace' %}?type=villa_house" class="text-ink-400 transition hover:text-white">Villas &amp; houses</a></li>
-            <li><a href="{% url 'web:marketplace' %}?ordering=-price" class="text-ink-400 transition hover:text-white">Luxury</a></li>
-            <li><a href="{% url 'web:sell' %}" class="text-ink-400 transition hover:text-white">List a property</a></li>
-            <li><a href="{% url 'web:agencies' %}" class="text-ink-400 transition hover:text-white">For agencies</a></li>
-          </ul>
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+          {% if COMPANY_WHATSAPP %}
+          <a href="https://wa.me/{{ COMPANY_WHATSAPP|digits }}" class="font-bold text-[#25D366] transition hover:text-[#4ae07e]" rel="noopener noreferrer" target="_blank">
+            +{{ COMPANY_WHATSAPP|digits }}
+          </a>
+          {% endif %}
+          <a href="{% url 'web:legal_notice' %}" class="text-ink-400 transition hover:text-white">Legal notice</a>
+          <a href="{% url 'web:contact' %}" class="text-ink-400 transition hover:text-white">Contact</a>
         </div>
-        <div>
-          <div class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/90 mb-4">Destinations</div>
-          <ul class="space-y-2.5 text-sm">
-            <li><a href="{% url 'web:destination_detail' 'portugal' %}" class="text-ink-400 transition hover:text-white">Portugal</a></li>
-            <li><a href="{% url 'web:destination_detail' 'spain' %}" class="text-ink-400 transition hover:text-white">Spain</a></li>
-            <li><a href="{% url 'web:destination_detail' 'france' %}" class="text-ink-400 transition hover:text-white">France</a></li>
-            <li><a href="{% url 'web:destination_detail' 'uae' %}" class="text-ink-400 transition hover:text-white">Dubai &amp; UAE</a></li>
-            <li><a href="{% url 'web:destinations' %}" class="font-semibold text-brand-300 transition hover:text-brand-200">All destinations →</a></li>
-          </ul>
-        </div>
-        <div>
-          <div class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/90 mb-4">Explore</div>
-          <ul class="space-y-2.5 text-sm">
-            <li><a href="{% url 'web:quiz' %}" class="text-ink-400 transition hover:text-white">Dream-home quiz</a></li>
-            <li><a href="{% url 'web:price_explorer' %}" class="text-ink-400 transition hover:text-white">Price explorer</a></li>
-            <li><a href="{% url 'web:chat' %}" class="text-ink-400 transition hover:text-white">AI Assistant</a></li>
-            <li><a href="{% url 'web:contact' %}" class="text-ink-400 transition hover:text-white">Contact</a></li>
-          </ul>
-        </div>
-        <div>
-          <div class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/90 mb-4">Legal</div>
-          <ul class="space-y-2.5 text-sm">
-            <li><a href="{% url 'web:legal_notice' %}" class="text-ink-400 transition hover:text-white">Legal notice</a></li>
-            <li><a href="{% url 'web:privacy' %}" class="text-ink-400 transition hover:text-white">Privacy Policy</a></li>
-            <li><a href="{% url 'web:terms' %}" class="text-ink-400 transition hover:text-white">Terms of Service</a></li>
-            <li><a href="{% url 'web:cookies' %}" class="text-ink-400 transition hover:text-white">Cookie Policy</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    {# ── Bottom bar ─────────────────────────────────────────────── #}
-    <div class="flex flex-col gap-4 border-t border-white/10 py-8 sm:flex-row sm:items-center sm:justify-between">
-      <p class="text-sm text-ink-500">
-        &copy; {% now "Y" %} <span class="font-semibold text-ink-300">{{ COMPANY_LEGAL_NAME }}</span>
-        · Vivalty marketplace · All rights reserved
-      </p>
-      <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-        {% if COMPANY_WHATSAPP %}
-        <a href="https://wa.me/{{ COMPANY_WHATSAPP|digits }}" class="font-bold text-[#25D366] transition hover:text-[#4ae07e]" rel="noopener noreferrer" target="_blank">
-          +{{ COMPANY_WHATSAPP|digits }}
-        </a>
-        {% endif %}
-        <a href="{% url 'web:legal_notice' %}" class="text-ink-400 transition hover:text-white">Legal notice</a>
-        <a href="{% url 'web:contact' %}" class="text-ink-400 transition hover:text-white">Contact</a>
       </div>
     </div>
   </div>
 </footer>
-
-{% endif %}
-{% endwith %}

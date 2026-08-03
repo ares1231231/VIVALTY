@@ -65,11 +65,6 @@
   </main>
 
   {% include "web/components/footer.html" %}
-  {% with url_name=request.resolver_match.url_name %}
-    {% if url_name == 'chat' or url_name == 'chat_session' or url_name == 'login' or url_name == 'register' or url_name == 'logout' %}
-      {% include "web/components/footer_trust_band.html" %}
-    {% endif %}
-  {% endwith %}
   {% include "web/components/cookie_consent.html" %}
 
   {% with url_name=request.resolver_match.url_name %}

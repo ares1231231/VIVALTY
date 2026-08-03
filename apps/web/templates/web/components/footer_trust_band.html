@@ -1,7 +1,7 @@
 {# High-visibility company identity — first block in footer so it sits right below page CTAs. #}
 {% load web_extras %}
 <section
-  class="border-b border-amber-200 bg-amber-50 text-amber-900"
+  class="relative z-20 border-b border-amber-200 bg-amber-50 text-amber-900"
   style="background: linear-gradient(180deg, #fffbeb 0%, #f5f0e6 100%); color: #451a03;"
   aria-labelledby="footer-trust-heading"
 >
@@ -16,7 +16,7 @@
       Wyoming limited liability company · United States
       {% if COMPANY_EIN %}<span class="text-amber-700"> · EIN {{ COMPANY_EIN }}</span>{% endif %}
     </p>
-    <p class="mx-auto mt-4 max-w-5xl text-center text-xs font-semibold leading-relaxed sm:text-sm lg:hidden">
+    <p class="mx-auto mt-4 max-w-5xl text-center text-xs font-semibold leading-relaxed sm:text-sm">
       {{ COMPANY_REGISTERED_ADDRESS }}
       <span class="mx-1.5 text-amber-600">·</span>
       {% if COMPANY_WHATSAPP %}
