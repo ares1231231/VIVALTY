@@ -1,25 +1,2 @@
-{# Site-wide regulatory disclaimer — visible on every page for ad-platform reviewers. #}
-{% load web_extras %}
-<div class="border-t border-amber-200/80 bg-amber-50 text-amber-950" role="note" aria-label="Company identity">
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 py-3.5 text-center text-xs sm:text-sm leading-relaxed">
-    <strong class="text-sm font-extrabold text-amber-950 sm:text-base">{{ COMPANY_LEGAL_NAME }}</strong>
-    <span class="mx-1.5 text-amber-700">·</span>
-    <span class="font-medium">{{ COMPANY_REGISTERED_ADDRESS }}</span>
-    {% if COMPANY_WHATSAPP %}
-    <span class="mx-1.5 text-amber-700">·</span>
-    <a href="https://wa.me/{{ COMPANY_WHATSAPP|digits }}"
-       class="font-bold text-emerald-800 underline underline-offset-2 hover:text-emerald-950"
-       rel="noopener noreferrer" target="_blank">
-      WhatsApp +{{ COMPANY_WHATSAPP|digits }}
-    </a>
-    {% endif %}
-    {% if COMPANY_PHONE %}
-    <span class="mx-1.5 text-amber-700">·</span>
-    <a href="tel:{{ COMPANY_PHONE|digits }}" class="font-semibold underline underline-offset-2 hover:text-amber-900">{{ COMPANY_PHONE }}</a>
-    {% endif %}
-    <span class="mx-1.5 text-amber-700">·</span>
-    <a href="mailto:{{ COMPANY_SUPPORT_EMAIL }}" class="font-semibold underline underline-offset-2 hover:text-amber-900">{{ COMPANY_SUPPORT_EMAIL }}</a>
-    <span class="mx-1.5 hidden text-amber-700 sm:inline">·</span>
-    <a href="{% url 'web:legal_notice' %}" class="mt-1 inline-block font-semibold underline underline-offset-2 hover:text-amber-900 sm:mt-0">Legal notice</a>
-  </div>
-</div>
+{# Deprecated: use footer_trust_band.html (included from footer.html). Kept for backwards compatibility. #}
+{% include "web/components/footer_trust_band.html" %}
