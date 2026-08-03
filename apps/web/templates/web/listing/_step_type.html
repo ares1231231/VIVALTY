@@ -1,65 +1,36 @@
-{# Step 1 — Title + property type. #}
-<form method="post" novalidate class="space-y-6">
+{# Step 1 — each type is a submit button: click = go to next step. #}
+<form method="post" novalidate class="space-y-6" id="vv-type-form">
   {% csrf_token %}
 
-  {# Title #}
-  <div class="card p-6">
-    <label for="id_title" class="label">Headline title</label>
-    {{ form.title }}
-    {% if form.title.errors %}
-      <p class="mt-2 text-xs text-rose-700">{{ form.title.errors|join:", " }}</p>
-    {% endif %}
-    <p class="mt-2 text-xs text-ink-500">
-      {{ form.title.help_text }}
-    </p>
-  </div>
-
-  {# Property type — large clickable cards #}
-  <div class="card p-6">
-    <div class="label">Property type</div>
-    {% comment %}
-      `checked` is computed once outside the loop so we don't repeat the
-      form-value vs. draft fallback for every option.
-    {% endcomment %}
+  <div class="card p-6 sm:p-8">
     {% with form_value=form.property_type.value draft_value=draft.property_type %}
       {% with checked=form_value|default_if_none:draft_value|default:"" %}
-        <div role="radiogroup" aria-label="Property type" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div role="group" aria-label="Property type" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {% for value, label in property_types %}
-            <label class="vv-listing-type-card {% if checked == value %}is-selected{% endif %}">
-              <input type="radio"
-                     name="property_type"
-                     value="{{ value }}"
-                     {% if checked == value %}checked{% endif %}
-                     class="sr-only vv-listing-type-input"
-                     required>
+            <button type="submit"
+                    name="property_type"
+                    value="{{ value }}"
+                    class="vv-listing-type-card {% if checked == value %}is-selected{% endif %}">
               <span class="vv-listing-type-icon" aria-hidden="true">
                 {% include "web/listing/_property_type_icon.html" with value=value %}
               </span>
               <span class="vv-listing-type-label">{{ label }}</span>
-            </label>
+            </button>
           {% endfor %}
         </div>
       {% endwith %}
     {% endwith %}
     {% if form.property_type.errors %}
-      <p class="mt-2 text-xs text-rose-700">{{ form.property_type.errors|join:", " }}</p>
+      <p class="mt-3 text-center text-xs text-rose-700">{{ form.property_type.errors|join:", " }}</p>
     {% endif %}
+    <p class="mt-5 text-center text-xs text-ink-500">Choose a type to continue</p>
   </div>
 
-  {% include "web/listing/_step_actions.html" %}
+  <div class="flex items-center justify-between gap-3">
+    <a href="{% url 'web:listing_cancel' %}"
+       class="text-xs font-semibold text-ink-500 hover:text-rose-600 transition-colors"
+       onclick="return confirm('Discard this listing draft? Uploaded photos will be removed.');">
+      Cancel
+    </a>
+  </div>
 </form>
-
-{% comment %}
-  Tiny progressive enhancement: toggle the "is-selected" ring without
-  waiting for a server round-trip when the user clicks a card.
-{% endcomment %}
-<script>
-  (function () {
-    document.querySelectorAll('.vv-listing-type-card').forEach(card => {
-      card.addEventListener('click', () => {
-        document.querySelectorAll('.vv-listing-type-card').forEach(c => c.classList.remove('is-selected'));
-        card.classList.add('is-selected');
-      });
-    });
-  })();
-</script>

@@ -71,6 +71,7 @@
 
       <form method="post" class="space-y-4">
         {% csrf_token %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
         <div>
           <label class="label">Email address</label>
           {{ form.username }}

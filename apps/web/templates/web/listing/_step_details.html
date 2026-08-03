@@ -1,0 +1,105 @@
+{# Location + size + optional description. #}
+<form method="post" novalidate class="space-y-6">
+  {% csrf_token %}
+
+  <div class="card p-6 sm:p-8 space-y-5">
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div>
+        <label for="id_country" class="label">Country <span class="text-rose-500">*</span></label>
+        {{ form.country }}
+        {% if form.country.errors %}
+          <p class="mt-1 text-xs text-rose-700">{{ form.country.errors|join:", " }}</p>
+        {% endif %}
+      </div>
+      <div class="relative">
+        <label for="id_city_name" class="label">City <span class="text-rose-500">*</span></label>
+        {{ form.city_id }}
+        <input type="text"
+               name="city_name"
+               id="id_city_name"
+               value="{{ form.city_name.value|default_if_none:draft.city_name|default:'' }}"
+               class="input"
+               placeholder="Start typing a city…"
+               autocomplete="off"
+               required
+               hx-get="{% url 'web:listing_city_search' %}"
+               hx-trigger="keyup changed delay:250ms, focus"
+               hx-include="#id_country, #id_city_name"
+               hx-target="#city-suggestions"
+               hx-swap="innerHTML">
+        <div id="city-suggestions" class="absolute z-30 left-0 right-0 mt-1"></div>
+        {% if form.city_name.errors %}
+          <p class="mt-1 text-xs text-rose-700">{{ form.city_name.errors|join:", " }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div>
+        <label class="label" for="id_area_sqm">Area (m²) <span class="text-rose-500">*</span></label>
+        {{ form.area_sqm }}
+        {% if form.area_sqm.errors %}
+          <p class="mt-1 text-xs text-rose-700">{{ form.area_sqm.errors|join:", " }}</p>
+        {% endif %}
+      </div>
+      <div>
+        <label class="label" for="id_bedrooms">Bedrooms</label>
+        {{ form.bedrooms }}
+      </div>
+      <div>
+        <label class="label" for="id_bathrooms">Bathrooms</label>
+        {{ form.bathrooms }}
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-6 sm:p-8 space-y-3">
+    <label for="id_description" class="label">
+      Description / notes
+      <span class="ml-1 font-normal normal-case tracking-normal text-ink-400">(optional)</span>
+    </label>
+    {% include "web/listing/_description_textarea.html" with description=form.description.value|default:draft.description polished=False %}
+    <p class="text-xs text-ink-500">A few words help — AI will polish the full text before publish.</p>
+  </div>
+
+  {% include "web/listing/_step_actions.html" with continue_label="Next →" %}
+</form>
+
+<script>
+  (function () {
+    var countrySelect = document.getElementById('id_country');
+    var cityName = document.getElementById('id_city_name');
+    var cityId = document.getElementById('id_city_id');
+
+    if (countrySelect) {
+      countrySelect.addEventListener('change', function () {
+        if (cityName) cityName.value = '';
+        if (cityId) cityId.value = '';
+        var box = document.getElementById('city-suggestions');
+        if (box) box.innerHTML = '';
+      });
+    }
+
+    document.addEventListener('click', function (e) {
+      var cityBtn = e.target.closest('[data-city-suggestion]');
+      if (cityBtn) {
+        e.preventDefault();
+        if (cityName) cityName.value = cityBtn.dataset.cityName || '';
+        if (cityId) cityId.value = cityBtn.dataset.cityId || '';
+        var box = document.getElementById('city-suggestions');
+        if (box) box.innerHTML = '';
+        return;
+      }
+      if (!e.target.closest('#id_city_name') && !e.target.closest('#city-suggestions')) {
+        var cityBox = document.getElementById('city-suggestions');
+        if (cityBox) cityBox.innerHTML = '';
+      }
+    });
+
+    if (cityName && cityId) {
+      cityName.addEventListener('input', function () {
+        cityId.value = '';
+      });
+    }
+  })();
+</script>

@@ -6,156 +6,129 @@
 {% endblock %}
 
 {% block content %}
-<div class="bg-radial-brand min-h-[calc(100vh-84px)]">
-  <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24 text-center">
+<div class="relative min-h-[calc(100vh-84px)] overflow-hidden">
+  <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-brand-50/80 via-ink-50 to-ink-50"></div>
 
-    {% comment %}
-      Status badge — different copy depending on whether the listing went
-      straight live (admin / staff) or is pending review (owners).
-    {% endcomment %}
+  <div class="relative mx-auto max-w-2xl px-4 sm:px-6 py-14 sm:py-20 text-center">
+
     {% if p.status == "active" %}
-      <div class="inline-flex items-center gap-2 rounded-full bg-emerald-100 text-emerald-800 px-4 py-1.5 text-xs font-bold tracking-wide ring-1 ring-emerald-200">
+      <div class="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-1.5 text-xs font-bold tracking-wide text-emerald-800 ring-1 ring-emerald-200">
         <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
         Live on Vivalty
       </div>
+      <h1 class="mt-6 font-display text-4xl sm:text-5xl font-extrabold tracking-tight text-ink-900 leading-[1.05]">
+        Your listing is live.
+      </h1>
+      <p class="mx-auto mt-4 max-w-md text-base text-ink-600 leading-relaxed">
+        “{{ p.title }}” is visible to buyers. You can still edit details or add photos anytime.
+      </p>
     {% else %}
-      <div class="inline-flex items-center gap-2 rounded-full bg-amber-100 text-amber-800 px-4 py-1.5 text-xs font-bold tracking-wide ring-1 ring-amber-200">
-        <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
-        Submitted · in editorial review
+      <div class="inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-1.5 text-xs font-bold tracking-wide text-amber-900 ring-1 ring-amber-200">
+        <span class="h-2 w-2 animate-pulse rounded-full bg-amber-500"></span>
+        In review
       </div>
+      <h1 class="mt-6 font-display text-4xl sm:text-5xl font-extrabold tracking-tight text-ink-900 leading-[1.05]">
+        Listing submitted.
+      </h1>
+      <p class="mx-auto mt-4 max-w-md text-base text-ink-600 leading-relaxed">
+        We’re checking “{{ p.title }}” for quality.
+        You’ll get an email when it goes live — usually within 24 hours.
+      </p>
     {% endif %}
 
-    <h1 class="mt-6 font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-ink-900 leading-[1.05]">
-      {% if p.status == "active" %}
-        Your listing is live.
-      {% else %}
-        Thank you — we'll be in touch shortly.
-      {% endif %}
-    </h1>
-    <p class="mt-4 text-base sm:text-lg text-ink-600 max-w-prose mx-auto leading-relaxed">
-      {% if p.status == "active" %}
-        “{{ p.title }}” is now searchable by buyers across the platform and the AI assistant.
-      {% else %}
-        “{{ p.title }}” is queued for editorial review. Most listings are approved within 24 hours; we'll email you the moment it goes live.
-      {% endif %}
-    </p>
-
-    {# Mini summary card with cover image and KPIs #}
+    {# Compact listing card #}
     <div class="card mt-10 overflow-hidden text-left">
-      <div class="grid sm:grid-cols-[200px_1fr] gap-0">
-        <div class="aspect-[4/3] sm:aspect-auto bg-ink-100 relative">
+      <div class="grid sm:grid-cols-[160px_1fr]">
+        <div class="aspect-[4/3] sm:aspect-auto bg-ink-100 min-h-[120px]">
           {% if p.primary_image_url %}
-            <img src="{{ p.primary_image_url }}" alt="{{ p.title }}" class="h-full w-full object-cover">
+            <img src="{{ p.primary_image_url }}" alt="{{ p.title }}" class="h-full w-full object-cover" width="320" height="240">
+          {% else %}
+            <div class="flex h-full min-h-[120px] items-center justify-center text-xs text-ink-400">No photo</div>
           {% endif %}
         </div>
-        <div class="p-5 sm:p-6 flex flex-col gap-3">
-          <div>
-            <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400">
-              {{ p.city.name }}, {{ p.country.name }}
-            </div>
-            <div class="mt-1 font-display text-xl font-bold text-ink-900 line-clamp-2">{{ p.title }}</div>
+        <div class="flex flex-col justify-center gap-2 p-5 sm:p-6">
+          <div class="text-[10px] font-bold uppercase tracking-widest text-ink-400">
+            {{ p.city.name }}, {{ p.country.name }}
           </div>
-          {% if SHOW_INVESTMENT_FEATURES and p.metric %}
-            <div class="flex items-center gap-4">
-              <div class="vv-score-gauge" data-score="{{ p.metric.investment_score }}">
-                <span>{{ p.metric.investment_score }}</span>
-                <small>AI</small>
-              </div>
-              <div class="text-xs space-y-0.5">
-                <div class="font-bold text-ink-900">{{ p.metric.investment_score|score_label }}</div>
-                <div class="text-ink-500">Yield {{ p.metric.rental_yield|pct }} · ROI {{ p.metric.estimated_roi_min|pct }}–{{ p.metric.estimated_roi_max|pct }}</div>
-              </div>
-            </div>
-          {% endif %}
-          <div class="mt-auto pt-2 text-base font-extrabold text-ink-900 tabular-nums">
+          <div class="font-display text-lg font-bold text-ink-900 line-clamp-2">{{ p.title }}</div>
+          <div class="text-base font-extrabold tabular-nums text-ink-900">
             {{ p.price|money:p.currency }}
           </div>
         </div>
       </div>
     </div>
 
-    {# ── Boost offer (live listings) / priority-review upsell (pending) ── #}
-    {% if p.status == "active" and not p.is_featured %}
-      <div class="card mt-8 p-6 text-left border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-white">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-2xl ring-1 ring-amber-200">⚡</div>
-          <div class="min-w-0 flex-1">
-            <h2 class="font-display text-lg font-black text-ink-900">Get seen first — boost this listing</h2>
-            <p class="mt-0.5 text-sm text-ink-600 leading-relaxed">
-              Featured listings sit at the top of the marketplace and on the home page.
-              {% if has_free_featured_slot %}Your plan includes a free featured slot — use it now.{% else %}{{ boost_days }} days of premium placement, one-off payment, no subscription.{% endif %}
-            </p>
-          </div>
-          <form method="post" action="{% url 'billing:feature_checkout' p.pk %}" class="w-full sm:w-auto">
-            {% csrf_token %}
-            <button type="submit" class="btn-primary w-full sm:w-auto rounded-xl px-6 py-3 text-sm whitespace-nowrap">
-              {% if has_free_featured_slot %}⚡ Feature free{% else %}⚡ Boost — €{{ boost_price }}{% endif %}
-            </button>
-          </form>
-        </div>
-      </div>
-    {% elif p.status == "pending" and not owner_is_premium %}
-      <div class="card mt-8 p-5 text-left border border-ink-200">
-        <div class="flex items-center gap-3">
-          <span class="text-xl">🚀</span>
-          <p class="text-sm text-ink-600 leading-relaxed">
-            <strong class="text-ink-900">Skip the queue:</strong> Pro listings get priority editorial review —
-            usually live within hours instead of a day.
-            <a href="{% url 'billing:pricing' %}" class="font-bold text-brand-700 hover:underline">See plans →</a>
-          </p>
-        </div>
-      </div>
-    {% endif %}
+    {# What to do next #}
+    <div class="mt-8 grid gap-3 sm:grid-cols-2 text-left">
+      <a href="{% url 'web:listing_edit' p.pk %}"
+         class="card flex items-start gap-3 p-5 transition hover:border-brand-300 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 ring-1 ring-brand-100" aria-hidden="true">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        </span>
+        <span>
+          <span class="block text-sm font-bold text-ink-900">Edit listing</span>
+          <span class="mt-0.5 block text-xs text-ink-500 leading-relaxed">Update price, description or contact while we review.</span>
+        </span>
+      </a>
+      <a href="{% url 'web:dashboard' %}"
+         class="card flex items-start gap-3 p-5 transition hover:border-brand-300 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink-50 text-ink-700 ring-1 ring-ink-100" aria-hidden="true">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        </span>
+        <span>
+          <span class="block text-sm font-bold text-ink-900">Go to dashboard</span>
+          <span class="mt-0.5 block text-xs text-ink-500 leading-relaxed">Track this listing and manage your account.</span>
+        </span>
+      </a>
+    </div>
 
-    {# Next-step CTAs #}
-    <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
+    {% with n=p.images.all|length %}
+    {% if n < 3 %}
+      <p class="mt-4 text-xs text-ink-500">
+        Tip: listings with more photos get more enquiries.
+        You uploaded {{ n }} photo{{ n|pluralize }} — you can improve the listing anytime from Edit.
+      </p>
+    {% endif %}
+    {% endwith %}
+
+    <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
       {% if p.status == "active" %}
         <a href="{% url 'web:property_detail' p.pk %}" class="btn-primary rounded-xl px-6 py-3 text-sm">
           View listing →
         </a>
       {% endif %}
-      <a href="{% url 'web:listing_edit' p.pk %}" class="btn-secondary rounded-xl px-6 py-3 text-sm">
-        Edit details
-      </a>
-      <a href="{% url 'web:dashboard' %}" class="btn-secondary rounded-xl px-6 py-3 text-sm">
-        Go to dashboard
-      </a>
-      <a href="{% url 'web:listing_start' %}" class="text-xs font-semibold text-ink-600 hover:text-brand-700 ml-2">
+      <a href="{% url 'web:listing_start' %}" class="text-xs font-semibold text-ink-500 hover:text-brand-700">
         + List another property
       </a>
     </div>
 
-    {# Editorial cross-sell #}
-    <div class="mt-12 grid sm:grid-cols-3 gap-3 text-left">
-      {% if SHOW_INVESTMENT_FEATURES %}
-      <a href="{% url 'web:methodology' %}" class="card p-4 hover:shadow-lg transition-shadow">
-        <div class="text-2xl">🧠</div>
-        <div class="mt-1 text-sm font-bold text-ink-900">How the AI score works</div>
-        <div class="text-[11px] text-ink-500 mt-0.5">Transparent factor breakdown.</div>
-      </a>
-      <a href="{% url 'web:simulator' %}" class="card p-4 hover:shadow-lg transition-shadow">
-        <div class="text-2xl">📊</div>
-        <div class="mt-1 text-sm font-bold text-ink-900">Investment simulator</div>
-        <div class="text-[11px] text-ink-500 mt-0.5">Model returns from your asking price.</div>
-      </a>
-      {% else %}
-      <a href="{% url 'web:marketplace' %}" class="card p-4 hover:shadow-lg transition-shadow">
-        <div class="text-2xl">🏠</div>
-        <div class="mt-1 text-sm font-bold text-ink-900">Browse the marketplace</div>
-        <div class="text-[11px] text-ink-500 mt-0.5">See how listings appear to buyers.</div>
-      </a>
-      <a href="{% url 'web:contact' %}" class="card p-4 hover:shadow-lg transition-shadow">
-        <div class="text-2xl">📞</div>
-        <div class="mt-1 text-sm font-bold text-ink-900">Talk to our team</div>
-        <div class="text-[11px] text-ink-500 mt-0.5">Listing support and partnerships.</div>
-      </a>
-      {% endif %}
-      <a href="{% url 'web:chat' %}" class="card p-4 hover:shadow-lg transition-shadow">
-        <div class="text-2xl">💬</div>
-        <div class="mt-1 text-sm font-bold text-ink-900">Ask the AI assistant</div>
-        <div class="text-[11px] text-ink-500 mt-0.5">Destinations, cities and listing questions.</div>
-      </a>
-    </div>
+    {% if p.status == "active" and not p.is_featured %}
+      <div class="card mt-10 p-5 text-left border border-amber-200 bg-amber-50/50">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div class="min-w-0 flex-1">
+            <h2 class="text-sm font-bold text-ink-900">Want more visibility?</h2>
+            <p class="mt-0.5 text-xs text-ink-600 leading-relaxed">
+              Boost this listing to the top of the marketplace.
+              {% if has_free_featured_slot %}Your plan includes a free featured slot.{% else %}{{ boost_days }} days · €{{ boost_price }}.{% endif %}
+            </p>
+          </div>
+          <form method="post" action="{% url 'billing:feature_checkout' p.pk %}" class="w-full sm:w-auto">
+            {% csrf_token %}
+            <button type="submit" class="btn-primary w-full sm:w-auto rounded-xl px-5 py-2.5 text-sm whitespace-nowrap">
+              {% if has_free_featured_slot %}Feature free{% else %}Boost — €{{ boost_price }}{% endif %}
+            </button>
+          </form>
+        </div>
+      </div>
+    {% elif p.status == "pending" %}
+      <p class="mt-10 text-xs text-ink-500 leading-relaxed">
+        No action needed while we review — unless you want to improve photos or details first.
+        {% if not owner_is_premium %}
+          <a href="{% url 'billing:pricing' %}" class="font-semibold text-brand-700 hover:underline">Pro = faster review</a>
+        {% endif %}
+      </p>
+    {% endif %}
+
   </div>
 </div>
 {% endblock %}

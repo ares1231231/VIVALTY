@@ -190,21 +190,52 @@ else:
 
 # --- Cache ------------------------------------------------------------------
 REDIS_URL = os.getenv("REDIS_URL")
-if REDIS_URL:
+
+
+def _redis_reachable(url: str, timeout: float = 0.35) -> bool:
+    """Fast probe so local .env REDIS_URL does not hang the whole site."""
+    try:
+        import redis
+
+        client = redis.from_url(url, socket_connect_timeout=timeout, socket_timeout=timeout)
+        client.ping()
+        return True
+    except Exception:
+        return False
+
+
+_LOCMEM_CACHE = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "vivalty-locmem",
+    }
+}
+
+if REDIS_URL and _redis_reachable(REDIS_URL):
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
             "LOCATION": REDIS_URL,
-            "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                # Never 500 the site if Redis blips (ratelimit, sessions, etc.).
+                "IGNORE_EXCEPTIONS": True,
+            },
         }
     }
+    DJANGO_REDIS_IGNORE_EXCEPTIONS = True
+elif REDIS_URL:
+    # Common local case: .env has redis://127.0.0.1:6379 but Redis isn't running.
+    # LocMem keeps Sell → Register working; start Redis to use the real cache.
+    import logging
+
+    logging.getLogger("vivalty").warning(
+        "REDIS_URL is set but Redis is unreachable — using LocMemCache. "
+        "Start Redis locally, or remove REDIS_URL from .env."
+    )
+    CACHES = _LOCMEM_CACHE
 else:
-    CACHES = {
-        "default": {
-            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            "LOCATION": "vivalty-locmem",
-        }
-    }
+    CACHES = _LOCMEM_CACHE
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

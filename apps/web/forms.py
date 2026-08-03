@@ -300,21 +300,22 @@ class _WizardForm(forms.Form):
 
 
 class ListingTypeForm(_WizardForm):
-    """Step 1 — what is being listed."""
+    """Step 1 — pick a property type. Title is auto-filled later (AI / city)."""
 
-    title = forms.CharField(
-        max_length=200,
-        widget=forms.TextInput(attrs={
-            "class": "input",
-            "placeholder": "e.g. Sun-drenched 2-bed pied-à-terre, Le Marais",
-            "autocomplete": "off",
-        }),
-        help_text="Buyers skim — lead with the headline that makes them click.",
-    )
     property_type = forms.ChoiceField(
         choices=PropertyType.choices,
         widget=forms.RadioSelect(attrs={"class": "vv-listing-type-input"}),
     )
+
+    def to_draft(self) -> dict:
+        ptype = self.cleaned_data["property_type"]
+        label = dict(PropertyType.choices).get(ptype, ptype.replace("_", " ").title())
+        return {
+            "property_type": ptype,
+            # Placeholder until Details (city) or AI polish upgrades it.
+            "title": label,
+            "property_type_display": label,
+        }
 
 
 class ListingLocationForm(_WizardForm):
@@ -393,7 +394,7 @@ class ListingLocationForm(_WizardForm):
 
 
 class ListingSpecsForm(_WizardForm):
-    """Step 3 — bedrooms / bathrooms / area / description."""
+    """Legacy specs-only form (kept for compatibility). Prefer ListingDetailsForm."""
 
     bedrooms = forms.IntegerField(
         required=False, min_value=0, max_value=50,
@@ -435,8 +436,60 @@ class ListingSpecsForm(_WizardForm):
         }
 
 
+class ListingDetailsForm(ListingLocationForm):
+    """Merged location + specs step — country/city, size, rooms, description."""
+
+    bedrooms = forms.IntegerField(
+        required=False, min_value=0, max_value=50,
+        widget=forms.NumberInput(attrs={"class": "input", "placeholder": "2"}),
+    )
+    bathrooms = forms.IntegerField(
+        required=False, min_value=0, max_value=20,
+        widget=forms.NumberInput(attrs={"class": "input", "placeholder": "1"}),
+    )
+    area_sqm = forms.DecimalField(
+        max_digits=8, decimal_places=2, min_value=Decimal("1"),
+        widget=forms.NumberInput(attrs={"class": "input", "step": "0.1", "placeholder": "85"}),
+    )
+    year_built = forms.IntegerField(
+        required=False, min_value=1500, max_value=2100,
+        widget=forms.NumberInput(attrs={"class": "input", "placeholder": "1890"}),
+    )
+    description = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            "class": "input",
+            "rows": 6,
+            "id": "id_description",
+            "placeholder": (
+                "Tell the story: location & lifestyle, what makes this "
+                "property distinctive, why now."
+            ),
+        }),
+    )
+
+    def to_draft(self) -> dict:
+        data = self.cleaned_data
+        location = super().to_draft()
+        return {
+            **location,
+            "bedrooms": data.get("bedrooms"),
+            "bathrooms": data.get("bathrooms"),
+            "area_sqm": str(data["area_sqm"]) if data.get("area_sqm") else "",
+            "year_built": data.get("year_built"),
+            "description": data.get("description") or "",
+        }
+
+
 class ListingPriceForm(_WizardForm):
-    """Step 5 — price, currency, contact, agency."""
+    """Price + lean contact: private/agency, email, phone."""
+
+    SELLER_PRIVATE = "private"
+    SELLER_AGENCY = "agency"
+    SELLER_TYPE_CHOICES = (
+        (SELLER_PRIVATE, "Private seller"),
+        (SELLER_AGENCY, "Agency"),
+    )
 
     price = forms.DecimalField(
         max_digits=14, decimal_places=2, min_value=Decimal("1"),
@@ -450,36 +503,33 @@ class ListingPriceForm(_WizardForm):
         initial="EUR",
         widget=forms.Select(attrs={"class": "input", "id": "id_currency"}),
     )
-    contact_name = forms.CharField(
-        max_length=120,
-        widget=forms.TextInput(attrs={"class": "input", "placeholder": "Sophie Laurent"}),
+    seller_type = forms.ChoiceField(
+        choices=SELLER_TYPE_CHOICES,
+        required=False,
+        widget=forms.RadioSelect(attrs={"class": "vv-seller-type-input"}),
     )
     contact_email = forms.EmailField(
-        widget=forms.EmailInput(attrs={"class": "input", "placeholder": "sophie@agency.com"}),
+        required=False,
+        widget=forms.EmailInput(attrs={"class": "input", "placeholder": "you@email.com"}),
     )
     contact_phone = forms.CharField(
-        required=False, max_length=32,
+        required=False,
+        max_length=32,
         widget=forms.TextInput(attrs={"class": "input", "placeholder": "+33 1 23 45 67 89"}),
-    )
-    listing_agency = forms.CharField(
-        required=False, max_length=200,
-        widget=forms.TextInput(attrs={"class": "input", "placeholder": "e.g. Hamptons International"}),
-    )
-    listing_ref = forms.CharField(
-        required=False, max_length=64,
-        widget=forms.TextInput(attrs={"class": "input", "placeholder": "MLS-12345"}),
     )
 
     def to_draft(self) -> dict:
         data = self.cleaned_data
+        seller = data.get("seller_type") or ""
         return {
             "price": str(data["price"]),
             "currency": data["currency"],
-            "contact_name": data["contact_name"],
-            "contact_email": data["contact_email"],
-            "contact_phone": data.get("contact_phone") or "",
-            "listing_agency": data.get("listing_agency") or "",
-            "listing_ref": data.get("listing_ref") or "",
+            "seller_type": seller,
+            "contact_email": data.get("contact_email") or "",
+            "contact_phone": (data.get("contact_phone") or "").strip(),
+            "listing_agency": "Agency" if seller == self.SELLER_AGENCY else "",
+            "contact_name": "",
+            "listing_ref": "",
         }
 
 
@@ -586,6 +636,7 @@ __all__ = [
     "ListingTypeForm",
     "ListingLocationForm",
     "ListingSpecsForm",
+    "ListingDetailsForm",
     "ListingPriceForm",
     "BecomeOwnerForm",
 ]

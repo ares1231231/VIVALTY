@@ -30,11 +30,37 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_str
-from django.utils.http import urlsafe_base64_decode
+from django.utils.http import url_has_allowed_host_and_scheme, urlsafe_base64_decode
 from django.views.decorators.http import require_POST, require_http_methods
 from django_ratelimit.decorators import ratelimit
 
 logger = logging.getLogger("vivalty.web")
+
+_POST_VERIFY_NEXT_KEY = "post_verify_next"
+
+
+def _safe_next_url(request: HttpRequest, raw: str | None) -> str | None:
+    """Return an internal redirect target, or None if unsafe / empty."""
+    candidate = (raw or "").strip()
+    if not candidate:
+        return None
+    if url_has_allowed_host_and_scheme(
+        url=candidate,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return candidate
+    return None
+
+
+def _remember_post_verify_next(request: HttpRequest, raw: str | None) -> None:
+    nxt = _safe_next_url(request, raw)
+    if nxt:
+        request.session[_POST_VERIFY_NEXT_KEY] = nxt
+
+
+def _pop_post_verify_next(request: HttpRequest) -> str | None:
+    return request.session.pop(_POST_VERIFY_NEXT_KEY, None)
 
 from apps.ai_advisor.models import AIConversationSession, ChatMessage, Role as ChatRole
 from apps.ai_advisor.services.advisor import generate, stream as advisor_stream
@@ -63,9 +89,8 @@ from .forms import (
     ForgotPasswordForm,
     InvestorInquiryForm,
     LeadForm,
-    ListingLocationForm,
+    ListingDetailsForm,
     ListingPriceForm,
-    ListingSpecsForm,
     ListingTypeForm,
     PropertyEditForm,
     PropertyForm,
@@ -1426,18 +1451,19 @@ def investor_inquiry(request: HttpRequest) -> HttpResponse:
 @ratelimit(key="ip", rate="10/m", block=False)
 @ratelimit(key="ip", rate="100/h", block=False)
 def login_view(request: HttpRequest) -> HttpResponse:
+    next_url = _safe_next_url(request, request.GET.get("next") or request.POST.get("next"))
     if request.user.is_authenticated:
-        return redirect("web:dashboard")
+        return redirect(next_url or "web:dashboard")
     if getattr(request, "limited", False):
         messages.error(request, "Too many attempts. Please try again in a minute.")
-        return render(request, "web/login.html", {"form": EmailLoginForm(request)})
+        return render(request, "web/login.html", {"form": EmailLoginForm(request), "next": next_url})
 
     form = EmailLoginForm(request, data=request.POST or None)
     if request.method == "POST" and form.is_valid():
         user = form.get_user()
         auth_login(request, user)
         messages.success(request, "Welcome back.")
-        return redirect(request.GET.get("next") or "web:dashboard")
+        return redirect(next_url or "web:dashboard")
 
     # Surface a friendlier error when the credentials are correct but the
     # account is still pending email verification.
@@ -1456,14 +1482,16 @@ def login_view(request: HttpRequest) -> HttpResponse:
                     pass
                 return redirect("web:verify_sent")
 
-    return render(request, "web/login.html", {"form": form})
+    return render(request, "web/login.html", {"form": form, "next": next_url})
 
 
 @ratelimit(key="ip", rate="5/m", block=False)
 @ratelimit(key="ip", rate="20/h", block=False)
 def register_view(request: HttpRequest) -> HttpResponse:
+    next_url = _safe_next_url(request, request.GET.get("next") or request.POST.get("next"))
+    sell_intent = bool(next_url and "/list" in next_url)
     if request.user.is_authenticated:
-        return redirect("web:dashboard")
+        return redirect(next_url or "web:dashboard")
     if getattr(request, "limited", False):
         messages.error(request, "Too many signup attempts. Please try again in a few minutes.")
         return render(
@@ -1472,12 +1500,15 @@ def register_view(request: HttpRequest) -> HttpResponse:
             {
                 "form": RegisterForm(request=request),
                 "turnstile_site_key": settings.TURNSTILE_SITE_KEY,
+                "next": next_url,
+                "sell_intent": sell_intent,
             },
         )
 
     form = RegisterForm(request.POST or None, request=request)
     if request.method == "POST" and form.is_valid():
         user = form.save()
+        _remember_post_verify_next(request, next_url)
         try:
             send_verification_email(user)
         except Exception:
@@ -1489,10 +1520,19 @@ def register_view(request: HttpRequest) -> HttpResponse:
             )
         return redirect("web:verify_sent")
 
+    # Remember next early so a GET→POST flow (or verify from another tab) still works.
+    if next_url:
+        _remember_post_verify_next(request, next_url)
+
     return render(
         request,
         "web/register.html",
-        {"form": form, "turnstile_site_key": settings.TURNSTILE_SITE_KEY},
+        {
+            "form": form,
+            "turnstile_site_key": settings.TURNSTILE_SITE_KEY,
+            "next": next_url,
+            "sell_intent": sell_intent,
+        },
     )
 
 
@@ -1538,8 +1578,16 @@ def verify_email_view(request: HttpRequest, uidb64: str, token: str) -> HttpResp
             pass
 
     auth_login(request, user)
-    messages.success(request, "Email confirmed. Welcome aboard!")
-    return redirect("web:dashboard")
+    # Promote sellers immediately — no separate "do you agree" / become-owner wall.
+    if getattr(user, "role", None) not in {Role.OWNER, Role.ADMIN} and not user.is_staff:
+        user.role = Role.OWNER
+        user.save(update_fields=["role"])
+    nxt = _pop_post_verify_next(request)
+    messages.success(
+        request,
+        "Email confirmed — you're ready to list." if nxt and "/list" in nxt else "Email confirmed. Welcome aboard!",
+    )
+    return redirect(nxt or "web:dashboard")
 
 
 @ratelimit(key="ip", rate="3/m", block=False)
@@ -1706,29 +1754,46 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
 # ─── List your property — multi-step wizard ────────────────────────────────
 #
-# Entry point: /list/  (alias: legacy /owner/new/ → 302 to /list/).
-# - If the user is anonymous            → redirect to register with next=/list/
-# - If the user is an investor          → /list/become-owner/ (one-screen upgrade)
-# - If the user is an owner / admin / staff → wizard step 1
+# Public entry: /sell/ (attractive landing). Auth → email confirm → /list/
+# with no become-owner / "do you agree" wall (role upgrade is automatic).
 #
-# Per-step form posts redirect to the next step. No HTMX swap on step
-# transitions on purpose (browser-back works, refresh-resistant, easier to
-# debug). HTMX is reserved for the live score preview, AI description
-# rewrite, image uploads, and the address autocomplete.
+# Per-step form posts redirect to the next step. HTMX is reserved for the
+# live score preview, AI description rewrite, and image uploads.
+
+
+def sell_landing(request: HttpRequest) -> HttpResponse:
+    """Marketing landing for « Sell your property » — one clear start CTA."""
+    return render(
+        request,
+        "web/sell.html",
+        {
+            "start_url": (
+                reverse("web:listing_start")
+                if request.user.is_authenticated
+                else f"{reverse('web:register')}?next={reverse('web:listing_start')}"
+            ),
+            "login_url": f"{reverse('web:login')}?next={reverse('web:listing_start')}",
+        },
+    )
+
 
 _STEP_FORM_CLASSES = {
     "type": ListingTypeForm,
-    "location": ListingLocationForm,
-    "specs": ListingSpecsForm,
+    "details": ListingDetailsForm,
     "price": ListingPriceForm,
 }
 
 _STEP_TEMPLATES = {
     "type": "web/listing/_step_type.html",
-    "location": "web/listing/_step_location.html",
-    "specs": "web/listing/_step_specs.html",
+    "details": "web/listing/_step_details.html",
     "photos": "web/listing/_step_photos.html",
     "price": "web/listing/_step_price.html",
+}
+
+# Old step slugs → current (bookmarks / in-flight sessions).
+_STEP_ALIASES = {
+    "location": "details",
+    "specs": "details",
 }
 
 
@@ -1748,18 +1813,15 @@ def _ensure_owner(user) -> None:
     user.save(update_fields=["role"])
 
 
-def _initial_for_step(step: str, draft: dict) -> dict:
+def _initial_for_step(step: str, draft: dict, user=None) -> dict:
     """Map the session draft back onto the per-step form's `initial=` kwarg."""
     if step == "type":
-        return {"title": draft.get("title"), "property_type": draft.get("property_type")}
-    if step == "location":
+        return {"property_type": draft.get("property_type")}
+    if step == "details":
         return {
             "country": draft.get("country_id"),
             "city_id": draft.get("city_id"),
             "city_name": draft.get("city_name") or "",
-        }
-    if step == "specs":
-        return {
             "bedrooms": draft.get("bedrooms"),
             "bathrooms": draft.get("bathrooms"),
             "area_sqm": draft.get("area_sqm"),
@@ -1767,16 +1829,17 @@ def _initial_for_step(step: str, draft: dict) -> dict:
             "description": draft.get("description"),
         }
     if step == "price":
+        seller = draft.get("seller_type") or ""
+        if not seller and draft.get("listing_agency"):
+            seller = ListingPriceForm.SELLER_AGENCY
         return {
             "price": draft.get("price"),
             "currency": draft.get("currency") or listing_wizard.CURRENCY_BY_COUNTRY.get(
                 draft.get("country_code", ""), "EUR"
             ),
-            "contact_name": draft.get("contact_name"),
-            "contact_email": draft.get("contact_email"),
-            "contact_phone": draft.get("contact_phone"),
-            "listing_agency": draft.get("listing_agency"),
-            "listing_ref": draft.get("listing_ref"),
+            "seller_type": seller,
+            "contact_email": draft.get("contact_email") or "",
+            "contact_phone": draft.get("contact_phone") or "",
         }
     return {}
 
@@ -1785,10 +1848,10 @@ def _render_step(request: HttpRequest, step: str, form=None) -> HttpResponse:
     draft = listing_wizard.get_draft(request)
     if form is None and step in _STEP_FORM_CLASSES:
         form_cls = _STEP_FORM_CLASSES[step]
-        form = form_cls(initial=_initial_for_step(step, draft))
+        form = form_cls(initial=_initial_for_step(step, draft, user=request.user))
 
     countries = Country.objects.order_by("name")
-    # Keyed by country PK (string) so the location-step JS can cascade cities
+    # Keyed by country PK (string) so the details-step JS can cascade cities
     # from the selected <option value="…"> without parsing country codes.
     cities_by_country: dict[str, list[dict]] = {}
     for city in City.objects.select_related("country").order_by("country__name", "name"):
@@ -1822,6 +1885,7 @@ def listing_start(request: HttpRequest) -> HttpResponse:
 @login_required
 def listing_step(request: HttpRequest, step: str) -> HttpResponse:
     """Render or process a single wizard step."""
+    step = _STEP_ALIASES.get(step, step)
     if step not in listing_wizard.STEPS:
         return redirect("web:listing_start")
     _ensure_owner(request.user)
@@ -1833,8 +1897,11 @@ def listing_step(request: HttpRequest, step: str) -> HttpResponse:
 
 def _handle_step_post(request: HttpRequest, step: str) -> HttpResponse:
     if step == "photos":
-        # Photos step has no Django Form — its content is managed via the
-        # HTMX upload endpoints. Submitting just advances to the next step.
+        # Photos step has no Django Form — uploads are HTMX. Require ≥1 image.
+        draft = listing_wizard.get_draft(request)
+        if not draft.get("images"):
+            messages.error(request, "Add at least one photo to continue.")
+            return _render_step(request, step)
         return redirect("web:listing_step", step=listing_wizard.next_step(step) or "price")
 
     form_cls = _STEP_FORM_CLASSES[step]
@@ -1843,15 +1910,21 @@ def _handle_step_post(request: HttpRequest, step: str) -> HttpResponse:
         return _render_step(request, step, form=form)
     listing_wizard.update_draft(request, form.to_draft())
 
-    # Step 1 may also include a chosen property_type label for display.
-    if step == "type":
-        ptype = form.cleaned_data["property_type"]
-        listing_wizard.update_draft(
-            request, {"property_type_display": dict(PropertyType.choices).get(ptype, ptype)}
-        )
+    # Once city is known, give a readable placeholder title (AI upgrades it on review).
+    if step == "details":
+        draft = listing_wizard.get_draft(request)
+        ptype = draft.get("property_type_display") or draft.get("property_type") or "Property"
+        city = draft.get("city_name") or ""
+        current_title = (draft.get("title") or "").strip()
+        bland = (not current_title) or current_title.casefold() in {
+            str(ptype).casefold(),
+            str(draft.get("property_type") or "").replace("_", " ").casefold(),
+        }
+        if city and bland:
+            listing_wizard.update_draft(request, {"title": f"{ptype} in {city}"[:200]})
 
     # Title / description edits invalidate AI polish so review rewrites again.
-    if step in {"type", "specs"}:
+    if step in {"type", "details"}:
         listing_wizard.update_draft(
             request,
             {

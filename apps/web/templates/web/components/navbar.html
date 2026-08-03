@@ -200,7 +200,7 @@ Two visual variants based on context:
             {% endif %}
             <li><a href="{% url 'web:chat' %}"         class="dropdown-item">AI Assistant</a></li>
             <li>
-              <a href="{% url 'web:listing_start' %}" class="dropdown-item font-bold text-brand-700 flex items-center gap-2">
+              <a href="{% url 'web:sell' %}" class="dropdown-item font-bold text-brand-700 flex items-center gap-2">
                 <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1V10"/>
                 </svg>
@@ -236,12 +236,8 @@ Two visual variants based on context:
 
       {% endif %}
 
-      {% comment %}
-        Right-side CTA — always points at /list/. Anonymous users get
-        redirected to /auth/register/?next=/list/ by @login_required; the
-        wizard then intercepts investors with the become-owner upgrade.
-      {% endcomment %}
-      <a href="{% if user.is_authenticated %}{% url 'web:listing_start' %}{% else %}{% url 'web:register' %}?next={% url 'web:listing_start' %}{% endif %}"
+      {# Public sell landing — clear CTA; auth + email verify happen after Start. #}
+      <a href="{% url 'web:sell' %}"
          class="vv-cta hidden sm:inline-flex gap-1.5">
         <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1V10"/>
@@ -337,7 +333,7 @@ Two visual variants based on context:
          class="block rounded-xl px-3 py-2.5 text-ink-700 hover:bg-ink-50 transition-colors">Login</a>
     {% endif %}
 
-    <a href="{% if user.is_authenticated %}{% url 'web:listing_start' %}{% else %}{% url 'web:register' %}?next={% url 'web:listing_start' %}{% endif %}"
+    <a href="{% url 'web:sell' %}"
        class="mt-3 flex items-center justify-center gap-2 px-4 py-3 text-center text-[12px] font-bold uppercase transition-all duration-200"
        style="letter-spacing: 0.22em; border-radius: 2px; background: linear-gradient(135deg,#f5d486 0%,#d4a44a 100%); border: 1px solid rgba(180,130,40,0.55); color: #1a1a1a;">
       <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">

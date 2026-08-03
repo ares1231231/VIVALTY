@@ -20,14 +20,25 @@
         <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white font-black text-lg">V</span>
         <span class="text-xl font-extrabold text-white">Vivalty</span>
       </div>
-      <h2 class="text-3xl font-extrabold text-white leading-tight">
-        Find your next home,<br/>
-        <span class="text-brand-400">anywhere in the world.</span>
-      </h2>
-      <p class="mt-4 text-ink-300 text-sm leading-relaxed">
-        Create a free account to save listings, get new-home alerts,
-        and chat with our AI assistant across 7 destinations.
-      </p>
+      {% if sell_intent %}
+        <h2 class="text-3xl font-extrabold text-white leading-tight">
+          List free.<br/>
+          <span class="text-brand-400">Reach buyers worldwide.</span>
+        </h2>
+        <p class="mt-4 text-ink-300 text-sm leading-relaxed">
+          Confirm your email once — then go straight into the listing form.
+          No commission to publish. AI helps with your description.
+        </p>
+      {% else %}
+        <h2 class="text-3xl font-extrabold text-white leading-tight">
+          Find your next home,<br/>
+          <span class="text-brand-400">anywhere in the world.</span>
+        </h2>
+        <p class="mt-4 text-ink-300 text-sm leading-relaxed">
+          Create a free account to save listings, get new-home alerts,
+          and chat with our AI assistant across 7 destinations.
+        </p>
+      {% endif %}
       <div class="mt-10 grid grid-cols-2 gap-3">
         <div class="rounded-xl border border-white/10 bg-white/5 p-4">
           <div class="text-2xl font-black text-white">7</div>
@@ -57,12 +68,18 @@
           <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white font-black">V</span>
           <span class="text-lg font-extrabold text-ink-900">Vivalty</span>
         </div>
-        <h1 class="text-2xl font-extrabold text-ink-900">Create your account</h1>
-        <p class="mt-1 text-sm text-ink-500">Free forever. No credit card required.</p>
+        {% if sell_intent %}
+          <h1 class="text-2xl font-extrabold text-ink-900">Create your seller account</h1>
+          <p class="mt-1 text-sm text-ink-500">Free to list. Confirm your email, then start your listing — no extra forms.</p>
+        {% else %}
+          <h1 class="text-2xl font-extrabold text-ink-900">Create your account</h1>
+          <p class="mt-1 text-sm text-ink-500">Free forever. No credit card required.</p>
+        {% endif %}
       </div>
 
       <form method="post" class="space-y-4">
         {% csrf_token %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
 
         <div>
           <label class="label">Email address</label>
@@ -87,16 +104,25 @@
           {% if form.password.errors %}<p class="mt-1 text-xs text-rose-700">{{ form.password.errors|join:", " }}</p>{% endif %}
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        {% if sell_intent %}
+          {# Sellers: skip role picker — verified as owner after email confirm. #}
+          <input type="hidden" name="role" value="owner">
           <div>
-            <label class="label">I am a…</label>
-            {{ form.role }}
-          </div>
-          <div>
-            <label class="label">Company <span class="normal-case text-ink-400">(optional)</span></label>
+            <label class="label">Agency name <span class="normal-case text-ink-400">(optional)</span></label>
             {{ form.company_name }}
           </div>
-        </div>
+        {% else %}
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="label">I am a…</label>
+              {{ form.role }}
+            </div>
+            <div>
+              <label class="label">Company <span class="normal-case text-ink-400">(optional)</span></label>
+              {{ form.company_name }}
+            </div>
+          </div>
+        {% endif %}
 
         <label class="flex items-start gap-2.5 text-sm text-ink-600 cursor-pointer select-none">
           <input type="checkbox" name="accept_terms" required class="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-600 focus:ring-brand-500">
@@ -132,17 +158,21 @@
         {% endif %}
 
         <button type="submit" class="btn-primary w-full justify-center py-3 text-base rounded-xl">
-          Create free account
+          {% if sell_intent %}Create account &amp; continue{% else %}Create free account{% endif %}
         </button>
 
         <p class="text-center text-xs text-ink-400">
-          We'll email you a confirmation link to activate your account.
+          {% if sell_intent %}
+            Confirm the email we send — then you go straight to your listing. No extra “agree” screen.
+          {% else %}
+            We'll email you a confirmation link to activate your account.
+          {% endif %}
         </p>
       </form>
 
       <p class="text-center text-sm text-ink-500">
         Already have an account?
-        <a href="{% url 'web:login' %}" class="font-semibold text-brand-700 hover:text-brand-900">Sign in</a>
+        <a href="{% url 'web:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="font-semibold text-brand-700 hover:text-brand-900">Sign in</a>
       </p>
     </div>
   </div>

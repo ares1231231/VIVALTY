@@ -39,6 +39,7 @@ class StaticViewSitemap(_SiteUrlSitemap):
             "web:destinations",
             "web:quiz",
             "web:price_explorer",
+            "web:sell",
             "web:become_owner",
             "web:privacy",
             "web:terms",

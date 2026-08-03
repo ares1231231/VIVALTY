@@ -89,7 +89,8 @@ urlpatterns = [
 
     path("dashboard/", views.dashboard, name="dashboard"),
 
-    # ── List your property — wizard ───────────────────────────────────────
+    # ── Sell your property — public landing + listing wizard ──────────────
+    path("sell/",                 views.sell_landing,     name="sell"),
     path("list/",                 views.listing_start,    name="listing_start"),
     path("list/become-owner/",    views.become_owner,     name="become_owner"),
     path("list/review/",          views.listing_review,   name="listing_review"),

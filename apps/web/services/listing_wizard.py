@@ -43,7 +43,7 @@ from apps.users.models import Role
 SESSION_KEY = "listing_draft"
 
 # Ordered step list — the URLs / progress bar both key off this.
-STEPS: tuple[str, ...] = ("type", "location", "specs", "photos", "price")
+STEPS: tuple[str, ...] = ("type", "details", "photos", "price")
 
 # Every key the templates may read. We seed the draft dict with all of
 # them on first access so `{{ draft.foo|default:"" }}` and similar
@@ -53,7 +53,7 @@ _DRAFT_DEFAULTS: dict[str, object] = {
     "title": "",
     "property_type": "",
     "property_type_display": "",
-    # Step 2
+    # Step 2 — location + specs
     "country_id": None,
     "country_code": "",
     "country_name": "",
@@ -62,18 +62,18 @@ _DRAFT_DEFAULTS: dict[str, object] = {
     "address": "",
     "latitude": "",
     "longitude": "",
-    # Step 3
     "bedrooms": None,
     "bathrooms": None,
     "area_sqm": "",
     "year_built": None,
     "description": "",
-    # Step 4
+    # Step 3
     "images": [],
     "stash_id": "",
-    # Step 5
+    # Step 4
     "price": "",
     "currency": "",
+    "seller_type": "",  # "private" | "agency"
     "contact_name": "",
     "contact_email": "",
     "contact_phone": "",
@@ -83,18 +83,16 @@ _DRAFT_DEFAULTS: dict[str, object] = {
 
 STEP_LABELS = {
     "type": "Property type",
-    "location": "Location",
-    "specs": "Details",
+    "details": "Details",
     "photos": "Photos",
     "price": "Price & contact",
 }
 
 REQUIRED_FIELDS: dict[str, tuple[str, ...]] = {
-    "type": ("property_type", "title"),
-    "location": ("country_id", "city_id"),
-    "specs": ("area_sqm",),
-    "photos": (),  # optional but encouraged
-    "price": ("price", "contact_name", "contact_email"),
+    "type": ("property_type",),
+    "details": ("country_id", "city_id", "area_sqm"),
+    "photos": ("images",),  # at least one photo — see is_step_complete
+    "price": ("price",),  # contact fields are optional
 }
 
 CURRENCY_BY_COUNTRY = {
@@ -199,6 +197,8 @@ def _wipe_stash(stash_id: str | None) -> None:
 # ─── Step navigation ─────────────────────────────────────────────────────────
 
 def is_step_complete(draft: dict, step: str) -> bool:
+    if step == "photos":
+        return bool(draft.get("images"))
     fields = REQUIRED_FIELDS.get(step, ())
     return all(draft.get(f) not in (None, "") for f in fields)
 
@@ -241,8 +241,8 @@ def prev_step(current: str) -> str | None:
 
 
 def can_review(draft: dict) -> bool:
-    """Every required step must be filled before we render /list/review/."""
-    return all(is_step_complete(draft, s) for s in STEPS if REQUIRED_FIELDS[s])
+    """Every step must be complete before we render /list/review/."""
+    return all(is_step_complete(draft, s) for s in STEPS)
 
 
 # ─── Image stash ─────────────────────────────────────────────────────────────
@@ -428,10 +428,10 @@ def publish_draft(request: HttpRequest) -> Property:
         bathrooms=_to_int(draft.get("bathrooms")),
         area_sqm=_to_decimal(draft.get("area_sqm")),
         year_built=_to_int(draft.get("year_built")),
-        contact_name=(draft.get("contact_name") or user.get_full_name() or "")[:120],
+        contact_name=_contact_display_name(draft, user),
         contact_email=draft.get("contact_email") or user.email,
         contact_phone=draft.get("contact_phone") or "",
-        listing_agency=draft.get("listing_agency") or "",
+        listing_agency=_agency_label(draft),
         listing_ref=draft.get("listing_ref") or "",
     )
 
@@ -477,6 +477,25 @@ def _to_int(value) -> int | None:
         return int(value)
     except (TypeError, ValueError):
         return None
+
+
+def _contact_display_name(draft: dict, user) -> str:
+    """Derive a contact label — wizard no longer collects a free-text name."""
+    existing = (draft.get("contact_name") or "").strip()
+    if existing:
+        return existing[:120]
+    full = (user.get_full_name() or "").strip()
+    if full:
+        return full[:120]
+    if draft.get("seller_type") == "agency":
+        return "Agency"
+    return (user.email.split("@")[0] if user.email else "Private seller")[:120]
+
+
+def _agency_label(draft: dict) -> str:
+    if draft.get("seller_type") == "agency":
+        return (draft.get("listing_agency") or "Agency")[:200]
+    return ""
 
 
 __all__ = [

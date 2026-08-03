@@ -1,17 +1,8 @@
-{% comment %}
-  Step 5 — price, currency, contact + agency details.
-
-  The price input drives a live HTMX request to /htmx/list/score-preview/
-  which re-renders the AI score gauge on the side rail.
-{% endcomment %}
-<form method="post" novalidate class="space-y-6"
-      hx-trigger="input changed delay:600ms from:#id_price, change from:#id_currency"
-      hx-post="{% url 'web:listing_score_preview' %}"
-      hx-target="#score-preview-inline"
-      hx-swap="outerHTML">
+{# Price + optional contact. #}
+<form method="post" novalidate class="space-y-6">
   {% csrf_token %}
 
-  <div class="card p-6 space-y-5">
+  <div class="card p-6 sm:p-8 space-y-5">
     <div class="grid grid-cols-3 gap-4">
       <div class="col-span-2">
         <label for="id_price" class="label">Asking price <span class="text-rose-500">*</span></label>
@@ -26,46 +17,57 @@
       </div>
     </div>
 
-    {# Inline AI-suggested price chip, lazy-loaded after step renders #}
     <div id="price-suggestion"
          hx-get="{% url 'web:listing_price_suggest' %}"
          hx-trigger="load"
          hx-swap="outerHTML">
-      <div class="text-xs text-ink-400">Computing a benchmark price for {{ draft.city_name|default:"this market" }}…</div>
-    </div>
-
-    {# Inline AI score preview shown on mobile (where the side rail is hidden). #}
-    <div class="lg:hidden">
-      {% include "web/listing/_score_preview.html" with score=score draft=draft %}
+      <div class="text-xs text-ink-400">Market hint for {{ draft.city_name|default:"this area" }}…</div>
     </div>
   </div>
 
-  <div class="card p-6 space-y-5">
-    <div class="text-[11px] font-bold uppercase tracking-widest text-ink-500">Contact details for buyers</div>
+  <div class="card p-6 sm:p-8 space-y-5">
+    <div class="flex items-baseline justify-between gap-3">
+      <div class="text-[11px] font-bold uppercase tracking-widest text-ink-500">Contact</div>
+      <span class="text-[11px] text-ink-400">Optional</span>
+    </div>
+
+    <fieldset>
+      <legend class="label">Listing as</legend>
+      <div class="mt-2 grid sm:grid-cols-2 gap-3">
+        {% with selected=form.seller_type.value %}
+        {% for value, label in form.fields.seller_type.choices %}
+          <label class="relative flex cursor-pointer items-center gap-3 rounded-xl border border-ink-200 bg-white px-4 py-3.5
+                        has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50 has-[:checked]:ring-1 has-[:checked]:ring-brand-600
+                        hover:border-ink-300 transition">
+            <input type="radio"
+                   name="seller_type"
+                   value="{{ value }}"
+                   class="h-4 w-4 accent-brand-700"
+                   {% if selected == value %}checked{% endif %}>
+            <span class="text-sm font-semibold text-ink-900">{{ label }}</span>
+          </label>
+        {% endfor %}
+        {% endwith %}
+      </div>
+    </fieldset>
+
     <div class="grid sm:grid-cols-2 gap-4">
       <div>
-        <label for="id_contact_name" class="label">Contact name <span class="text-rose-500">*</span></label>
-        {{ form.contact_name }}
-      </div>
-      <div>
-        <label for="id_contact_email" class="label">Contact email <span class="text-rose-500">*</span></label>
+        <label for="id_contact_email" class="label">Email</label>
         {{ form.contact_email }}
+        {% if form.contact_email.errors %}
+          <p class="mt-1 text-xs text-rose-700">{{ form.contact_email.errors|join:", " }}</p>
+        {% endif %}
       </div>
       <div>
-        <label for="id_contact_phone" class="label">Contact phone</label>
+        <label for="id_contact_phone" class="label">Phone</label>
         {{ form.contact_phone }}
-      </div>
-      <div>
-        <label for="id_listing_agency" class="label">Agency / brokerage</label>
-        {{ form.listing_agency }}
-      </div>
-      <div class="sm:col-span-2">
-        <label for="id_listing_ref" class="label">Internal reference</label>
-        {{ form.listing_ref }}
-        <p class="mt-1 text-xs text-ink-500">Optional — MLS / agency reference shown alongside the listing.</p>
+        {% if form.contact_phone.errors %}
+          <p class="mt-1 text-xs text-rose-700">{{ form.contact_phone.errors|join:", " }}</p>
+        {% endif %}
       </div>
     </div>
   </div>
 
-  {% include "web/listing/_step_actions.html" %}
+  {% include "web/listing/_step_actions.html" with continue_label="Preview &amp; publish →" %}
 </form>

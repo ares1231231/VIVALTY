@@ -47,6 +47,11 @@ _PAGE_SEO: dict[str, tuple[str, str]] = {
         "Compare properties · Vivalty",
         "Side-by-side comparison of international property listings.",
     ),
+    "sell": (
+        "Sell your property · Vivalty",
+        "List your home free on Vivalty. AI-assisted listing, zero commission to publish, "
+        "and direct enquiries from international buyers.",
+    ),
     "become_owner": (
         "List your property on Vivalty · Vivalty",
         "Reach international buyers and renters. List residential or commercial property with "

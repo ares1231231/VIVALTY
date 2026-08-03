@@ -19,10 +19,12 @@
     {% endif %}
   </div>
   <button type="submit" class="btn-primary rounded-xl px-6 py-3 text-sm">
-    {% if next_step %}
-      Continue →
+    {% if continue_label %}
+      {{ continue_label }}
+    {% elif next_step %}
+      Next →
     {% else %}
-      Preview with AI →
+      Preview &amp; publish →
     {% endif %}
   </button>
 </div>
