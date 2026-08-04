@@ -151,7 +151,6 @@ def robots_txt(request: HttpRequest) -> HttpResponse:
         "Disallow: /list/",
         "Allow: /list/become-owner/",
         "Disallow: /chat/",
-        "Disallow: /*/story/",
     ]
     if not settings.SHOW_INVESTMENT_FEATURES:
         lines += [
@@ -508,15 +507,19 @@ def marketplace_country(request: HttpRequest, country_code: str) -> HttpResponse
 def property_detail(
     request: HttpRequest, pk: int, slug: str | None = None
 ) -> HttpResponse:
-    prop = get_object_or_404(
-        Property.objects.select_related("country", "city", "metric", "owner")
-        .prefetch_related("images", "tags"),
-        pk=pk,
-    )
-
-    # Prefer slug URL as canonical — 301 from /properties/<pk>/ when slug exists.
     from apps.web.seo_helpers import property_absolute_url
 
+    prop = (
+        Property.objects.select_related("country", "city", "metric", "owner")
+        .prefetch_related("images", "tags")
+        .filter(pk=pk)
+        .first()
+    )
+    if prop is None:
+        # Soften GSC 404s for deleted/old listing URLs — send crawl budget to marketplace.
+        return redirect("web:marketplace", permanent=True)
+
+    # Prefer slug URL as canonical — 301 from /properties/<pk>/ when slug exists.
     canonical_path = property_absolute_url(prop)
     if prop.slug and slug != prop.slug:
         qs = request.META.get("QUERY_STRING")
@@ -651,10 +654,14 @@ def property_og_image(request: HttpRequest, pk: int) -> HttpResponse:
 
     from apps.web.services.og_image import render_property_og
 
-    prop = get_object_or_404(
-        Property.objects.select_related("country", "city").prefetch_related("images"),
-        pk=pk,
+    prop = (
+        Property.objects.select_related("country", "city")
+        .prefetch_related("images")
+        .filter(pk=pk)
+        .first()
     )
+    if prop is None:
+        return redirect(f"{settings.SITE_URL.rstrip('/')}/static/img/og-image.png")
 
     ts = int(prop.updated_at.timestamp()) if prop.updated_at else 0
     cache_key = f"og:property:{pk}:{ts}"
@@ -685,10 +692,14 @@ def property_og_image(request: HttpRequest, pk: int) -> HttpResponse:
 
 def property_story(request: HttpRequest, pk: int) -> HttpResponse:
     """Vertical 9:16 slideshow for TikTok/Reels — screen-record friendly."""
-    prop = get_object_or_404(
-        Property.objects.select_related("country", "city").prefetch_related("images"),
-        pk=pk,
+    prop = (
+        Property.objects.select_related("country", "city")
+        .prefetch_related("images")
+        .filter(pk=pk)
+        .first()
     )
+    if prop is None:
+        return redirect("web:marketplace", permanent=True)
     story_images: list[str] = []
     for img in prop.images.all():
         if img.url:
