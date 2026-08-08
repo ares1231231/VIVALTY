@@ -19,6 +19,11 @@ from apps.web.models import InvestorInquiry, InvestorProfile
 from apps.web.services.security import turnstile_enabled, verify_turnstile_token
 
 
+def _visible_password_widget(**extra: object) -> forms.TextInput:
+    attrs = {"class": "input", "spellcheck": "false", "autocapitalize": "off", **extra}
+    return forms.TextInput(attrs=attrs)
+
+
 class EmailLoginForm(AuthenticationForm):
     """Authenticates with email instead of username."""
 
@@ -29,7 +34,7 @@ class EmailLoginForm(AuthenticationForm):
     password = forms.CharField(
         label="Password",
         strip=False,
-        widget=forms.PasswordInput(attrs={"class": "input", "autocomplete": "current-password"}),
+        widget=_visible_password_widget(autocomplete="current-password"),
     )
 
 
@@ -43,7 +48,7 @@ class RegisterForm(forms.ModelForm):
     """
 
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={"class": "input", "minlength": 8, "autocomplete": "new-password"}),
+        widget=_visible_password_widget(minlength=8, autocomplete="new-password"),
         min_length=8,
     )
     accept_terms = forms.BooleanField(
@@ -131,12 +136,12 @@ class ForgotPasswordForm(forms.Form):
 class SetNewPasswordForm(forms.Form):
     new_password1 = forms.CharField(
         label="New password",
-        widget=forms.PasswordInput(attrs={"class": "input", "minlength": 8, "autocomplete": "new-password"}),
+        widget=_visible_password_widget(minlength=8, autocomplete="new-password"),
         min_length=8,
     )
     new_password2 = forms.CharField(
         label="Confirm new password",
-        widget=forms.PasswordInput(attrs={"class": "input", "minlength": 8, "autocomplete": "new-password"}),
+        widget=_visible_password_widget(minlength=8, autocomplete="new-password"),
         min_length=8,
     )
 
