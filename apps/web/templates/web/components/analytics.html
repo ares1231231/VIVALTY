@@ -1,6 +1,7 @@
 {% load static %}
-{# GA4 + optional Google Ads tag — consent mode default denied until cookie banner accept. #}
+{# Google tag (gtag.js) + Consent Mode v2 — tag always present; storage granted on Accept all. #}
 {% if GA4_MEASUREMENT_ID %}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ GA4_MEASUREMENT_ID|urlencode }}"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -11,6 +12,11 @@
     ad_personalization: "denied",
     wait_for_update: 500
   });
+  gtag("js", new Date());
+  gtag("config", "{{ GA4_MEASUREMENT_ID|escapejs }}");
+  {% if GOOGLE_ADS_ID %}
+  gtag("config", "{{ GOOGLE_ADS_ID|escapejs }}");
+  {% endif %}
 </script>
 <script type="application/json" id="vivalty-analytics-config">{{ ANALYTICS_CONFIG_JSON }}</script>
 <script src="{% static 'js/analytics.js' %}" defer></script>

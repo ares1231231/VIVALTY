@@ -1,10 +1,9 @@
 /**
- * GA4 + Google Ads consent mode — loads only after cookie consent ("all").
+ * GA4 conversions + consent updates (gtag.js is loaded from analytics.html).
  * Conversion events: sign_up, generate_lead (importable in Google Ads from GA4).
  */
 (function () {
   const CONSENT_KEY = "vivalty_cookie_consent";
-  const SCRIPT_ID = "vivalty-gtag-js";
 
   function readConfig() {
     const el = document.getElementById("vivalty-analytics-config");
@@ -20,71 +19,44 @@
     return localStorage.getItem(CONSENT_KEY) === "all";
   }
 
-  function gtag() {
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push(arguments);
-  }
-
-  function ensureGtagFn() {
-    if (typeof window.gtag !== "function") {
-      window.gtag = gtag;
-    }
-  }
-
-  function loadGtagScript(measurementId, adsId, onLoad) {
-    if (document.getElementById(SCRIPT_ID)) {
-      onLoad();
-      return;
-    }
-    const s = document.createElement("script");
-    s.id = SCRIPT_ID;
-    s.async = true;
-    s.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
-    s.onload = onLoad;
-    s.onerror = onLoad;
-    document.head.appendChild(s);
-  }
-
-  let initialized = false;
+  let consentGranted = false;
   let queue = [];
 
-  function grantConsentAndConfigure(cfg) {
-    ensureGtagFn();
+  function grantConsentStorage() {
+    if (consentGranted || typeof window.gtag !== "function") return;
     window.gtag("consent", "update", {
       analytics_storage: "granted",
       ad_storage: "granted",
       ad_user_data: "granted",
       ad_personalization: "granted",
     });
-    window.gtag("js", new Date());
-    window.gtag("config", cfg.ga4Id, { send_page_view: true });
-    if (cfg.adsId) {
-      window.gtag("config", cfg.adsId);
-    }
-    initialized = true;
-    queue.forEach((item) => fireEvent(item.name, item.params));
+    consentGranted = true;
+    queue.forEach((item) => {
+      window.gtag("event", item.name, item.params);
+    });
     queue = [];
   }
 
   function fireEvent(name, params) {
-    if (!initialized || typeof window.gtag !== "function") {
-      queue.push({ name, params: params || {} });
+    const payload = params || {};
+    if (!consentGranted || typeof window.gtag !== "function") {
+      queue.push({ name, params: payload });
       return;
     }
-    window.gtag("event", name, params || {});
+    window.gtag("event", name, payload);
   }
 
-  function maybeInit() {
-    const cfg = readConfig();
-    if (!cfg || !cfg.ga4Id) return;
-    if (!hasAnalyticsConsent()) return;
-
-    loadGtagScript(cfg.ga4Id, cfg.adsId || "", () => {
-      grantConsentAndConfigure(cfg);
-      (cfg.pending || []).forEach((item) => {
-        fireEvent(item.name, item.params);
-      });
+  function flushPendingFromConfig(cfg) {
+    if (!cfg?.pending?.length) return;
+    cfg.pending.forEach((item) => {
+      fireEvent(item.name, item.params);
     });
+  }
+
+  function syncConsentState() {
+    if (!hasAnalyticsConsent()) return;
+    grantConsentStorage();
+    flushPendingFromConfig(readConfig());
   }
 
   function trackFromElement(el) {
@@ -113,12 +85,12 @@
   window.VivaltyAnalytics = { track: fireEvent };
 
   document.addEventListener("DOMContentLoaded", () => {
-    maybeInit();
+    syncConsentState();
     scanPendingMarkers(document);
   });
 
   document.addEventListener("vivalty:cookie-consent", (e) => {
-    if (e.detail?.value === "all") maybeInit();
+    if (e.detail?.value === "all") syncConsentState();
   });
 
   document.addEventListener("htmx:afterSettle", (e) => {
