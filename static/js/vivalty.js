@@ -383,22 +383,21 @@ function initLocaleSwitcher(root = document) {
 }
 
 // ── Cookie consent (GDPR / ad-platform compliance) ───────────────────────────
+const VIVALTY_COOKIE_CONSENT_KEY = "vivalty_cookie_consent";
+
+function showCookieConsentBanner() {
+  const banner = document.getElementById("cookie-consent");
+  if (!banner) return;
+  banner.classList.remove("hidden");
+  banner.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
 function initCookieConsent() {
   const banner = document.getElementById("cookie-consent");
   if (!banner) return;
 
-  const storageKey = "vivalty_cookie_consent";
-  const stored = localStorage.getItem(storageKey);
-  if (stored) {
-    document.dispatchEvent(
-      new CustomEvent("vivalty:cookie-consent", { detail: { value: stored } })
-    );
-    return;
-  }
-
-  banner.classList.remove("hidden");
-
-  const persist = (value) => {
+  const storageKey = VIVALTY_COOKIE_CONSENT_KEY;
+  let persist = (value) => {
     localStorage.setItem(storageKey, value);
     banner.classList.add("hidden");
     document.dispatchEvent(
@@ -408,7 +407,33 @@ function initCookieConsent() {
 
   document.getElementById("cookie-accept")?.addEventListener("click", () => persist("all"));
   document.getElementById("cookie-decline")?.addEventListener("click", () => persist("essential"));
+
+  document.querySelectorAll("[data-vivalty-cookie-preferences]").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      showCookieConsentBanner();
+    });
+  });
+
+  const stored = localStorage.getItem(storageKey);
+  if (stored) {
+    document.dispatchEvent(
+      new CustomEvent("vivalty:cookie-consent", { detail: { value: stored } })
+    );
+    return;
+  }
+
+  showCookieConsentBanner();
 }
+
+window.VivaltyCookieConsent = {
+  key: VIVALTY_COOKIE_CONSENT_KEY,
+  show: showCookieConsentBanner,
+  reset() {
+    localStorage.removeItem(VIVALTY_COOKIE_CONSENT_KEY);
+    showCookieConsentBanner();
+  },
+};
 
 // ── Listing wizard: cascade cities when country changes ─────────────────────
 function initListingCityCascade(root = document) {
