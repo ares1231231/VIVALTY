@@ -90,6 +90,7 @@ urlpatterns = [
 
     # Email verification
     path("auth/verify/sent/", views.verify_sent_view, name="verify_sent"),
+    path("analytics/ack-sign-up/", views.analytics_ack_sign_up, name="analytics_ack_sign_up"),
     path("auth/verify/<str:uidb64>/<str:token>/", views.verify_email_view, name="verify_email"),
 
     # Password reset

@@ -33,6 +33,7 @@
     consentGranted = true;
     queue.forEach((item) => {
       window.gtag("event", item.name, item.params);
+      if (item.name === "sign_up") ackSignUpSent();
     });
     queue = [];
   }
@@ -46,10 +47,30 @@
     window.gtag("event", name, payload);
   }
 
+  function csrfToken() {
+    const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : "";
+  }
+
+  function ackSignUpSent() {
+    const url = document.querySelector("[data-vivalty-analytics-ack-sign-up]");
+    if (!url) return;
+    fetch(url.getAttribute("data-vivalty-analytics-ack-sign-up"), {
+      method: "POST",
+      headers: { "X-CSRFToken": csrfToken() },
+      credentials: "same-origin",
+    }).catch(() => {});
+  }
+
   function flushPendingFromConfig(cfg) {
     if (!cfg?.pending?.length) return;
     cfg.pending.forEach((item) => {
+      if (!consentGranted) {
+        fireEvent(item.name, item.params);
+        return;
+      }
       fireEvent(item.name, item.params);
+      if (item.name === "sign_up") ackSignUpSent();
     });
   }
 

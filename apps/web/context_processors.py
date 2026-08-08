@@ -216,7 +216,10 @@ def analytics(request):
     """GA4 / Google Ads IDs and pending conversion events (overridable per view)."""
     ga4 = getattr(settings, "GA4_MEASUREMENT_ID", "")
     ads = getattr(settings, "GOOGLE_ADS_ID", "")
-    cfg = {"ga4Id": ga4, "adsId": ads, "pending": []}
+    pending: list[dict] = []
+    if request.session.get("analytics_sign_up"):
+        pending.append({"name": "sign_up", "params": {"method": "email"}})
+    cfg = {"ga4Id": ga4, "adsId": ads, "pending": pending}
     return {
         "GA4_MEASUREMENT_ID": ga4,
         "GOOGLE_ADS_ID": ads,

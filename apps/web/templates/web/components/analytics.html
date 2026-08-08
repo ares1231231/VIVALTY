@@ -1,6 +1,7 @@
 {% load static %}
 {# Google tag (gtag.js) + Consent Mode v2 — tag always present; storage granted on Accept all. #}
 {% if GA4_MEASUREMENT_ID %}
+<span class="hidden" data-vivalty-analytics-ack-sign-up="{% url 'web:analytics_ack_sign_up' %}" hidden></span>
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ GA4_MEASUREMENT_ID|urlencode }}"></script>
 <script>
   window.dataLayer = window.dataLayer || [];

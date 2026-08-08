@@ -1641,6 +1641,13 @@ def register_view(request: HttpRequest) -> HttpResponse:
     )
 
 
+@require_POST
+def analytics_ack_sign_up(request: HttpRequest) -> HttpResponse:
+    """Clear pending GA4 sign_up after the browser sent the event (cookie consent safe)."""
+    request.session.pop("analytics_sign_up", None)
+    return HttpResponse(status=204)
+
+
 def verify_sent_view(request: HttpRequest) -> HttpResponse:
     """Friendly 'check your inbox' page. Also accepts a POST to resend."""
     if request.method == "POST":
@@ -1655,19 +1662,7 @@ def verify_sent_view(request: HttpRequest) -> HttpResponse:
         messages.success(request, "If an account exists for that email, we just sent a fresh verification link.")
         return redirect("web:verify_sent")
 
-    pending = []
-    if request.session.pop("analytics_sign_up", False):
-        pending.append({"name": "sign_up", "params": {"method": "email"}})
-    cfg = {
-        "ga4Id": settings.GA4_MEASUREMENT_ID,
-        "adsId": settings.GOOGLE_ADS_ID,
-        "pending": pending,
-    }
-    return render(
-        request,
-        "web/auth/verify_sent.html",
-        {"ANALYTICS_CONFIG_JSON": json.dumps(cfg)},
-    )
+    return render(request, "web/auth/verify_sent.html")
 
 
 @ratelimit(key="ip", rate="30/m", block=False)
