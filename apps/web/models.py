@@ -163,3 +163,28 @@ class InvestorInquiry(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} <{self.email}> ({self.profile})"
+
+
+class StaffActivityAlert(models.Model):
+    """Unread staff notification for a new signup or member login (Django admin banner)."""
+
+    class Kind(models.TextChoices):
+        SIGNUP = "signup", "New account"
+        LOGIN = "login", "Login"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="staff_activity_alerts",
+    )
+    kind = models.CharField(max_length=16, choices=Kind.choices)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["-created_at", "kind"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.get_kind_display()}: {self.user_id} @ {self.created_at:%Y-%m-%d %H:%M}"

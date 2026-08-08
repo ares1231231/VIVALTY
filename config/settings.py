@@ -99,7 +99,7 @@ INSTALLED_APPS = [
     "apps.properties",
     "apps.ai_advisor",
     "apps.billing",
-    "apps.web",
+    "apps.web.apps.WebConfig",
 ]
 
 # Server-rendered website auth: send users back to /auth/login/ when they
