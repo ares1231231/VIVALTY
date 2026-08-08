@@ -144,6 +144,7 @@ TEMPLATES = [
                 "apps.web.context_processors.company",
                 "apps.web.context_processors.recently_viewed",
                 "apps.web.context_processors.i18n_ui",
+                "apps.web.context_processors.analytics",
             ],
         },
     },
@@ -407,6 +408,12 @@ PLAN_TRIAL_DAYS = int(os.getenv("PLAN_TRIAL_DAYS", "14"))
 # Leave both blank in dev to disable the challenge.
 TURNSTILE_SITE_KEY = os.getenv("TURNSTILE_SITE_KEY", "")
 TURNSTILE_SECRET_KEY = os.getenv("TURNSTILE_SECRET_KEY", "")
+
+# --- Analytics (GA4 + Google Ads) -----------------------------------------
+# GA4 measurement ID (G-XXXXXXXX). Leave empty to disable all tracking scripts.
+GA4_MEASUREMENT_ID = os.getenv("GA4_MEASUREMENT_ID", "").strip()
+# Google Ads account ID (AW-XXXXXXXX) — optional; enables Ads remarketing / direct tag pairing.
+GOOGLE_ADS_ID = os.getenv("GOOGLE_ADS_ID", "").strip()
 
 # --- Auth tokens ------------------------------------------------------------
 # Email verification links must be opened within this many hours.

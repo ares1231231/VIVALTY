@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from django.conf import settings
 
 # Fallback copy when a page does not override `seo_head`.
@@ -207,4 +209,16 @@ def i18n_ui(request):
         "UI_LANGUAGES": SUPPORTED_LANGUAGES,
         "UI_LANGUAGE": lang,
         "UI_RTL": lang == "ar",
+    }
+
+
+def analytics(request):
+    """GA4 / Google Ads IDs and pending conversion events (overridable per view)."""
+    ga4 = getattr(settings, "GA4_MEASUREMENT_ID", "")
+    ads = getattr(settings, "GOOGLE_ADS_ID", "")
+    cfg = {"ga4Id": ga4, "adsId": ads, "pending": []}
+    return {
+        "GA4_MEASUREMENT_ID": ga4,
+        "GOOGLE_ADS_ID": ads,
+        "ANALYTICS_CONFIG_JSON": json.dumps(cfg),
     }

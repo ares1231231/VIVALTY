@@ -388,7 +388,13 @@ function initCookieConsent() {
   if (!banner) return;
 
   const storageKey = "vivalty_cookie_consent";
-  if (localStorage.getItem(storageKey)) return;
+  const stored = localStorage.getItem(storageKey);
+  if (stored) {
+    document.dispatchEvent(
+      new CustomEvent("vivalty:cookie-consent", { detail: { value: stored } })
+    );
+    return;
+  }
 
   banner.classList.remove("hidden");
 

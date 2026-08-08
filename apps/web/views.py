@@ -1622,6 +1622,7 @@ def register_view(request: HttpRequest) -> HttpResponse:
                 request,
                 "We couldn't send your verification email right now. You can request a new one below.",
             )
+        request.session["analytics_sign_up"] = True
         return redirect("web:verify_sent")
 
     # Remember next early so a GET→POST flow (or verify from another tab) still works.
@@ -1653,7 +1654,20 @@ def verify_sent_view(request: HttpRequest) -> HttpResponse:
                     pass
         messages.success(request, "If an account exists for that email, we just sent a fresh verification link.")
         return redirect("web:verify_sent")
-    return render(request, "web/auth/verify_sent.html")
+
+    pending = []
+    if request.session.pop("analytics_sign_up", False):
+        pending.append({"name": "sign_up", "params": {"method": "email"}})
+    cfg = {
+        "ga4Id": settings.GA4_MEASUREMENT_ID,
+        "adsId": settings.GOOGLE_ADS_ID,
+        "pending": pending,
+    }
+    return render(
+        request,
+        "web/auth/verify_sent.html",
+        {"ANALYTICS_CONFIG_JSON": json.dumps(cfg)},
+    )
 
 
 @ratelimit(key="ip", rate="30/m", block=False)
