@@ -41,10 +41,8 @@ class EmailLoginForm(AuthenticationForm):
 class RegisterForm(forms.ModelForm):
     """Public signup form.
 
-    The user is created with ``is_active=False`` and ``email_verified=False``;
-    the view is responsible for sending the verification email. The auto-login
-    only happens after the user opens the verification link, so we never
-    establish a session for an unverified address.
+    Users are active immediately (``is_active=True``) with ``email_verified=False``.
+    The view logs them in and sends an optional confirmation email.
     """
 
     password = forms.CharField(
@@ -106,7 +104,7 @@ class RegisterForm(forms.ModelForm):
         user = super().save(commit=False)
         user.username = self.cleaned_data["email"]
         user.set_password(self.cleaned_data["password"])
-        user.is_active = False
+        user.is_active = True
         user.email_verified = False
         if commit:
             user.save()

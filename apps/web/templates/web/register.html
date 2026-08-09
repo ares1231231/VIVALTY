@@ -26,8 +26,8 @@
           <span class="text-brand-400">Reach buyers worldwide.</span>
         </h2>
         <p class="mt-4 text-ink-300 text-sm leading-relaxed">
-          Confirm your email once — then go straight into the listing form.
-          No commission to publish. AI helps with your description.
+          Create your account — then go straight into the listing form.
+          We’ll email an optional confirmation link. No commission to publish.
         </p>
       {% else %}
         <h2 class="text-3xl font-extrabold text-white leading-tight">
@@ -70,7 +70,7 @@
         </div>
         {% if sell_intent %}
           <h1 class="text-2xl font-extrabold text-ink-900">Create your seller account</h1>
-          <p class="mt-1 text-sm text-ink-500">Free to list. Confirm your email, then start your listing — no extra forms.</p>
+          <p class="mt-1 text-sm text-ink-500">Free to list. Start your listing right after signup — no extra forms.</p>
         {% else %}
           <h1 class="text-2xl font-extrabold text-ink-900">Create your account</h1>
           <p class="mt-1 text-sm text-ink-500">Free forever. No credit card required.</p>
@@ -105,7 +105,7 @@
         </div>
 
         {% if sell_intent %}
-          {# Sellers: skip role picker — verified as owner after email confirm. #}
+          {# Sellers: skip role picker — owner role on signup. #}
           <input type="hidden" name="role" value="owner">
           <div>
             <label class="label">Agency name <span class="normal-case text-ink-400">(optional)</span></label>
@@ -163,9 +163,9 @@
 
         <p class="text-center text-xs text-ink-400">
           {% if sell_intent %}
-            Confirm the email we send — then you go straight to your listing. No extra “agree” screen.
+            You’ll go straight to your listing after signup. A confirmation email is sent but not required.
           {% else %}
-            We'll email you a confirmation link to activate your account.
+            We’ll send an optional confirmation email — you can use your account without clicking it.
           {% endif %}
         </p>
       </form>

@@ -16,6 +16,7 @@ from typing import Iterator
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.contrib.auth.hashers import check_password
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg, Count, F, Max, Min, Q
@@ -1569,22 +1570,18 @@ def login_view(request: HttpRequest) -> HttpResponse:
         messages.success(request, "Welcome back.")
         return redirect(next_url or "web:dashboard")
 
-    # Surface a friendlier error when the credentials are correct but the
-    # account is still pending email verification.
+    # Legacy accounts created before optional-verify signup may still be inactive.
     if request.method == "POST" and not form.is_valid():
         raw_email = (request.POST.get("username") or "").lower().strip()
-        if raw_email:
-            pending = User.objects.filter(email__iexact=raw_email, is_active=False, email_verified=False).first()
-            if pending:
-                messages.info(
-                    request,
-                    "Almost there — please confirm your email. We just resent the verification link.",
-                )
-                try:
-                    send_verification_email(pending)
-                except Exception:
-                    pass
-                return redirect("web:verify_sent")
+        password = request.POST.get("password") or ""
+        if raw_email and password:
+            pending = User.objects.filter(email__iexact=raw_email, is_active=False).first()
+            if pending and check_password(password, pending.password):
+                pending.is_active = True
+                pending.save(update_fields=["is_active"])
+                auth_login(request, pending)
+                messages.success(request, "Welcome back.")
+                return redirect(next_url or "web:dashboard")
 
     return render(request, "web/login.html", {"form": form, "next": next_url})
 
@@ -1613,17 +1610,26 @@ def register_view(request: HttpRequest) -> HttpResponse:
     if request.method == "POST" and form.is_valid():
         user = form.save()
         _remember_post_verify_next(request, next_url)
+        email_sent = True
         try:
             send_verification_email(user)
         except Exception:
-            # Don't leak the user's existence/state if the email provider hiccups.
-            # The user can still trigger a resend from the verify-sent page.
-            messages.warning(
-                request,
-                "We couldn't send your verification email right now. You can request a new one below.",
-            )
+            email_sent = False
         request.session["analytics_sign_up"] = True
-        return redirect("web:verify_sent")
+        auth_login(request, user)
+        if next_url and "/list" in next_url:
+            _ensure_owner(user)
+        if email_sent:
+            messages.success(
+                request,
+                "You're signed in. We sent a confirmation email — clicking it is optional.",
+            )
+        else:
+            messages.success(
+                request,
+                "You're signed in. We couldn't send the confirmation email right now; you can still use your account.",
+            )
+        return redirect(next_url or "web:dashboard")
 
     # Remember next early so a GET→POST flow (or verify from another tab) still works.
     if next_url:
@@ -1867,8 +1873,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
 # ─── List your property — multi-step wizard ────────────────────────────────
 #
-# Public entry: /sell/ (attractive landing). Auth → email confirm → /list/
-# with no become-owner / "do you agree" wall (role upgrade is automatic).
+# Public entry: /sell/ (attractive landing). Signup → immediate login → /list/
 #
 # Per-step form posts redirect to the next step. HTMX is reserved for the
 # live score preview, AI description rewrite, and image uploads.

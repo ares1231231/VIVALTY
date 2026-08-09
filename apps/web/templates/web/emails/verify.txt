@@ -1,6 +1,6 @@
 Hi{% if user.first_name %} {{ user.first_name }}{% endif %},
 
-Welcome to Vivalty. Please confirm your email by opening the link below:
+Welcome to Vivalty. You can confirm your email anytime with the link below (optional):
 
 {{ verify_url }}
 

@@ -55,7 +55,7 @@ class User(AbstractUser):
     country = models.CharField(max_length=2, blank=True, help_text="ISO-3166-1 alpha-2")
     email_verified = models.BooleanField(
         default=False,
-        help_text="True once the user clicked the verification link sent at signup.",
+        help_text="True once the user clicked the optional verification link sent at signup.",
     )
     email_verified_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
