@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone as dt_timezone
 
 from django.contrib import admin
 from django.http import HttpRequest, HttpResponse
@@ -25,7 +25,7 @@ def _watermark_from_session(request: HttpRequest) -> datetime:
             if timezone.is_naive(parsed):
                 parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
             return parsed
-    return datetime.fromtimestamp(0, tz=timezone.utc)
+    return datetime.fromtimestamp(0, tz=dt_timezone.utc)
 
 
 def staff_alerts_for_request(request: HttpRequest) -> list[StaffActivityAlert]:
@@ -40,10 +40,18 @@ def staff_alerts_for_request(request: HttpRequest) -> list[StaffActivityAlert]:
 
 
 def staff_alert_banner_context(request: HttpRequest) -> dict:
+    empty = {
+        "staff_activity_alerts": [],
+        "staff_activity_alerts_extra": 0,
+        "staff_activity_alerts_dismiss_url": "",
+    }
+    if not request.user.is_authenticated or not request.user.is_staff:
+        return empty
+
+    watermark = _watermark_from_session(request)
     alerts = staff_alerts_for_request(request)
-    extra = StaffActivityAlert.objects.filter(
-        created_at__gt=_watermark_from_session(request)
-    ).count() - len(alerts)
+    total = StaffActivityAlert.objects.filter(created_at__gt=watermark).count()
+    extra = total - len(alerts)
     return {
         "staff_activity_alerts": alerts,
         "staff_activity_alerts_extra": max(extra, 0),
