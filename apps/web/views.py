@@ -1876,19 +1876,25 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
 # ─── List your property — multi-step wizard ────────────────────────────────
 #
-# Public entry: /sell/ → register?next=/list/ (logged-out) or listing wizard (logged-in).
+# Public entry: /sell/ and /list/ are open. Account is required only to publish.
 #
 # Per-step form posts redirect to the next step. HTMX is reserved for the
 # live score preview, AI description rewrite, and image uploads.
 
 
 def sell_landing(request: HttpRequest) -> HttpResponse:
-    """Send sellers to signup first; logged-in users skip to the listing wizard."""
+    """Send sellers straight into the listing wizard (account only at publish)."""
+    return redirect("web:listing_start")
+
+
+def _guest_publish_auth_url() -> str:
+    next_url = reverse("web:listing_publish_continue")
+    return f"{reverse('web:register')}?next={next_url}"
+
+
+def _maybe_ensure_owner(request: HttpRequest) -> None:
     if request.user.is_authenticated:
-        return redirect("web:listing_start")
-    register_url = reverse("web:register")
-    next_url = reverse("web:listing_start")
-    return redirect(f"{register_url}?next={next_url}")
+        _ensure_owner(request.user)
 
 
 _STEP_FORM_CLASSES = {
@@ -1921,6 +1927,8 @@ def _ensure_owner(user) -> None:
     Phone / agency / contact details are collected inside the listing wizard
     itself, so the old intermediate "become owner" form is no longer needed.
     """
+    if not getattr(user, "is_authenticated", False):
+        return
     if _is_owner_or_admin(user):
         return
     user.role = Role.OWNER
@@ -1989,20 +1997,18 @@ def _render_step(request: HttpRequest, step: str, form=None) -> HttpResponse:
     return render(request, "web/listing/wizard.html", {**ctx, "step_template": _STEP_TEMPLATES[step]})
 
 
-@login_required
 def listing_start(request: HttpRequest) -> HttpResponse:
     """Entry point: /list/. Sends the user straight into the listing wizard."""
-    _ensure_owner(request.user)
+    _maybe_ensure_owner(request)
     return redirect("web:listing_step", step=listing_wizard.STEPS[0])
 
 
-@login_required
 def listing_step(request: HttpRequest, step: str) -> HttpResponse:
     """Render or process a single wizard step."""
     step = _STEP_ALIASES.get(step, step)
     if step not in listing_wizard.STEPS:
         return redirect("web:listing_start")
-    _ensure_owner(request.user)
+    _maybe_ensure_owner(request)
 
     if request.method == "POST":
         return _handle_step_post(request, step)
@@ -2054,9 +2060,8 @@ def _handle_step_post(request: HttpRequest, step: str) -> HttpResponse:
     return redirect("web:listing_step", step=nxt)
 
 
-@login_required
 def listing_review(request: HttpRequest) -> HttpResponse:
-    _ensure_owner(request.user)
+    _maybe_ensure_owner(request)
     draft = listing_wizard.get_draft(request)
     if not listing_wizard.can_review(draft):
         messages.info(request, "A few details are still missing — let's finish them first.")
@@ -2146,9 +2151,7 @@ def listing_review(request: HttpRequest) -> HttpResponse:
     )
 
 
-@login_required
-@require_POST
-def listing_publish(request: HttpRequest) -> HttpResponse:
+def _publish_session_draft(request: HttpRequest) -> HttpResponse:
     _ensure_owner(request.user)
     try:
         prop = listing_wizard.publish_draft(request)
@@ -2159,6 +2162,19 @@ def listing_publish(request: HttpRequest) -> HttpResponse:
             return redirect("billing:pricing")
         return redirect("web:listing_review")
     return redirect("web:listing_success", pk=prop.pk)
+
+
+@require_POST
+def listing_publish(request: HttpRequest) -> HttpResponse:
+    if not request.user.is_authenticated:
+        return redirect(_guest_publish_auth_url())
+    return _publish_session_draft(request)
+
+
+@login_required
+def listing_publish_continue(request: HttpRequest) -> HttpResponse:
+    """After guest signup/login, publish the session draft they already filled."""
+    return _publish_session_draft(request)
 
 
 @login_required
@@ -2182,12 +2198,13 @@ def listing_success(request: HttpRequest, pk: int) -> HttpResponse:
     )
 
 
-@login_required
 def listing_cancel(request: HttpRequest) -> HttpResponse:
-    """Clear the in-flight draft and return to the dashboard."""
+    """Clear the in-flight draft and return to the dashboard (or home if logged out)."""
     listing_wizard.clear_draft(request)
     messages.info(request, "Listing draft discarded.")
-    return redirect("web:dashboard")
+    if request.user.is_authenticated:
+        return redirect("web:dashboard")
+    return redirect("web:home")
 
 
 # ─── Become-owner intercept ────────────────────────────────────────────────
@@ -2232,7 +2249,6 @@ def listing_delete(request: HttpRequest, pk: int) -> HttpResponse:
 # ─── HTMX endpoints for the wizard ─────────────────────────────────────────
 
 
-@login_required
 @require_POST
 def listing_score_preview(request: HttpRequest) -> HttpResponse:
     """Recompute the score preview from the in-flight price / currency
@@ -2254,7 +2270,7 @@ def listing_score_preview(request: HttpRequest) -> HttpResponse:
     )
 
 
-@login_required
+@ratelimit(key="ip", rate="8/h", block=True)
 @require_POST
 def listing_ai_rewrite(request: HttpRequest) -> HttpResponse:
     """Polish the owner-typed description using the AI rewriter and swap the
@@ -2310,7 +2326,6 @@ def listing_ai_rewrite(request: HttpRequest) -> HttpResponse:
     )
 
 
-@login_required
 def listing_price_suggest(request: HttpRequest) -> HttpResponse:
     """Render an inline price suggestion chip for the price step, given the
     draft's city and area.
@@ -2332,7 +2347,7 @@ def listing_price_suggest(request: HttpRequest) -> HttpResponse:
     return render(request, "web/listing/_price_suggestion.html", {"s": suggestion})
 
 
-@login_required
+@ratelimit(key="ip", rate="30/h", block=True)
 @require_POST
 def listing_image_upload(request: HttpRequest) -> HttpResponse:
     """Receive one or more file uploads and append them to the draft stash.
@@ -2356,7 +2371,7 @@ def listing_image_upload(request: HttpRequest) -> HttpResponse:
     )
 
 
-@login_required
+@ratelimit(key="ip", rate="40/h", block=True)
 @require_POST
 def listing_image_url(request: HttpRequest) -> HttpResponse:
     """Append a paste-URL image to the draft and refresh the grid."""
@@ -2372,7 +2387,6 @@ def listing_image_url(request: HttpRequest) -> HttpResponse:
     )
 
 
-@login_required
 @require_POST
 def listing_image_delete(request: HttpRequest, image_id: str) -> HttpResponse:
     listing_wizard.remove_image(request, image_id)
@@ -2383,7 +2397,7 @@ def listing_image_delete(request: HttpRequest, image_id: str) -> HttpResponse:
     )
 
 
-@login_required
+@ratelimit(key="ip", rate="40/m", block=True)
 def listing_address_search(request: HttpRequest) -> HttpResponse:
     """Address autocomplete via Nominatim. Used by the location step."""
     query = (request.GET.get("q") or request.GET.get("address") or "").strip()
@@ -2397,7 +2411,7 @@ def listing_address_search(request: HttpRequest) -> HttpResponse:
     return render(request, "web/listing/_address_suggestions.html", {"suggestions": suggestions})
 
 
-@login_required
+@ratelimit(key="ip", rate="40/m", block=True)
 def listing_city_search(request: HttpRequest) -> HttpResponse:
     """City autocomplete: local DB first, then Nominatim for any other city."""
     query = (request.GET.get("city_name") or request.GET.get("q") or "").strip()

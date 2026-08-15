@@ -65,11 +65,7 @@
           {% if plan.code == current_plan_code %}
             <span class="btn-secondary w-full justify-center cursor-default opacity-70">Current plan</span>
           {% elif plan.monthly_price == 0 %}
-            {% if user.is_authenticated %}
-              <a href="{% url 'web:listing_start' %}" class="btn-secondary w-full justify-center">Start listing free</a>
-            {% else %}
-              <a href="{% url 'web:register' %}" class="btn-secondary w-full justify-center">Start free</a>
-            {% endif %}
+            <a href="{% url 'web:listing_start' %}" class="btn-secondary w-full justify-center">Start listing free</a>
           {% elif user.is_authenticated %}
             <div class="space-y-2">
               <form method="post" action="{% url 'billing:plan_checkout' plan.code %}">

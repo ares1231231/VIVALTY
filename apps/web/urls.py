@@ -106,6 +106,7 @@ urlpatterns = [
     path("list/become-owner/",    views.become_owner,     name="become_owner"),
     path("list/review/",          views.listing_review,   name="listing_review"),
     path("list/publish/",         views.listing_publish,  name="listing_publish"),
+    path("list/publish/continue/", views.listing_publish_continue, name="listing_publish_continue"),
     path("list/success/<int:pk>/", views.listing_success, name="listing_success"),
     path("list/cancel/",          views.listing_cancel,   name="listing_cancel"),
     path("list/<int:pk>/edit/",   views.listing_edit,     name="listing_edit"),

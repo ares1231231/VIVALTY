@@ -172,6 +172,7 @@
           <a href="{% url 'web:listing_step' step='price' %}" class="rounded-lg border border-ink-200 bg-white px-2.5 py-1.5 font-semibold text-ink-600 hover:border-brand-300 hover:text-brand-700">Price</a>
         </div>
 
+        {% if user.is_authenticated %}
         <form method="post" action="{% url 'web:listing_publish' %}" class="space-y-3">
           {% csrf_token %}
           <button type="submit" class="btn-primary w-full justify-center rounded-xl px-6 py-3.5 text-base">
@@ -186,6 +187,28 @@
             Cancel draft
           </a>
         </form>
+        {% else %}
+        <div class="space-y-3">
+          <a href="{% url 'web:register' %}?next={% url 'web:listing_publish_continue' %}"
+             class="btn-primary w-full justify-center rounded-xl px-6 py-3.5 text-base">
+            Create a free account to publish →
+          </a>
+          <p class="text-center text-xs text-ink-500 leading-relaxed">
+            Your listing is already saved. Sign up takes a minute — then we publish it.
+            Goes live after a quick quality check — usually within 24h.
+          </p>
+          <p class="text-center text-xs text-ink-500">
+            Already have an account?
+            <a href="{% url 'web:login' %}?next={% url 'web:listing_publish_continue' %}"
+               class="font-semibold text-brand-700 hover:text-brand-900">Sign in</a>
+          </p>
+          <a href="{% url 'web:listing_cancel' %}"
+             class="block text-center text-xs font-semibold text-ink-500 hover:text-rose-600"
+             onclick="return confirm('Discard this draft? Uploaded photos will be removed.');">
+            Cancel draft
+          </a>
+        </div>
+        {% endif %}
       </aside>
     </div>
   </div>

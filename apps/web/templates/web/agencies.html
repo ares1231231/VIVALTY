@@ -23,8 +23,8 @@
       and boost your best mandates to the top of the search.
     </p>
     <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-      <a href="{% url 'web:register' %}?next={% url 'web:listing_start' %}" class="btn-primary justify-center px-8 py-3.5 text-base">
-        Create your free agency account
+      <a href="{% url 'web:listing_start' %}" class="btn-primary justify-center px-8 py-3.5 text-base">
+        List your first property
       </a>
       <a href="{% url 'billing:pricing' %}" class="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/5 px-8 py-3.5 text-base font-semibold text-white transition hover:border-white/40 hover:bg-white/10">
         See plans &amp; pricing
@@ -168,7 +168,7 @@
       Start free with your first listings today, or talk to us — we'll help you get your portfolio online.
     </p>
     <div class="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-      <a href="{% url 'web:register' %}?next={% url 'web:listing_start' %}" class="btn-primary justify-center px-8 py-3.5 text-base">Create free account</a>
+      <a href="{% url 'web:listing_start' %}" class="btn-primary justify-center px-8 py-3.5 text-base">Start listing free</a>
       {% if COMPANY_WHATSAPP %}
       <a href="https://wa.me/{{ COMPANY_WHATSAPP|digits }}" target="_blank" rel="noopener noreferrer"
          class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-8 py-3.5 text-base font-bold text-white transition hover:bg-[#1ebe57]">

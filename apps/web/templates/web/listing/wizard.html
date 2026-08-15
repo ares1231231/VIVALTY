@@ -32,6 +32,11 @@
         {% if step == "photos" %}From your gallery or camera — at least one photo.{% endif %}
         {% if step == "price" %}Set your asking price. Contact details are optional.{% endif %}
       </p>
+      {% if not user.is_authenticated %}
+      <p class="mx-auto mt-2 max-w-md text-xs text-ink-500">
+        No account needed until you publish.
+      </p>
+      {% endif %}
     </header>
 
     <script id="vv-cities-by-country" type="application/json">{{ cities_by_country_json|safe }}</script>
