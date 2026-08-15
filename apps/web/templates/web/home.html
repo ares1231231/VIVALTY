@@ -156,7 +156,15 @@ Navbar overlays this section (vv-nav--overlay).
                   <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                 </svg>
               </button>
-              <div class="vv-filter-menu" data-filter-menu data-price-menu role="listbox"></div>
+              <div class="vv-filter-menu" data-filter-menu data-price-menu role="listbox">
+                <button type="button" class="vv-filter-option is-selected" data-value="" data-label="Any price">Any price</button>
+                <button type="button" class="vv-filter-option" data-value="250000" data-label="Less than €250k">Less than €250k</button>
+                <button type="button" class="vv-filter-option" data-value="500000" data-label="Less than €500k">Less than €500k</button>
+                <button type="button" class="vv-filter-option" data-value="1000000" data-label="Less than €1M">Less than €1M</button>
+                <button type="button" class="vv-filter-option" data-value="2500000" data-label="Less than €2.5M">Less than €2.5M</button>
+                <button type="button" class="vv-filter-option" data-value="5000000" data-label="Less than €5M">Less than €5M</button>
+                <button type="button" class="vv-filter-option" data-value="10000000" data-label="Less than €10M">Less than €10M</button>
+              </div>
             </div>
 
             <button type="submit" class="vv-filter-cta">
@@ -1142,7 +1150,9 @@ AI ADVISOR CTA
     var menu = choice.querySelector('[data-filter-menu]');
 
     if (trigger) {
-      trigger.addEventListener('click', function () {
+      trigger.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
         var willOpen = !choice.classList.contains('is-open');
         closeFilters(choice);
         choice.classList.toggle('is-open', willOpen);

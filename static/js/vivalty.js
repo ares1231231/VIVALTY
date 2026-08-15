@@ -193,7 +193,7 @@ function initFilterPurpose() {
   const tabs = [...stack.querySelectorAll("[data-purpose-tab]")];
   const purposeInput = stack.querySelector("[data-purpose-input]");
   const priceField = stack.querySelector("[data-price-filter]");
-  if (!tabs.length || !purposeInput || !priceField) return;
+  if (!priceField) return;
 
   const priceLabel = priceField.querySelector("[data-price-label]");
   const priceInput = priceField.querySelector("[data-price-input]");
@@ -233,13 +233,13 @@ function initFilterPurpose() {
   }
 
   function activate(purpose) {
-    const prev = purposeInput.value;
+    const prev = purposeInput ? purposeInput.value : "buy";
     tabs.forEach((tab) => {
       const on = tab.getAttribute("data-purpose-tab") === purpose;
       tab.classList.toggle("is-active", on);
       tab.setAttribute("aria-selected", on ? "true" : "false");
     });
-    purposeInput.value = purpose;
+    if (purposeInput) purposeInput.value = purpose;
     if (prev !== purpose) resetPrice(purpose);
   }
 
@@ -247,7 +247,7 @@ function initFilterPurpose() {
     tab.addEventListener("click", () => activate(tab.getAttribute("data-purpose-tab")));
   });
 
-  resetPrice("buy");
+  resetPrice(purposeInput?.value || "buy");
 }
 
 function initHeroVideo() {
