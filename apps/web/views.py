@@ -1873,26 +1873,19 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
 # ─── List your property — multi-step wizard ────────────────────────────────
 #
-# Public entry: /sell/ (attractive landing). Signup → immediate login → /list/
+# Public entry: /sell/ → register?next=/list/ (logged-out) or listing wizard (logged-in).
 #
 # Per-step form posts redirect to the next step. HTMX is reserved for the
 # live score preview, AI description rewrite, and image uploads.
 
 
 def sell_landing(request: HttpRequest) -> HttpResponse:
-    """Marketing landing for « Sell your property » — one clear start CTA."""
-    return render(
-        request,
-        "web/sell.html",
-        {
-            "start_url": (
-                reverse("web:listing_start")
-                if request.user.is_authenticated
-                else f"{reverse('web:register')}?next={reverse('web:listing_start')}"
-            ),
-            "login_url": f"{reverse('web:login')}?next={reverse('web:listing_start')}",
-        },
-    )
+    """Send sellers to signup first; logged-in users skip to the listing wizard."""
+    if request.user.is_authenticated:
+        return redirect("web:listing_start")
+    register_url = reverse("web:register")
+    next_url = reverse("web:listing_start")
+    return redirect(f"{register_url}?next={next_url}")
 
 
 _STEP_FORM_CLASSES = {
