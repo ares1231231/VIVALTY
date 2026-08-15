@@ -30,7 +30,7 @@ async function initCoverflow3d(root, canvas, dataEl) {
   const nextBtn = root.querySelector("[data-coverflow-next]");
   const stage = root.querySelector("[data-coverflow-stage]");
 
-  const IMG_PARAMS = "?auto=format&fit=crop&w=900&q=85";
+  const IMG_PARAMS = "?auto=format&fit=crop&w=1400&q=88";
   const COUNTRY_IMGS = {
     FR: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34",
     PT: "https://images.unsplash.com/photo-1513735492246-483525079686",
@@ -55,8 +55,8 @@ async function initCoverflow3d(root, canvas, dataEl) {
   let frame = 0;
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 40);
-  camera.position.set(0, 0.08, 5.9);
+  const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 40);
+  camera.position.set(0, 0.12, 5.15);
 
   let renderer;
   try {
@@ -73,31 +73,35 @@ async function initCoverflow3d(root, canvas, dataEl) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setClearColor(0x000000, 0);
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.82));
-  const key = new THREE.DirectionalLight(0xfff4e0, 1.15);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+  const key = new THREE.DirectionalLight(0xfff4e0, 1.35);
   key.position.set(2.2, 3.4, 4.5);
   scene.add(key);
-  const rim = new THREE.DirectionalLight(0x9ec9ff, 0.55);
+  const rim = new THREE.DirectionalLight(0x9ec9ff, 0.62);
   rim.position.set(-3.5, 0.8, -2);
   scene.add(rim);
-  const warm = new THREE.PointLight(0xf5d486, 0.55, 12);
-  warm.position.set(0, -0.4, 3.2);
+  const warm = new THREE.PointLight(0xf5d486, 0.75, 14);
+  warm.position.set(0, -0.2, 3.6);
   scene.add(warm);
 
   const cardGroup = new THREE.Group();
   scene.add(cardGroup);
 
+  const CARD_W = 1.62;
+  const CARD_H = 2.22;
+  const RIM_PAD = 0.07;
+
   // Soft contact shadow under the fan
-  const floorGeo = new THREE.PlaneGeometry(7.5, 1.8);
+  const floorGeo = new THREE.PlaneGeometry(10, 2.4);
   const floorMat = new THREE.MeshBasicMaterial({
     color: 0x000000,
     transparent: true,
-    opacity: 0.28,
+    opacity: 0.32,
     depthWrite: false,
   });
   const floor = new THREE.Mesh(floorGeo, floorMat);
   floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -1.55;
+  floor.position.y = -1.95;
   scene.add(floor);
 
   const cards = [];
@@ -119,21 +123,21 @@ async function initCoverflow3d(root, canvas, dataEl) {
       const texture = buildCardTexture(photo, market.code, market.label);
       const material = new THREE.MeshPhysicalMaterial({
         map: texture,
-        roughness: 0.32,
-        metalness: 0.08,
-        clearcoat: 0.55,
-        clearcoatRoughness: 0.28,
-        reflectivity: 0.35,
+        roughness: 0.26,
+        metalness: 0.1,
+        clearcoat: 0.72,
+        clearcoatRoughness: 0.2,
+        reflectivity: 0.42,
         transparent: true,
         toneMapped: true,
       });
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.18, 1.72), material);
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W, CARD_H), material);
       mesh.userData = { index, href: market.href, code: market.code };
       cardGroup.add(mesh);
 
       // Gold rim plane (slightly larger, only bright when active)
       const rimMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(1.24, 1.78),
+        new THREE.PlaneGeometry(CARD_W + RIM_PAD, CARD_H + RIM_PAD),
         new THREE.MeshBasicMaterial({
           color: 0xf5d486,
           transparent: true,
@@ -141,17 +145,17 @@ async function initCoverflow3d(root, canvas, dataEl) {
           depthWrite: false,
         })
       );
-      rimMesh.position.z = -0.014;
+      rimMesh.position.z = -0.016;
       mesh.add(rimMesh);
 
       // Reflection clone (faded)
       const reflectMat = material.clone();
-      reflectMat.opacity = 0.22;
+      reflectMat.opacity = 0.26;
       reflectMat.transparent = true;
       reflectMat.depthWrite = false;
-      const reflect = new THREE.Mesh(new THREE.PlaneGeometry(1.18, 1.72), reflectMat);
+      const reflect = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W, CARD_H), reflectMat);
       reflect.scale.y = -1;
-      reflect.position.y = -1.62;
+      reflect.position.y = -(CARD_H + 0.08);
       reflect.renderOrder = -1;
       mesh.add(reflect);
 
@@ -174,9 +178,11 @@ async function initCoverflow3d(root, canvas, dataEl) {
   }
 
   function layoutFor(center, immediate = false) {
-    const spacing = window.innerWidth < 480 ? 1.15 : window.innerWidth < 768 ? 1.35 : 1.52;
-    const depth = 0.85;
-    const angle = 0.38;
+    const wide = window.innerWidth >= 1024;
+    const spacing = window.innerWidth < 480 ? 1.28 : window.innerWidth < 768 ? 1.52 : wide ? 1.86 : 1.68;
+    const depth = 0.78;
+    const angle = 0.32;
+    camera.position.z = window.innerWidth < 480 ? 6.05 : window.innerWidth < 768 ? 5.55 : 5.05;
 
     cards.forEach((card) => {
       const offset = circularOffset(card.index, center);
@@ -184,12 +190,12 @@ async function initCoverflow3d(root, canvas, dataEl) {
       const hidden = abs > sideCount;
       const target = {
         x: offset * spacing,
-        y: abs * 0.035,
-        z: abs === 0 ? 1.35 : 0.4 - abs * depth,
+        y: abs * 0.02,
+        z: abs === 0 ? 1.55 : 0.55 - abs * depth,
         rotY: -offset * angle,
-        scale: abs === 0 ? 1.1 : Math.max(0.66, 1 - abs * 0.1),
-        opacity: hidden ? 0 : abs === 0 ? 1 : Math.max(0.62, 1 - abs * 0.1),
-        rim: abs === 0 ? 0.55 : 0,
+        scale: abs === 0 ? 1.28 : Math.max(0.78, 1 - abs * 0.08),
+        opacity: hidden ? 0 : abs === 0 ? 1 : Math.max(0.72, 1 - abs * 0.08),
+        rim: abs === 0 ? 0.72 : abs === 1 ? 0.12 : 0,
       };
 
       if (!card.state || immediate) {
@@ -425,15 +431,15 @@ function loadTexture(loader, url) {
 }
 
 function buildCardTexture(photoTexture, code, label) {
-  const w = 512;
-  const h = 768;
+  const w = 768;
+  const h = 1056;
   const c = document.createElement("canvas");
   c.width = w;
   c.height = h;
   const ctx = c.getContext("2d");
 
   // Rounded card clip
-  roundRect(ctx, 0, 0, w, h, 54);
+  roundRect(ctx, 0, 0, w, h, 64);
   ctx.clip();
 
   if (photoTexture?.image) {
@@ -451,62 +457,70 @@ function buildCardTexture(photoTexture, code, label) {
   }
 
   // Depth vignette + bottom scrim
-  const scrim = ctx.createLinearGradient(0, h * 0.4, 0, h);
+  const scrim = ctx.createLinearGradient(0, h * 0.32, 0, h);
   scrim.addColorStop(0, "rgba(0,0,0,0)");
-  scrim.addColorStop(0.55, "rgba(0,0,0,0.25)");
-  scrim.addColorStop(1, "rgba(0,0,0,0.72)");
+  scrim.addColorStop(0.5, "rgba(0,0,0,0.22)");
+  scrim.addColorStop(1, "rgba(8,14,28,0.78)");
   ctx.fillStyle = scrim;
   ctx.fillRect(0, 0, w, h);
 
-  const top = ctx.createLinearGradient(0, 0, 0, h * 0.35);
-  top.addColorStop(0, "rgba(8,14,30,0.22)");
+  const top = ctx.createLinearGradient(0, 0, 0, h * 0.28);
+  top.addColorStop(0, "rgba(8,14,30,0.18)");
   top.addColorStop(1, "rgba(8,14,30,0)");
   ctx.fillStyle = top;
   ctx.fillRect(0, 0, w, h);
 
   // Specular edge
-  ctx.strokeStyle = "rgba(255,255,255,0.28)";
-  ctx.lineWidth = 3;
-  roundRect(ctx, 3, 3, w - 6, h - 6, 50);
+  ctx.strokeStyle = "rgba(255,255,255,0.34)";
+  ctx.lineWidth = 4;
+  roundRect(ctx, 5, 5, w - 10, h - 10, 58);
   ctx.stroke();
 
-  // Glass label pill — sized to stay readable on side cards
-  const pillW = Math.min(w * 0.9, 440);
-  const pillH = 92;
-  const pillX = (w - pillW) / 2;
-  const pillY = h - 128;
-  ctx.fillStyle = "rgba(8, 14, 28, 0.58)";
-  roundRect(ctx, pillX, pillY, pillW, pillH, 999);
-  ctx.fill();
-  ctx.fillStyle = "rgba(255,255,255,0.14)";
-  roundRect(ctx, pillX, pillY, pillW, pillH, 999);
-  ctx.fill();
-  ctx.strokeStyle = "rgba(255,255,255,0.45)";
+  ctx.strokeStyle = "rgba(245,212,134,0.28)";
   ctx.lineWidth = 2;
-  roundRect(ctx, pillX, pillY, pillW, pillH, 999);
+  roundRect(ctx, 10, 10, w - 20, h - 20, 54);
+  ctx.stroke();
+
+  // Glass label — two lines so the country name reads as a headline
+  const pillW = Math.min(w * 0.86, 620);
+  const pillH = 148;
+  const pillX = (w - pillW) / 2;
+  const pillY = h - 196;
+  ctx.fillStyle = "rgba(8, 14, 28, 0.62)";
+  roundRect(ctx, pillX, pillY, pillW, pillH, 36);
+  ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.1)";
+  roundRect(ctx, pillX, pillY, pillW, pillH, 36);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(245,212,134,0.55)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, pillX, pillY, pillW, pillH, 36);
   ctx.stroke();
 
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.shadowColor = "rgba(0,0,0,0.5)";
-  ctx.shadowBlur = 10;
+  ctx.shadowColor = "rgba(0,0,0,0.55)";
+  ctx.shadowBlur = 12;
   const codeText = String(code || "").toUpperCase();
   const nameText = String(label || "").toUpperCase();
-  const line = `${codeText}  ${nameText}`;
-  // 30% larger than previous 28 / 32
-  let fontSize = nameText.length > 10 ? 36 : 42;
+
+  ctx.font = "700 28px Inter, system-ui, sans-serif";
+  ctx.fillStyle = "rgba(245,212,134,0.95)";
+  ctx.fillText(codeText, w / 2, pillY + 46);
+
+  let fontSize = nameText.length > 10 ? 44 : 52;
   ctx.font = `800 ${fontSize}px Inter, system-ui, sans-serif`;
-  while (fontSize > 24 && ctx.measureText(line).width > pillW - 36) {
+  while (fontSize > 30 && ctx.measureText(nameText).width > pillW - 48) {
     fontSize -= 1;
     ctx.font = `800 ${fontSize}px Inter, system-ui, sans-serif`;
   }
   ctx.fillStyle = "#ffffff";
-  ctx.fillText(line, w / 2, pillY + pillH / 2);
+  ctx.fillText(nameText, w / 2, pillY + 98);
   ctx.shadowBlur = 0;
 
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
+  tex.anisotropy = 8;
   tex.needsUpdate = true;
   return tex;
 }

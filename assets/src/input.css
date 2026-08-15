@@ -1537,7 +1537,7 @@
   .vv-hero {
     @apply relative isolate;
     background-color: #0f172a;
-    min-height: clamp(640px, 72vw, 860px);
+    min-height: clamp(720px, 86vw, 1040px);
     overflow: hidden;
   }
   .vv-hero-bg {
@@ -2006,7 +2006,7 @@
 
   /* ── Hero market rail (Three.js circular coverflow) ─ */
   .vv-coverflow {
-    @apply relative mx-auto mt-8 w-full max-w-5xl px-10 sm:mt-10 sm:px-14;
+    @apply relative mx-auto mt-10 w-full max-w-7xl px-12 sm:mt-12 sm:px-16;
     outline: none;
   }
   .vv-coverflow:focus-visible {
@@ -2019,7 +2019,7 @@
   }
   .vv-coverflow-stage {
     position: relative;
-    height: clamp(13rem, 34vw, 19rem);
+    height: clamp(20rem, 48vw, 32rem);
     overflow: visible;
   }
   .vv-coverflow-canvas {
@@ -2038,23 +2038,25 @@
     cursor: grabbing;
   }
   .vv-coverflow-nav {
-    @apply absolute top-1/2 z-20 -translate-y-1/2 flex h-10 w-10 items-center justify-center
-           rounded-full border border-white/25 bg-black/25 text-white/90 backdrop-blur-md
+    @apply absolute top-1/2 z-20 -translate-y-1/2 flex h-12 w-12 items-center justify-center
+           rounded-full border border-white/30 bg-black/35 text-white backdrop-blur-md
            transition-all duration-200
-           hover:border-white/45 hover:bg-black/40 hover:text-white hover:scale-105
+           hover:border-[rgba(245,212,134,0.7)] hover:bg-black/50 hover:text-white hover:scale-110
            active:scale-95
            focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
   }
   .vv-coverflow-nav svg {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 1.4rem;
+    height: 1.4rem;
   }
   .vv-coverflow-nav--prev { left: 0; }
   .vv-coverflow-nav--next { right: 0; }
 
-  @media (max-width: 479px) {
-    .vv-coverflow { @apply px-8; }
-    .vv-coverflow-stage { height: clamp(11.5rem, 52vw, 15rem); }
+  @media (max-width: 639px) {
+    .vv-coverflow { @apply px-10 mt-8; }
+    .vv-coverflow-stage { height: clamp(17rem, 68vw, 22rem); }
+    .vv-coverflow-nav { @apply h-11 w-11; }
   }
 
 
