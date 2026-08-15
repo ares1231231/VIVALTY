@@ -175,14 +175,18 @@ Two visual variants based on context:
 
       {% if user.is_authenticated %}
 
-        {# Avatar dropdown (Flowbite) — Dashboard lives inside this menu. #}
+        {# Avatar dropdown — vanilla JS (Flowbite toggle was failing on click). #}
+        <div class="relative" id="user-menu-wrap">
         <button id="user-menu-button" type="button"
-                data-dropdown-toggle="user-menu"
-                class="vv-avatar">
+                class="vv-avatar"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                aria-controls="user-menu"
+                aria-label="Account menu">
           {{ user|initials }}
         </button>
-        <div id="user-menu"
-             class="z-50 hidden min-w-[220px] divide-y divide-ink-100 rounded-2xl bg-white shadow-2xl border border-ink-200">
+        <div id="user-menu" hidden
+             class="absolute right-0 top-full z-[70] mt-2 min-w-[220px] divide-y divide-ink-100 rounded-2xl bg-white shadow-2xl border border-ink-200">
           <div class="px-4 py-3">
             <div class="text-sm font-semibold text-ink-900 truncate">{{ user.first_name|default:user.email }}</div>
             <div class="text-xs text-ink-500 truncate">{{ user.email }}</div>
@@ -221,6 +225,7 @@ Two visual variants based on context:
               </button>
             </form>
           </div>
+        </div>
         </div>
 
       {% else %}

@@ -347,6 +347,37 @@ function initHeroCountryCoverflow() {
   });
 }
 
+function initUserMenu(root = document) {
+  const wrap = root.querySelector("#user-menu-wrap") || document.querySelector("#user-menu-wrap");
+  if (!wrap || wrap.dataset.userMenuInit === "1") return;
+  wrap.dataset.userMenuInit = "1";
+
+  const btn = wrap.querySelector("#user-menu-button");
+  const menu = wrap.querySelector("#user-menu");
+  if (!btn || !menu) return;
+
+  const close = () => {
+    menu.hidden = true;
+    btn.setAttribute("aria-expanded", "false");
+  };
+  const open = () => {
+    menu.hidden = false;
+    btn.setAttribute("aria-expanded", "true");
+  };
+
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    menu.hidden ? open() : close();
+  });
+  document.addEventListener("click", (e) => {
+    if (!wrap.contains(e.target)) close();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") close();
+  });
+}
+
 // ── Language switcher (vanilla — avoids Alpine + HTMX conflicts) ─────────────
 function initLocaleSwitcher(root = document) {
   const wrap = root.querySelector("#locale-switcher");
@@ -494,6 +525,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initLocaleSwitcher();
   initCookieConsent();
   initListingCityCascade();
+  initUserMenu();
 });
 
 // Re-init counters after HTMX swaps (e.g. boosted navigation back to home).
@@ -501,4 +533,5 @@ document.addEventListener("htmx:afterSettle", (e) => {
   initCounters();
   initLocaleSwitcher(e.detail.elt || document);
   initListingCityCascade(e.detail.elt || document);
+  initUserMenu(e.detail.elt || document);
 });
