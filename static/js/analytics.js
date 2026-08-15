@@ -22,6 +22,15 @@
   let consentGranted = false;
   let queue = [];
 
+  function flushQueue() {
+    if (!consentGranted || typeof window.gtag !== "function") return;
+    queue.forEach((item) => {
+      window.gtag("event", item.name, item.params);
+      if (item.name === "sign_up") ackSignUpSent();
+    });
+    queue = [];
+  }
+
   function grantConsentStorage() {
     if (consentGranted || typeof window.gtag !== "function") return;
     window.gtag("consent", "update", {
@@ -31,20 +40,13 @@
       ad_personalization: "granted",
     });
     consentGranted = true;
-    queue.forEach((item) => {
-      window.gtag("event", item.name, item.params);
-      if (item.name === "sign_up") ackSignUpSent();
-    });
-    queue = [];
+    flushQueue();
   }
 
   function fireEvent(name, params) {
     const payload = params || {};
-    if (!consentGranted || typeof window.gtag !== "function") {
-      queue.push({ name, params: payload });
-      return;
-    }
-    window.gtag("event", name, payload);
+    queue.push({ name, params: payload });
+    flushQueue();
   }
 
   function csrfToken() {
@@ -62,22 +64,14 @@
     }).catch(() => {});
   }
 
-  function flushPendingFromConfig(cfg) {
+  function enqueuePendingFromConfig(cfg) {
     if (!cfg?.pending?.length) return;
-    cfg.pending.forEach((item) => {
-      if (!consentGranted) {
-        fireEvent(item.name, item.params);
-        return;
-      }
-      fireEvent(item.name, item.params);
-      if (item.name === "sign_up") ackSignUpSent();
-    });
+    cfg.pending.forEach((item) => fireEvent(item.name, item.params));
   }
 
   function syncConsentState() {
     if (!hasAnalyticsConsent()) return;
     grantConsentStorage();
-    flushPendingFromConfig(readConfig());
   }
 
   function trackFromElement(el) {
@@ -106,6 +100,7 @@
   window.VivaltyAnalytics = { track: fireEvent };
 
   document.addEventListener("DOMContentLoaded", () => {
+    enqueuePendingFromConfig(readConfig());
     syncConsentState();
     scanPendingMarkers(document);
   });

@@ -224,5 +224,6 @@ def analytics(request):
     return {
         "GA4_MEASUREMENT_ID": ga4,
         "GOOGLE_ADS_ID": ads,
+        "ANALYTICS_PENDING_SIGN_UP": bool(pending),
         "ANALYTICS_CONFIG_JSON": json.dumps(cfg),
     }

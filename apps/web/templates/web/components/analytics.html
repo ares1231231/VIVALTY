@@ -20,5 +20,8 @@
   {% endif %}
 </script>
 <script type="application/json" id="vivalty-analytics-config">{{ ANALYTICS_CONFIG_JSON }}</script>
+{% if ANALYTICS_PENDING_SIGN_UP %}
+<span hidden data-vivalty-analytics-event="sign_up" data-vivalty-analytics-params='{"method":"email"}'></span>
+{% endif %}
 <script src="{% static 'js/analytics.js' %}" defer></script>
 {% endif %}
