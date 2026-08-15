@@ -28,7 +28,7 @@
     <div class="mt-8 flex flex-wrap gap-3">
       <a href="{% url 'web:marketplace' %}?country={{ country_guide.code }}{% if city %}&city={{ city.slug }}{% endif %}"
          class="btn-primary px-6 py-3 rounded-xl">
-        View {% if listings_count %}{{ listings_count }} {% endif %}homes in {{ city_guide.name }}
+        View homes in {{ city_guide.name }}
       </a>
       <a href="{% url 'web:destination_detail' country_guide.slug %}"
          class="inline-flex items-center rounded-xl border border-white/25 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur hover:bg-white/20 transition-colors">

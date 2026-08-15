@@ -53,11 +53,6 @@
               <div class="flex items-center gap-2 text-3xl drop-shadow">{{ c.country.flag_emoji|default:"📍" }}</div>
               <h2 class="mt-1 font-display text-2xl font-black text-white drop-shadow">{{ c.guide.name }}</h2>
             </div>
-            {% if c.listings_count %}
-              <span class="absolute right-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-ink-900 shadow-lg">
-                {{ c.listings_count }} home{{ c.listings_count|pluralize }}
-              </span>
-            {% endif %}
           </div>
           <div class="flex flex-1 flex-col p-5">
             <p class="text-sm text-ink-600 leading-relaxed">{{ c.guide.tagline }}</p>

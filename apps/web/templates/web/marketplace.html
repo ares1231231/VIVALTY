@@ -30,9 +30,6 @@
           <span class="font-semibold text-ink-700">{{ PUBLIC_LISTINGS_LABEL }}</span>
           {% if market_country %}
             in <span class="font-semibold text-ink-700">{{ market_country.name }}</span>
-          {% else %}
-            across
-            <span class="font-semibold text-ink-700">{{ countries|length }}</span> countries
           {% endif %}
           {% if params.type or params.search %}
             · <span class="text-brand-600 font-medium">Filters active</span>

@@ -26,7 +26,7 @@
     <p class="mt-5 max-w-2xl text-lg text-white/80 leading-relaxed">{{ guide.tagline }}.</p>
     <div class="mt-8 flex flex-wrap gap-3">
       <a href="{% url 'web:marketplace' %}?country={{ guide.code }}" class="btn-primary px-6 py-3 rounded-xl">
-        View {% if listings_count %}{{ listings_count }} {% endif %}homes in {{ guide.name }}
+        View homes in {{ guide.name }}
       </a>
       <a href="#buying" class="inline-flex items-center rounded-xl border border-white/25 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur hover:bg-white/20 transition-colors">
         How to buy here
@@ -73,7 +73,6 @@
                 <div class="font-bold text-ink-900 group-hover:text-brand-700 transition-colors">{{ city.name }}</div>
                 <div class="mt-1 text-xs text-ink-500">
                   {% if city.population %}{{ city.population|floatformat:0 }} residents{% endif %}
-                  {% if city.listings_count %}· {{ city.listings_count }} listing{{ city.listings_count|pluralize }}{% endif %}
                 </div>
                 {% if city.summary %}<p class="mt-2 text-xs text-ink-500 line-clamp-2">{{ city.summary }}</p>{% endif %}
               </div>
