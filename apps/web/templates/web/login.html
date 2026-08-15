@@ -69,7 +69,7 @@
         <p class="mt-1 text-sm text-ink-500">Sign in to your account to continue.</p>
       </div>
 
-      <form method="post" class="space-y-4">
+      <form method="post" class="space-y-4" hx-boost="false">
         {% csrf_token %}
         {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
         <div>

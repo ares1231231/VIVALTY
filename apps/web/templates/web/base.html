@@ -67,6 +67,13 @@
   </main>
 
   {% include "web/components/footer.html" %}
+
+  {% if GA4_MEASUREMENT_ID %}
+  <div id="vivalty-analytics-root" hidden aria-hidden="true">
+    <script type="application/json" id="vivalty-analytics-config-body">{{ ANALYTICS_CONFIG_JSON }}</script>
+  </div>
+  {% endif %}
+
   {% include "web/components/cookie_consent.html" %}
 
   {% with url_name=request.resolver_match.url_name %}

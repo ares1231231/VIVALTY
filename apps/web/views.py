@@ -79,6 +79,7 @@ from apps.properties.services.simulator import (
 )
 from apps.users.models import Role, User
 from apps.web.services import geocoding, listing_ai, listing_wizard
+from apps.web.analytics import track_sign_up_server
 from apps.web.services.emails import (
     send_lead_confirmation,
     send_lead_notification,
@@ -1615,7 +1616,8 @@ def register_view(request: HttpRequest) -> HttpResponse:
             send_verification_email(user)
         except Exception:
             email_sent = False
-        request.session["analytics_sign_up"] = True
+        if not track_sign_up_server(request, user):
+            request.session["analytics_sign_up"] = True
         auth_login(request, user)
         if next_url and "/list" in next_url:
             _ensure_owner(user)

@@ -412,6 +412,8 @@ TURNSTILE_SECRET_KEY = os.getenv("TURNSTILE_SECRET_KEY", "")
 # --- Analytics (GA4 + Google Ads) -----------------------------------------
 # GA4 measurement ID (G-XXXXXXXX). Leave empty to disable all tracking scripts.
 GA4_MEASUREMENT_ID = os.getenv("GA4_MEASUREMENT_ID", "").strip()
+# Optional — create under GA4 Admin → Data streams → Measurement Protocol API secrets.
+GA4_API_SECRET = os.getenv("GA4_API_SECRET", "").strip()
 # Google Ads account ID (AW-XXXXXXXX) — optional; enables Ads remarketing / direct tag pairing.
 GOOGLE_ADS_ID = os.getenv("GOOGLE_ADS_ID", "").strip()
 

@@ -6,7 +6,7 @@
   const CONSENT_KEY = "vivalty_cookie_consent";
 
   function readConfig() {
-    const el = document.getElementById("vivalty-analytics-config");
+    const el = document.getElementById("vivalty-analytics-config-body");
     if (!el) return null;
     try {
       return JSON.parse(el.textContent || "{}");
@@ -21,12 +21,16 @@
 
   let consentGranted = false;
   let queue = [];
+  let bootstrapped = false;
 
   function flushQueue() {
     if (!consentGranted || typeof window.gtag !== "function") return;
     queue.forEach((item) => {
       window.gtag("event", item.name, item.params);
-      if (item.name === "sign_up") ackSignUpSent();
+      if (item.name === "sign_up") {
+        sessionStorage.setItem("vv_sign_up_sent", "1");
+        ackSignUpSent();
+      }
     });
     queue = [];
   }
@@ -45,6 +49,7 @@
 
   function fireEvent(name, params) {
     const payload = params || {};
+    if (name === "sign_up" && sessionStorage.getItem("vv_sign_up_sent") === "1") return;
     queue.push({ name, params: payload });
     flushQueue();
   }
@@ -90,27 +95,34 @@
   }
 
   function scanPendingMarkers(root) {
-    root.querySelectorAll("[data-vivalty-analytics-event]").forEach((el) => {
+    const scope = root.querySelectorAll ? root : document;
+    scope.querySelectorAll("[data-vivalty-analytics-event]").forEach((el) => {
       if (el.getAttribute("data-vivalty-analytics-fired") === "1") return;
       el.setAttribute("data-vivalty-analytics-fired", "1");
       trackFromElement(el);
     });
   }
 
-  window.VivaltyAnalytics = { track: fireEvent };
-
-  document.addEventListener("DOMContentLoaded", () => {
+  function bootstrapAnalytics(root) {
     enqueuePendingFromConfig(readConfig());
     syncConsentState();
-    scanPendingMarkers(document);
-  });
+    scanPendingMarkers(root || document);
+    bootstrapped = true;
+  }
+
+  window.VivaltyAnalytics = { track: fireEvent };
+
+  document.addEventListener("DOMContentLoaded", () => bootstrapAnalytics(document));
 
   document.addEventListener("vivalty:cookie-consent", (e) => {
-    if (e.detail?.value === "all") syncConsentState();
+    if (e.detail?.value === "all") {
+      syncConsentState();
+      if (bootstrapped) flushQueue();
+    }
   });
 
   document.addEventListener("htmx:afterSettle", (e) => {
     const root = e.detail?.elt || document;
-    scanPendingMarkers(root);
+    bootstrapAnalytics(root);
   });
 })();

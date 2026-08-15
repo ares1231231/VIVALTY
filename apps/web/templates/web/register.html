@@ -77,7 +77,7 @@
         {% endif %}
       </div>
 
-      <form method="post" class="space-y-4">
+      <form method="post" class="space-y-4" hx-boost="false">
         {% csrf_token %}
         {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
 
