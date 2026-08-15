@@ -27,8 +27,7 @@
           {{ seo_h1|default:"Property Listings" }}
         </h1>
         <p class="mt-1 text-sm text-ink-500">
-          <span class="font-semibold text-ink-700" data-total>{{ total }}</span>
-          active listings
+          <span class="font-semibold text-ink-700">{{ PUBLIC_LISTINGS_LABEL }}</span>
           {% if market_country %}
             in <span class="font-semibold text-ink-700">{{ market_country.name }}</span>
           {% else %}
@@ -225,7 +224,11 @@
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <p class="text-sm text-ink-500">
-            <span class="font-semibold text-ink-900" data-total>{{ total }}</span> results
+            {% if params.type or params.search or params.country or params.price_min or params.price_max %}
+              <span class="font-semibold text-ink-900" data-total>{{ total }}</span> results
+            {% else %}
+              <span class="font-semibold text-ink-900">{{ PUBLIC_LISTINGS_LABEL }}</span>
+            {% endif %}
           </p>
           {% include "web/components/save_search_button.html" %}
         </div>

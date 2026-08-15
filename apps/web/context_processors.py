@@ -187,6 +187,7 @@ def recently_viewed(request):
 def company(request):
     """Business identity shown on legal pages and the site footer."""
     return {
+        "PUBLIC_LISTINGS_LABEL": "More than 1,000 properties listed",
         "COMPANY_LEGAL_NAME": settings.COMPANY_LEGAL_NAME,
         "COMPANY_REGISTERED_ADDRESS": settings.COMPANY_REGISTERED_ADDRESS,
         "COMPANY_SUPPORT_EMAIL": settings.COMPANY_SUPPORT_EMAIL,
