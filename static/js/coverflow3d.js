@@ -87,8 +87,8 @@ async function initCoverflow3d(root, canvas, dataEl) {
   const cardGroup = new THREE.Group();
   scene.add(cardGroup);
 
-  const CARD_W = 1.62;
-  const CARD_H = 2.22;
+  const CARD_W = 1.3;
+  const CARD_H = 1.78;
   const RIM_PAD = 0.07;
 
   // Soft contact shadow under the fan
@@ -101,7 +101,7 @@ async function initCoverflow3d(root, canvas, dataEl) {
   });
   const floor = new THREE.Mesh(floorGeo, floorMat);
   floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -1.95;
+  floor.position.y = -1.72;
   scene.add(floor);
 
   const cards = [];
@@ -182,7 +182,7 @@ async function initCoverflow3d(root, canvas, dataEl) {
     const spacing = window.innerWidth < 480 ? 1.28 : window.innerWidth < 768 ? 1.52 : wide ? 1.86 : 1.68;
     const depth = 0.78;
     const angle = 0.32;
-    camera.position.z = window.innerWidth < 480 ? 6.05 : window.innerWidth < 768 ? 5.55 : 5.05;
+    camera.position.z = window.innerWidth < 480 ? 6.25 : window.innerWidth < 768 ? 5.75 : 5.35;
 
     cards.forEach((card) => {
       const offset = circularOffset(card.index, center);
@@ -193,7 +193,7 @@ async function initCoverflow3d(root, canvas, dataEl) {
         y: abs * 0.02,
         z: abs === 0 ? 1.55 : 0.55 - abs * depth,
         rotY: -offset * angle,
-        scale: abs === 0 ? 1.28 : Math.max(0.78, 1 - abs * 0.08),
+        scale: abs === 0 ? 1.18 : Math.max(0.78, 1 - abs * 0.08),
         opacity: hidden ? 0 : abs === 0 ? 1 : Math.max(0.72, 1 - abs * 0.08),
         rim: abs === 0 ? 0.72 : abs === 1 ? 0.12 : 0,
       };

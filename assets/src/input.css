@@ -1537,7 +1537,7 @@
   .vv-hero {
     @apply relative isolate;
     background-color: #0f172a;
-    min-height: clamp(720px, 86vw, 1040px);
+    min-height: clamp(680px, 78vw, 960px);
     overflow: hidden;
   }
   .vv-hero-bg {
@@ -2019,7 +2019,7 @@
   }
   .vv-coverflow-stage {
     position: relative;
-    height: clamp(20rem, 48vw, 32rem);
+    height: clamp(16rem, 38vw, 25.6rem);
     overflow: visible;
   }
   .vv-coverflow-canvas {
@@ -2055,7 +2055,7 @@
 
   @media (max-width: 639px) {
     .vv-coverflow { @apply px-10 mt-8; }
-    .vv-coverflow-stage { height: clamp(17rem, 68vw, 22rem); }
+    .vv-coverflow-stage { height: clamp(13.6rem, 54vw, 17.6rem); }
     .vv-coverflow-nav { @apply h-11 w-11; }
   }
 
