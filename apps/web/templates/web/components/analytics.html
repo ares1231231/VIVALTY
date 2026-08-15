@@ -6,17 +6,24 @@
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
+  var vvConsentAll = false;
+  try { vvConsentAll = localStorage.getItem("vivalty_cookie_consent") === "all"; } catch (e) {}
   gtag("consent", "default", {
-    analytics_storage: "denied",
-    ad_storage: "denied",
-    ad_user_data: "denied",
-    ad_personalization: "denied",
+    analytics_storage: vvConsentAll ? "granted" : "denied",
+    ad_storage: vvConsentAll ? "granted" : "denied",
+    ad_user_data: vvConsentAll ? "granted" : "denied",
+    ad_personalization: vvConsentAll ? "granted" : "denied",
     wait_for_update: 500
   });
   gtag("js", new Date());
   gtag("config", "{{ GA4_MEASUREMENT_ID|escapejs }}");
   {% if GOOGLE_ADS_ID %}
   gtag("config", "{{ GOOGLE_ADS_ID|escapejs }}");
+  {% endif %}
+  {% if ANALYTICS_PENDING_SIGN_UP %}
+  if (vvConsentAll) {
+    gtag("event", "sign_up", { method: "email", send_to: "{{ GA4_MEASUREMENT_ID|escapejs }}" });
+  }
   {% endif %}
 </script>
 <script src="{% static 'js/analytics.js' %}" defer></script>

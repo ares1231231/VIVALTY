@@ -1616,9 +1616,10 @@ def register_view(request: HttpRequest) -> HttpResponse:
             send_verification_email(user)
         except Exception:
             email_sent = False
-        if not track_sign_up_server(request, user):
-            request.session["analytics_sign_up"] = True
+        track_sign_up_server(request, user)
         auth_login(request, user)
+        request.session["analytics_sign_up"] = True
+        request.session.modified = True
         if next_url and "/list" in next_url:
             _ensure_owner(user)
         if email_sent:
