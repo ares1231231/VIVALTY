@@ -253,6 +253,10 @@ function initFilterPurpose() {
 function initHeroVideo() {
   const video = document.getElementById("hero-bg-video");
   if (!video || prefersReducedMotion) return;
+  video.muted = true;
+  video.defaultMuted = true;
+  video.volume = 0;
+  video.loop = true;
   const play = () => video.play().catch(() => {});
   if (video.readyState >= 2) play();
   else video.addEventListener("loadeddata", play, { once: true });
